@@ -549,7 +549,7 @@ function AdminPage() {
                             <h3 style={styles.settingsLabel}>📲 Notificaciones por WhatsApp</h3>
                             <p style={styles.settingsHint}>
                                 Recibe un mensaje de WhatsApp cada vez que un operador solicite un turno.
-                                Usa <strong>CallMeBot</strong> (gratis): envía <em>"I allow callmebot to send me messages"</em> por WhatsApp al número <strong>+34 644 60 49 82</strong> y recibirás tu clave API.
+                                Usa <strong>CallMeBot</strong> (gratis): envía <em>"I allow callmebot to send me messages"</em> por WhatsApp al número <strong>+34 621 371 153</strong> y recibirás tu clave API.
                             </p>
                             <form style={styles.settingsForm} onSubmit={handleSaveWhatsapp}>
                                 <div style={styles.fieldGroup}>
