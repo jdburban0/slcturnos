@@ -1,0 +1,34 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import authRouter from "./routes/auth.js";
+import shiftsRouter from "./routes/shifts.js";
+import requestsRouter from "./routes/requests.js";
+import notificationsRouter from "./routes/notifications.js";
+import usersRouter from "./routes/users.js";
+import settingsRouter from "./routes/settings.js";
+
+dotenv.config();
+
+const app = express();
+
+app.use(
+    cors({
+        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        credentials: true,
+    })
+);
+app.use(express.json());
+
+app.get("/", (req, res) => {
+    res.json({ message: "Backend SLC Turnos OK" });
+});
+
+app.use("/api/auth", authRouter);
+app.use("/api/shifts", shiftsRouter);
+app.use("/api/requests", requestsRouter);
+app.use("/api/notifications", notificationsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/settings", settingsRouter);
+
+export default app;

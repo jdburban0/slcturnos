@@ -1,0 +1,154 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0f172a;
+}
+
+/* ─── Keyframes ─────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.98); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+/* ─── Clases de animación ───────────────────────────────── */
+
+.anim-fade-in-up {
+  animation: fadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-fade-in {
+  animation: fadeIn 0.35s ease both;
+}
+
+.anim-fade-out {
+  animation: fadeOut 0.35s ease forwards;
+  pointer-events: none;
+}
+
+.anim-slide-right {
+  animation: slideInRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-shake {
+  animation: shake 0.4s ease both;
+}
+
+.anim-field {
+  animation: fadeInDown 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Botones: micro-interacciones ──────────────────────── */
+
+button {
+  transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.96);
+  opacity: 1;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ─── Inputs: focus glow ────────────────────────────────── */
+
+input, select, textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  border-color: #2563eb !important;
+}
+
+/* ─── ShiftCreatorModal: mobile responsive ──────────────── */
+
+@media (max-width: 520px) {
+  .modal-header {
+    padding: 16px 16px 0 !important;
+  }
+  .modal-tabs {
+    padding: 12px 16px 0 !important;
+  }
+  .modal-error {
+    margin: 10px 16px 0 !important;
+  }
+  .modal-body {
+    padding: 16px !important;
+    gap: 16px !important;
+  }
+  .modal-preset-cards {
+    grid-template-columns: 1fr !important;
+  }
+  .modal-single-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .modal-footer {
+    flex-direction: column !important;
+  }
+  .modal-footer button {
+    width: 100%;
+  }
+}
+
+/* ─── ScheduleTable: mobile responsive ──────────────────── */
+
+@media (max-width: 520px) {
+  .schedule-wrapper {
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+  .week-nav {
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+  .week-nav button {
+    padding: 6px 12px !important;
+    font-size: 0.78rem !important;
+  }
+}

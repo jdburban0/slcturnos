@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  operator
+  lead
+  admin
+}
+
+enum ShiftType {
+  DAY
+  NIGHT
+}
+
+enum ShiftStatus {
+  OPEN
+  FULL
+  CLOSED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String
+  email         String          @unique
+  passwordHash  String
+  role          Role            @default(operator)
+  active        Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  requests      ShiftRequest[]
+  notifications Notification[]
+}
+
+model Shift {
+  id         String         @id @default(cuid())
+  title      String
+  date       DateTime
+  startTime  String
+  endTime    String
+  type       ShiftType
+  totalSlots Int
+  status     ShiftStatus    @default(OPEN)
+  createdBy  String
+  createdAt  DateTime       @default(now())
+  requests   ShiftRequest[]
+}
+
+model ShiftRequest {
+  id            String         @id @default(cuid())
+  shiftId       String
+  userId        String
+  status        RequestStatus  @default(PENDING)
+  holdExpiresAt DateTime?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  notes         String?
+  createdAt     DateTime       @default(now())
+
+  shift Shift @relation(fields: [shiftId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([shiftId, status])
+  @@index([userId, status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Setting {
+  key   String @id
+  value String
+}

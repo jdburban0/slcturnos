@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(node -e \"import\\(''@prisma/client''\\).then\\(m => console.log\\(Object.keys\\(m\\)\\)\\).catch\\(e => console.error\\(e.message\\)\\)\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //F //PID 13840)",
+      "Bash(taskkill //F //PID 27404)",
+      "Bash(taskkill //F //PID 1852)",
+      "Bash(node src/cleanup-test-users.js)",
+      "Bash(node -e ':*)",
+      "Bash(node src/init-code.js)",
+      "Bash(npx vite:*)"
+    ]
+  }
+}
