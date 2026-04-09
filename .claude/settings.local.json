@@ -12,7 +12,9 @@
       "Bash(node src/cleanup-test-users.js)",
       "Bash(node -e ':*)",
       "Bash(node src/init-code.js)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "WebFetch(domain:www.callmebot.com)",
+      "Bash(del \"C:\\\\Users\\\\juand\\\\slc-turnos\\\\server\\\\src\\\\lib\\\\whatsapp.js\")"
     ]
   }
 }

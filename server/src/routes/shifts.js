@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { sendWhatsApp } from "../lib/whatsapp.js";
 
 const router = Router();
 
@@ -170,12 +169,6 @@ router.post("/:id/request", requireAuth, async (req, res) => {
         const io = req.app.get("io");
         io.to("admins").emit("requests:refresh");
         io.emit("shifts:refresh");
-
-        // Notificación WhatsApp al admin (no bloquea la respuesta)
-        const dateStr = new Date(request.shift.date).toISOString().slice(0, 10);
-        sendWhatsApp(
-            `📋 *Nueva solicitud de turno*\n👤 ${request.user.name}\n🗓 ${request.shift.title} (${dateStr})\n🕐 ${request.shift.startTime} – ${request.shift.endTime}`
-        );
 
         res.status(201).json(request);
     } catch (err) {

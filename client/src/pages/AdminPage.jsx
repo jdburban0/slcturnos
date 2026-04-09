@@ -5,7 +5,6 @@ import { useSocket } from "../hooks/useSocket.js";
 import {
     getShifts, getRequests, deleteShift, updateShift, closeWeek, reviewRequest,
     getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode,
-    getWhatsappSettings, updateWhatsappSettings,
 } from "../api/index.js";
 
 function getMondayOfWeek(isoDate) {
@@ -120,9 +119,6 @@ function AdminPage() {
     const [newCode, setNewCode] = useState("");
     const [codeVisible, setCodeVisible] = useState(false);
     const [codeLoading, setCodeLoading] = useState(false);
-    const [waPhone, setWaPhone] = useState("");
-    const [waApikey, setWaApikey] = useState("");
-    const [waLoading, setWaLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const [notifSignal, setNotifSignal] = useState(0);
     const [showCreatorModal, setShowCreatorModal] = useState(false);
@@ -154,9 +150,6 @@ function AdminPage() {
         if (activeTab === "settings" && user?.role === "admin") {
             getRegisterCode(token)
                 .then(({ code }) => { setRegisterCode(code ?? ""); setNewCode(code ?? ""); })
-                .catch(() => {});
-            getWhatsappSettings(token)
-                .then(({ phone, apikey }) => { setWaPhone(phone ?? ""); setWaApikey(apikey ?? ""); })
                 .catch(() => {});
         }
     }, [activeTab, token, user?.role]);
@@ -252,14 +245,6 @@ function AdminPage() {
         finally { setCodeLoading(false); }
     }
 
-    async function handleSaveWhatsapp(e) {
-        e.preventDefault();
-        setWaLoading(true);
-        try {
-            await updateWhatsappSettings(token, waPhone, waApikey);
-            showToast("WhatsApp configurado ✓");
-        } catch (err) { showToast("Error", err.message); }
-        finally { setWaLoading(false); }
     }
 
     async function handleDeleteUser(id, name) {
@@ -544,43 +529,6 @@ function AdminPage() {
                             </form>
                         </div>
 
-                        {/* WhatsApp */}
-                        <div style={{ ...styles.settingsBlock, marginTop: "32px" }}>
-                            <h3 style={styles.settingsLabel}>📲 Notificaciones por WhatsApp</h3>
-                            <p style={styles.settingsHint}>
-                                Recibe un mensaje de WhatsApp cada vez que un operador solicite un turno.
-                                Usa <strong>CallMeBot</strong> (gratis): envía <em>"I allow callmebot to send me messages"</em> por WhatsApp al número <strong>+34 621 371 153</strong> y recibirás tu clave API.
-                            </p>
-                            <form style={styles.settingsForm} onSubmit={handleSaveWhatsapp}>
-                                <div style={styles.fieldGroup}>
-                                    <label style={styles.settingsHint}>Teléfono (con código de país, sin +)</label>
-                                    <input
-                                        style={styles.codeInput}
-                                        value={waPhone}
-                                        onChange={(e) => setWaPhone(e.target.value)}
-                                        placeholder="573177784185"
-                                        required
-                                    />
-                                </div>
-                                <div style={styles.fieldGroup}>
-                                    <label style={styles.settingsHint}>Clave API de CallMeBot</label>
-                                    <input
-                                        style={styles.codeInput}
-                                        value={waApikey}
-                                        onChange={(e) => setWaApikey(e.target.value)}
-                                        placeholder="123456"
-                                        required
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    style={styles.createButton}
-                                    disabled={waLoading || !waPhone || !waApikey}
-                                >
-                                    {waLoading ? "Guardando..." : "Guardar configuración"}
-                                </button>
-                            </form>
-                        </div>
                     </section>
                 )}
             </div>
