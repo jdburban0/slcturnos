@@ -172,7 +172,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
         io.emit("shifts:refresh");
 
         // Notificación WhatsApp al admin (no bloquea la respuesta)
-        const dateStr = request.shift.date.slice(0, 10);
+        const dateStr = new Date(request.shift.date).toISOString().slice(0, 10);
         sendWhatsApp(
             `📋 *Nueva solicitud de turno*\n👤 ${request.user.name}\n🗓 ${request.shift.title} (${dateStr})\n🕐 ${request.shift.startTime} – ${request.shift.endTime}`
         );
