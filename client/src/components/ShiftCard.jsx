@@ -52,14 +52,16 @@ function ShiftCard({ shift, myRequest, onRequest, onCancelRequest }) {
                 </div>
             </div>
 
-            {/* Píldora de estado */}
-            <span style={{ ...styles.pill, background: statusBg, color: statusColor }}>
-                {statusText}
-            </span>
-
-            {/* Acción */}
-            <div style={styles.actionArea}>
-                {getAction()}
+            {/* Estado + Acción (agrupados a la derecha) */}
+            <div style={styles.rightSide}>
+                <span style={{ ...styles.pill, background: statusBg, color: statusColor }}>
+                    {statusText}
+                </span>
+                {getAction() && (
+                    <div style={styles.actionArea}>
+                        {getAction()}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -68,7 +70,7 @@ function ShiftCard({ shift, myRequest, onRequest, onCancelRequest }) {
 const styles = {
     row: {
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         gap: "14px",
         padding: "14px 18px",
         background: "rgba(255,255,255,0.05)",
@@ -84,6 +86,7 @@ const styles = {
         height: "10px",
         borderRadius: "50%",
         flexShrink: 0,
+        marginTop: "5px",
     },
     main: {
         flex: 1,
@@ -115,7 +118,14 @@ const styles = {
         whiteSpace: "nowrap",
         flexShrink: 0,
     },
-    actionArea: { flexShrink: 0, minWidth: "80px", textAlign: "right" },
+    rightSide: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        gap: "8px",
+        flexShrink: 0,
+    },
+    actionArea: { flexShrink: 0, textAlign: "right" },
     requestBtn: {
         background: "#2563eb",
         color: "#fff",
