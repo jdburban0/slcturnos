@@ -152,3 +152,15 @@ input:focus, select:focus {
     font-size: 0.78rem !important;
   }
 }
+
+/* ─── NotificationBell: mobile responsive ───────────────── */
+
+@media (max-width: 520px) {
+  .notif-dropdown {
+    position: fixed !important;
+    top: 72px !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+  }
+}

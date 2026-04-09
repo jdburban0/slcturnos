@@ -59,7 +59,7 @@ function NotificationBell({ token, refreshSignal }) {
             </button>
 
             {open && (
-                <div style={styles.dropdown}>
+                <div style={styles.dropdown} className="notif-dropdown">
                     <div style={styles.dropHeader}>
                         <span style={styles.dropTitle}>Notificaciones</span>
                         {unread > 0 && (
