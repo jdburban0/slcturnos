@@ -37,4 +37,44 @@ router.patch("/register-code", requireAuth, requireRole("admin"), async (req, re
     }
 });
 
+// GET configuración de WhatsApp (solo admin)
+router.get("/whatsapp", requireAuth, requireRole("admin"), async (req, res) => {
+    try {
+        const [phoneSetting, keySetting] = await Promise.all([
+            prisma.setting.findUnique({ where: { key: "whatsapp_phone" } }),
+            prisma.setting.findUnique({ where: { key: "whatsapp_apikey" } }),
+        ]);
+        res.json({ phone: phoneSetting?.value ?? "", apikey: keySetting?.value ?? "" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al obtener configuración de WhatsApp" });
+    }
+});
+
+// PATCH configuración de WhatsApp (solo admin)
+router.patch("/whatsapp", requireAuth, requireRole("admin"), async (req, res) => {
+    const { phone, apikey } = req.body;
+    if (!phone || !apikey) {
+        return res.status(400).json({ message: "Teléfono y clave API son requeridos" });
+    }
+    try {
+        await Promise.all([
+            prisma.setting.upsert({
+                where: { key: "whatsapp_phone" },
+                update: { value: phone.trim() },
+                create: { key: "whatsapp_phone", value: phone.trim() },
+            }),
+            prisma.setting.upsert({
+                where: { key: "whatsapp_apikey" },
+                update: { value: apikey.trim() },
+                create: { key: "whatsapp_apikey", value: apikey.trim() },
+            }),
+        ]);
+        res.json({ message: "Configuración de WhatsApp guardada" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al guardar configuración de WhatsApp" });
+    }
+});
+
 export default router;

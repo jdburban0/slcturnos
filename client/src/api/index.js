@@ -180,3 +180,17 @@ export async function deleteUser(token, id) {
         })
     );
 }
+
+export async function getWhatsappSettings(token) {
+    return handle(await fetch(`${BASE}/api/settings/whatsapp`, { headers: headers(token) }));
+}
+
+export async function updateWhatsappSettings(token, phone, apikey) {
+    return handle(
+        await fetch(`${BASE}/api/settings/whatsapp`, {
+            method: "PATCH",
+            headers: headers(token),
+            body: JSON.stringify({ phone, apikey }),
+        })
+    );
+}
