@@ -245,8 +245,6 @@ function AdminPage() {
         finally { setCodeLoading(false); }
     }
 
-    }
-
     async function handleDeleteUser(id, name) {
         if (!confirm(`¿Eliminar permanentemente a ${name}?\n\nSe borrarán sus solicitudes y notificaciones. Esta acción no se puede deshacer.`)) return;
         try {
