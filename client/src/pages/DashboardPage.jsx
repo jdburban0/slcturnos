@@ -114,10 +114,10 @@ function DashboardPage() {
                         <p style={styles.subtitle}>Bienvenido, {user?.name}</p>
                     </div>
                     <div style={styles.headerActions}>
-                        <NotificationBell token={token} refreshSignal={notifSignal} />
                         <button style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
                             Cerrar sesión
                         </button>
+                        <NotificationBell token={token} refreshSignal={notifSignal} />
                     </div>
                 </header>
 

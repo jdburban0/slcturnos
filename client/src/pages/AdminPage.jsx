@@ -273,8 +273,8 @@ function AdminPage() {
                         <p style={styles.subtitle}>{user?.name} · SLC Turnos</p>
                     </div>
                     <div style={styles.headerActions}>
-                        <NotificationBell token={token} refreshSignal={notifSignal} />
                         <button style={styles.logoutButton} onClick={handleLogout}>Cerrar sesión</button>
+                        <NotificationBell token={token} refreshSignal={notifSignal} />
                     </div>
                 </header>
 
