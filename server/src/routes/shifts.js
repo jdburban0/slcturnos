@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { sendNewShiftEmail } from "../lib/mailer.js";
+import { sendNewShiftEmail, sendWeeklyScheduleEmail } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -284,6 +284,25 @@ router.post("/close-week", requireAuth, requireRole("admin", "lead"), async (req
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al archivar semana" });
+    }
+});
+
+// POST enviar horario semanal por email a todos los operadores (admin/lead)
+router.post("/send-schedule", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    const { imageBase64, weekLabel } = req.body;
+    if (!imageBase64 || !weekLabel) {
+        return res.status(400).json({ message: "imageBase64 y weekLabel son requeridos" });
+    }
+    try {
+        const operators = await prisma.user.findMany({
+            where: { role: "operator", active: true },
+            select: { name: true, email: true },
+        });
+        await sendWeeklyScheduleEmail({ operators, imageBase64, weekLabel });
+        res.json({ message: `Horario enviado a ${operators.length} operador${operators.length !== 1 ? "es" : ""}` });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al enviar el horario" });
     }
 });
 

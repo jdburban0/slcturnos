@@ -181,3 +181,13 @@ export async function deleteUser(token, id) {
     );
 }
 
+export async function sendScheduleEmail(token, imageBase64, weekLabel) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/send-schedule`, {
+            method: "POST",
+            headers: headers(token),
+            body: JSON.stringify({ imageBase64, weekLabel }),
+        })
+    );
+}
+

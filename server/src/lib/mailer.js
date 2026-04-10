@@ -60,6 +60,45 @@ export async function sendShiftResultEmail({ to, name, shiftTitle, shiftDate, st
 }
 
 /**
+ * Envía el horario semanal como imagen adjunta a todos los operadores activos.
+ */
+export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabel }) {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) return;
+    if (!operators.length) return;
+
+    const subject = `📅 Horario de turnos — ${weekLabel}`;
+
+    for (const op of operators) {
+        const html = `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
+                <h2 style="color:#0f172a;margin:0 0 8px;">📅 Horario de turnos</h2>
+                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, aquí está el horario de turnos disponibles para <strong>${weekLabel}</strong>.</p>
+                <img src="cid:schedule" style="width:100%;border-radius:8px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
+                <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
+            </div>
+        `;
+
+        try {
+            await transporter.sendMail({
+                from: `"SLC Turnos" <${process.env.GMAIL_USER}>`,
+                to: op.email,
+                subject,
+                html,
+                attachments: [{
+                    filename: `horario-${weekLabel}.jpg`,
+                    content: Buffer.from(imageBase64, "base64"),
+                    cid: "schedule",
+                    contentType: "image/jpeg",
+                }],
+            });
+            console.log(`[Mailer] Horario enviado a ${op.email}`);
+        } catch (err) {
+            console.error(`[Mailer] Error enviando horario a ${op.email}:`, err.message);
+        }
+    }
+}
+
+/**
  * Notifica a todos los operadores activos que hay un nuevo turno disponible.
  * operators: array de { name, email }
  */

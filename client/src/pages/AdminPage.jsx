@@ -356,6 +356,7 @@ function AdminPage() {
                             shifts={showHistory ? shifts : shifts.filter((s) => s.status !== "CLOSED")}
                             updatedAt={shiftsUpdatedAt}
                             canExport
+                            token={token}
                         />
 
                         {/* Control de archivar semana */}

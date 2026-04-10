@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import html2canvas from "html2canvas";
+import { sendScheduleEmail } from "../api/index.js";
 
 const DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -40,7 +41,7 @@ function getWeekKey(isoString) {
     return monday.toISOString().slice(0, 10);
 }
 
-export default function ScheduleTable({ shifts, updatedAt, canExport }) {
+export default function ScheduleTable({ shifts, updatedAt, canExport, token }) {
     const [flash, setFlash] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [weekIndex, setWeekIndex] = useState(0);
@@ -108,13 +109,16 @@ export default function ScheduleTable({ shifts, updatedAt, canExport }) {
                 canExport={canExport}
                 exporting={exporting}
                 setExporting={setExporting}
+                token={token}
             />
         </div>
     );
 }
 
-function WeekTable({ shifts, canExport, exporting, setExporting }) {
+function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const tableRef = useRef(null);
+    const [sending, setSending] = useState(false);
+    const [sendMsg, setSendMsg] = useState("");
 
     const dates = [...new Set(shifts.map((s) => s.date.slice(0, 10)))].sort();
     const dayShifts = shifts.filter((s) => s.type === "DAY");
@@ -170,6 +174,29 @@ function WeekTable({ shifts, canExport, exporting, setExporting }) {
         }
     }
 
+    async function handleSendEmail() {
+        if (!tableRef.current || sending) return;
+        setSending(true);
+        setSendMsg("");
+        try {
+            const canvas = await html2canvas(tableRef.current, {
+                backgroundColor: "#ffffff",
+                scale: 2,
+                useCORS: true,
+                logging: false,
+            });
+            const imageBase64 = canvas.toDataURL("image/jpeg", 0.9).split(",")[1];
+            const result = await sendScheduleEmail(token, imageBase64, dateRange);
+            setSendMsg(result.message);
+            setTimeout(() => setSendMsg(""), 4000);
+        } catch (err) {
+            setSendMsg("Error al enviar");
+            setTimeout(() => setSendMsg(""), 4000);
+        } finally {
+            setSending(false);
+        }
+    }
+
     return (
         <div style={styles.tableBlock}>
             {canExport && (
@@ -181,6 +208,14 @@ function WeekTable({ shifts, canExport, exporting, setExporting }) {
                     >
                         {exporting ? "Exportando..." : "⬇ Exportar JPG"}
                     </button>
+                    <button
+                        style={{ ...styles.exportBtn, ...(sending ? styles.exportBtnDisabled : {}), background: "#16a34a" }}
+                        onClick={handleSendEmail}
+                        disabled={sending}
+                    >
+                        {sending ? "Enviando..." : "📧 Enviar a operadores"}
+                    </button>
+                    {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
                 </div>
             )}
 
@@ -347,7 +382,15 @@ const styles = {
     exportRow: {
         display: "flex",
         justifyContent: "flex-end",
+        alignItems: "center",
+        gap: "8px",
         marginBottom: "10px",
+        flexWrap: "wrap",
+    },
+    sendMsg: {
+        fontSize: "0.82rem",
+        fontWeight: "600",
+        color: "#16a34a",
     },
     exportBtn: {
         background: "#1e3a5f",
