@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { sendShiftResultEmail } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -39,7 +40,10 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
     try {
         const request = await prisma.shiftRequest.findUnique({
             where: { id },
-            include: { shift: true },
+            include: {
+                shift: true,
+                user: { select: { name: true, email: true } },
+            },
         });
 
         if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
@@ -101,6 +105,16 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         io.to("admins").emit("requests:refresh");
         io.emit("shifts:refresh");
         io.to(`user:${request.userId}`).emit("notification:new", notification);
+
+        // Email al operador (no bloquea la respuesta)
+        sendShiftResultEmail({
+            to: request.user.email,
+            name: request.user.name,
+            shiftTitle: request.shift.title,
+            shiftDate: new Date(request.shift.date).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+            status: newStatus,
+            notes: notes || null,
+        });
 
         res.json(updated);
     } catch (err) {
