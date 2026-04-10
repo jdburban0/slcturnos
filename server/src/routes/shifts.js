@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { sendNewShiftEmail } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -46,6 +47,21 @@ router.post("/", requireAuth, requireRole("admin", "lead"), async (req, res) => 
 
         const io = req.app.get("io");
         io.emit("shifts:refresh");
+
+        // Notificar por email a todos los operadores activos (no bloquea la respuesta)
+        prisma.user.findMany({
+            where: { role: "operator", active: true },
+            select: { name: true, email: true },
+        }).then((operators) => {
+            sendNewShiftEmail({
+                operators,
+                shiftTitle: shift.title,
+                shiftDate: new Date(shift.date).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+                startTime: shift.startTime,
+                endTime: shift.endTime,
+                totalSlots: shift.totalSlots,
+            });
+        }).catch((err) => console.error("[Mailer] Error buscando operadores:", err.message));
 
         res.status(201).json(shift);
     } catch (err) {
