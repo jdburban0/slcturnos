@@ -136,10 +136,24 @@ router.delete("/:id", requireAuth, async (req, res) => {
             return res.status(400).json({ message: "Solo se pueden cancelar solicitudes pendientes" });
         }
 
-        await prisma.shiftRequest.update({
+        const cancelled = await prisma.shiftRequest.update({
             where: { id },
             data: { status: "CANCELLED" },
+            include: { shift: true },
         });
+
+        // Si el turno estaba FULL, verificar si ahora hay cupos libres
+        if (cancelled.shift.status === "FULL") {
+            const approvedCount = await prisma.shiftRequest.count({
+                where: { shiftId: cancelled.shiftId, status: "APPROVED" },
+            });
+            if (approvedCount < cancelled.shift.totalSlots) {
+                await prisma.shift.update({
+                    where: { id: cancelled.shiftId },
+                    data: { status: "OPEN" },
+                });
+            }
+        }
 
         const io = req.app.get("io");
         io.to("admins").emit("requests:refresh");
