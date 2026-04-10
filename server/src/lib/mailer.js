@@ -63,7 +63,7 @@ export async function sendShiftResultEmail({ to, name, shiftTitle, shiftDate, st
  * Notifica a todos los operadores activos que hay un nuevo turno disponible.
  * operators: array de { name, email }
  */
-export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, startTime, endTime, totalSlots }) {
+export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, startTime, endTime, totalSlots, extraMsg }) {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) return;
     if (!operators.length) return;
 
@@ -80,7 +80,7 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
                     <p style="margin:0 0 4px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
                     <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">📅 ${shiftDate}</p>
                     <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">🕐 ${startTime} – ${endTime}</p>
-                    <p style="margin:0;color:#475569;font-size:0.9rem;">👥 ${totalSlots} cupo${totalSlots !== 1 ? "s" : ""} disponible${totalSlots !== 1 ? "s" : ""}</p>
+                    <p style="margin:0;color:#475569;font-size:0.9rem;">👥 ${extraMsg || `${totalSlots} cupo${totalSlots !== 1 ? "s" : ""} disponible${totalSlots !== 1 ? "s" : ""}`}</p>
                 </div>
 
                 <a href="${appUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:0.9rem;">

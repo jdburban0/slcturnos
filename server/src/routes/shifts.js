@@ -76,6 +76,11 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
     const { title, date, startTime, endTime, totalSlots, status } = req.body;
 
     try {
+        // Guardar cupos anteriores para detectar si aumentaron
+        const before = totalSlots !== undefined
+            ? await prisma.shift.findUnique({ where: { id }, select: { totalSlots: true } })
+            : null;
+
         const shift = await prisma.shift.update({
             where: { id },
             data: {
@@ -91,6 +96,26 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
 
         const io = req.app.get("io");
         io.emit("shifts:refresh");
+
+        // Si aumentaron los cupos, notificar a operadores
+        const newSlots = parseInt(totalSlots);
+        if (before && newSlots > before.totalSlots) {
+            const added = newSlots - before.totalSlots;
+            prisma.user.findMany({
+                where: { role: "operator", active: true },
+                select: { name: true, email: true },
+            }).then((operators) => {
+                sendNewShiftEmail({
+                    operators,
+                    shiftTitle: shift.title,
+                    shiftDate: new Date(shift.date).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+                    startTime: shift.startTime,
+                    endTime: shift.endTime,
+                    totalSlots: added,
+                    extraMsg: `Se ${added === 1 ? "abrió 1 cupo nuevo" : `abrieron ${added} cupos nuevos`} en este turno.`,
+                });
+            }).catch((err) => console.error("[Mailer] Error buscando operadores:", err.message));
+        }
 
         res.json(shift);
     } catch (err) {
