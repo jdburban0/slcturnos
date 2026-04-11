@@ -195,32 +195,31 @@ function DashboardPage() {
                     </div>
                 </header>
 
+                {/* ── Stats (encima del schedule) ── */}
+                <div style={styles.statsRow}>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#4ade80" }}>{myApprovedShifts.length}</span>
+                        <span style={styles.statLabel}>Aprobados</span>
+                    </div>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#fbbf24" }}>{myPendingCount}</span>
+                        <span style={styles.statLabel}>Pendientes</span>
+                    </div>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#60a5fa" }}>{openShiftsCount}</span>
+                        <span style={styles.statLabel}>Disponibles</span>
+                    </div>
+                </div>
+
                 {/* ── Schedule en vivo (ancho completo) ── */}
                 <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
 
-                {/* ── Stats + filtro ── */}
-                <div style={styles.belowSchedule}>
-                    <div style={styles.statsRow}>
-                        <div style={styles.statCard}>
-                            <span style={{ ...styles.statValue, color: "#4ade80" }}>{myApprovedShifts.length}</span>
-                            <span style={styles.statLabel}>Aprobados</span>
-                        </div>
-                        <div style={styles.statCard}>
-                            <span style={{ ...styles.statValue, color: "#fbbf24" }}>{myPendingCount}</span>
-                            <span style={styles.statLabel}>Pendientes</span>
-                        </div>
-                        <div style={styles.statCard}>
-                            <span style={{ ...styles.statValue, color: "#60a5fa" }}>{openShiftsCount}</span>
-                            <span style={styles.statLabel}>Disponibles</span>
-                        </div>
-                    </div>
-
-                    <WeekStrip
-                        shifts={upcomingShifts}
-                        selectedDay={selectedDay}
-                        onSelectDay={setSelectedDay}
-                    />
-                </div>
+                {/* ── Filtro por día (justo debajo del schedule) ── */}
+                <WeekStrip
+                    shifts={upcomingShifts}
+                    selectedDay={selectedDay}
+                    onSelectDay={setSelectedDay}
+                />
 
                 {/* ── Shift cards ── */}
                 {loading && <p style={styles.info}>Cargando turnos...</p>}
@@ -289,17 +288,10 @@ const styles = {
         fontWeight: "bold",
         fontSize: "0.85rem",
     },
-    belowSchedule: {
-        display: "flex",
-        alignItems: "center",
-        gap: "20px",
-        marginBottom: "8px",
-        flexWrap: "wrap",
-    },
     statsRow: {
         display: "flex",
         gap: "10px",
-        flexShrink: 0,
+        marginBottom: "16px",
     },
     statCard: {
         background: "#1e293b",
@@ -310,7 +302,7 @@ const styles = {
         alignItems: "center",
         gap: "2px",
         border: "1px solid rgba(255,255,255,0.07)",
-        minWidth: "80px",
+        flex: 1,
     },
     statValue: {
         fontSize: "1.5rem",
@@ -326,7 +318,7 @@ const styles = {
     },
     cardsGrid: {
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))",
         gap: "0 28px",
     },
     dayGroup: { marginBottom: "20px" },
