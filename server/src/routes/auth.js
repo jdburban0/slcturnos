@@ -91,4 +91,41 @@ router.post("/register", async (req, res) => {
     }
 });
 
+router.patch("/change-password", async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: "No autorizado" });
+
+    const token = authHeader.split(" ")[1];
+    let payload;
+    try {
+        payload = jwt.verify(token, SECRET);
+    } catch {
+        return res.status(401).json({ message: "Token inválido" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Faltan campos requeridos" });
+    }
+    if (newPassword.length < 6) {
+        return res.status(400).json({ message: "La nueva contraseña debe tener al menos 6 caracteres" });
+    }
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: payload.id } });
+        if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+        const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!valid) return res.status(401).json({ message: "Contraseña actual incorrecta" });
+
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+        await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+
+        res.json({ message: "Contraseña actualizada correctamente" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error del servidor" });
+    }
+});
+
 export default router;

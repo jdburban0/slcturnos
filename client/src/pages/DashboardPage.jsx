@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
-import { getShifts, requestShift, cancelRequest } from "../api/index.js";
+import { getShifts, requestShift, cancelRequest, changePassword } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
@@ -102,6 +102,10 @@ function DashboardPage() {
     const [notifSignal, setNotifSignal] = useState(0);
     const [leaving, setLeaving] = useState(false);
     const [selectedDay, setSelectedDay] = useState(null);
+    const [showChangePwd, setShowChangePwd] = useState(false);
+    const [pwdForm, setPwdForm] = useState({ current: "", next: "", confirm: "" });
+    const [pwdError, setPwdError] = useState("");
+    const [pwdSuccess, setPwdSuccess] = useState("");
 
     const loadShifts = useCallback(async () => {
         try {
@@ -156,6 +160,19 @@ function DashboardPage() {
         return shift.requests?.find((r) => r.user?.id === user?.id) ?? null;
     }
 
+    async function handleChangePwd(e) {
+        e.preventDefault();
+        setPwdError(""); setPwdSuccess("");
+        if (pwdForm.next !== pwdForm.confirm) { setPwdError("Las contraseñas nuevas no coinciden"); return; }
+        if (pwdForm.next.length < 6) { setPwdError("Mínimo 6 caracteres"); return; }
+        try {
+            await changePassword(token, pwdForm.current, pwdForm.next);
+            setPwdSuccess("Contraseña actualizada");
+            setPwdForm({ current: "", next: "", confirm: "" });
+            setTimeout(() => { setShowChangePwd(false); setPwdSuccess(""); }, 2000);
+        } catch (err) { setPwdError(err.message); }
+    }
+
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const upcomingShifts = shifts.filter((s) => s.status !== "CLOSED" && new Date(s.date.slice(0,10)+"T12:00:00") >= today);
     const myApprovedShifts = upcomingShifts.filter((s) =>
@@ -180,6 +197,46 @@ function DashboardPage() {
                 </div>
             )}
 
+            {showChangePwd && (
+                <div style={styles.modalOverlay} onClick={() => setShowChangePwd(false)}>
+                    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                        <h3 style={styles.modalTitle}>Cambiar contraseña</h3>
+                        <form onSubmit={handleChangePwd} style={styles.modalForm}>
+                            <input
+                                style={styles.modalInput}
+                                type="password"
+                                placeholder="Contraseña actual"
+                                value={pwdForm.current}
+                                onChange={(e) => setPwdForm((f) => ({ ...f, current: e.target.value }))}
+                                required
+                            />
+                            <input
+                                style={styles.modalInput}
+                                type="password"
+                                placeholder="Nueva contraseña"
+                                value={pwdForm.next}
+                                onChange={(e) => setPwdForm((f) => ({ ...f, next: e.target.value }))}
+                                required
+                            />
+                            <input
+                                style={styles.modalInput}
+                                type="password"
+                                placeholder="Confirmar nueva contraseña"
+                                value={pwdForm.confirm}
+                                onChange={(e) => setPwdForm((f) => ({ ...f, confirm: e.target.value }))}
+                                required
+                            />
+                            {pwdError && <p style={styles.modalError}>{pwdError}</p>}
+                            {pwdSuccess && <p style={styles.modalSuccess}>{pwdSuccess}</p>}
+                            <div style={styles.modalActions}>
+                                <button type="button" style={styles.modalCancel} onClick={() => setShowChangePwd(false)}>Cancelar</button>
+                                <button type="submit" style={styles.modalSave}>Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <div style={styles.container}>
                 {/* ── Header ── */}
                 <header style={styles.header}>
@@ -188,6 +245,9 @@ function DashboardPage() {
                         <p style={styles.subtitle}>Bienvenido, {user?.name}</p>
                     </div>
                     <div style={styles.headerActions}>
+                        <button style={styles.pwdButton} onClick={() => { setShowChangePwd(true); setPwdError(""); setPwdSuccess(""); }}>
+                            🔒 Contraseña
+                        </button>
                         <button style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
                             Cerrar sesión
                         </button>
@@ -278,6 +338,16 @@ const styles = {
     title: { margin: 0, color: "#ffffff", fontSize: "1.6rem", fontWeight: "800" },
     subtitle: { margin: "4px 0 0", color: "#94a3b8", fontSize: "0.9rem" },
     headerActions: { display: "flex", gap: "10px", alignItems: "center" },
+    pwdButton: {
+        background: "#334155",
+        color: "#e2e8f0",
+        border: "none",
+        padding: "9px 14px",
+        borderRadius: "9px",
+        cursor: "pointer",
+        fontWeight: "bold",
+        fontSize: "0.85rem",
+    },
     logoutButton: {
         background: "#ef4444",
         color: "#fff",
@@ -359,6 +429,31 @@ const styles = {
         border: "1px solid #334155",
     },
     toastMsg: { margin: "4px 0 0", fontSize: "0.85rem", color: "#94a3b8" },
+    modalOverlay: {
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+        display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300,
+    },
+    modalBox: {
+        background: "#1e293b", borderRadius: "16px", padding: "28px 24px",
+        width: "100%", maxWidth: "380px", border: "1px solid #334155",
+    },
+    modalTitle: { margin: "0 0 20px", color: "#f1f5f9", fontSize: "1.1rem", fontWeight: "800" },
+    modalForm: { display: "flex", flexDirection: "column", gap: "12px" },
+    modalInput: {
+        background: "#0f172a", border: "1px solid #334155", borderRadius: "8px",
+        padding: "10px 14px", color: "#f1f5f9", fontSize: "0.9rem", width: "100%",
+    },
+    modalError: { margin: 0, color: "#f87171", fontSize: "0.85rem" },
+    modalSuccess: { margin: 0, color: "#4ade80", fontSize: "0.85rem" },
+    modalActions: { display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" },
+    modalCancel: {
+        background: "#334155", color: "#94a3b8", border: "none",
+        padding: "9px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
+    },
+    modalSave: {
+        background: "#3b82f6", color: "#fff", border: "none",
+        padding: "9px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
+    },
 };
 
 export default DashboardPage;

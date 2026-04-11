@@ -181,6 +181,16 @@ export async function deleteUser(token, id) {
     );
 }
 
+export async function changePassword(token, currentPassword, newPassword) {
+    return handle(
+        await fetch(`${BASE}/api/auth/change-password`, {
+            method: "PATCH",
+            headers: headers(token),
+            body: JSON.stringify({ currentPassword, newPassword }),
+        })
+    );
+}
+
 export async function sendScheduleEmail(token, imageBase64, weekLabel, customMessage) {
     return handle(
         await fetch(`${BASE}/api/shifts/send-schedule`, {
