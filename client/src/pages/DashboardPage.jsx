@@ -195,6 +195,22 @@ function DashboardPage() {
                     </div>
                 </header>
 
+                {/* ── Stats ── */}
+                <div style={styles.statsRow}>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#4ade80" }}>{myApprovedShifts.length}</span>
+                        <span style={styles.statLabel}>Aprobados</span>
+                    </div>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#fbbf24" }}>{myPendingCount}</span>
+                        <span style={styles.statLabel}>Pendientes</span>
+                    </div>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#60a5fa" }}>{openShiftsCount}</span>
+                        <span style={styles.statLabel}>Disponibles</span>
+                    </div>
+                </div>
+
                 {/* ── Schedule en vivo (ancho completo) ── */}
                 <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
 
