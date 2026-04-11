@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const FROM = "SLC Turnos <noreply@sig.systems>";
+const FROM = "SLC Turnos <noreply@slcturnos.online>";
 
 let _resend = null;
 function getResend() {
