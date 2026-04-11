@@ -93,7 +93,7 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
                 <h2 style="color:#0f172a;margin:0 0 8px;">📅 Horario de turnos</h2>
                 <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, aquí está el horario de turnos disponibles para <strong>${weekLabel}</strong>.</p>
-                <img src="cid:schedule" style="width:100%;border-radius:8px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
+                <img src="data:image/jpeg;base64,${imageBase64}" style="width:100%;border-radius:8px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
                 <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
             </div>
         `;
@@ -104,10 +104,6 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
                 to: op.email,
                 subject,
                 html,
-                attachments: [{
-                    filename: `horario-${weekLabel}.jpg`,
-                    content: Buffer.from(imageBase64, "base64"),
-                }],
             });
             console.log(`[Mailer] Horario enviado a ${op.email}`);
         } catch (err) {
