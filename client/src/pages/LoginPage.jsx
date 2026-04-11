@@ -12,6 +12,7 @@ function LoginPage() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [accessCode, setAccessCode] = useState("");
+    const [group, setGroup] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [leaving, setLeaving] = useState(false);
@@ -27,6 +28,7 @@ function LoginPage() {
         setPassword("");
         setConfirmPassword("");
         setAccessCode("");
+        setGroup("");
         setFieldKey((k) => k + 1);
     }
 
@@ -47,6 +49,9 @@ function LoginPage() {
         setError("");
 
         if (mode === "register") {
+            if (!group) {
+                return setError("Debes seleccionar tu grupo (E1 o E2)");
+            }
             if (!email.toLowerCase().endsWith("@sig.systems")) {
                 return setError("Solo se permiten correos @sig.systems");
             }
@@ -64,7 +69,7 @@ function LoginPage() {
                 const { token, user } = await login(email, password);
                 afterAuth(token, user);
             } else {
-                const { token, user } = await register(name, email, password, accessCode);
+                const { token, user } = await register(name, email, password, accessCode, group);
                 afterAuth(token, user);
             }
         } catch (err) {
@@ -146,7 +151,7 @@ function LoginPage() {
                     </div>
 
                     {!isLogin && (
-                        <div key={`confirm-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "120ms" }}>
+                        <div key={`confirm-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "80ms" }}>
                             <label style={styles.label}>Confirmar contraseña</label>
                             <input
                                 type="password"
@@ -160,7 +165,23 @@ function LoginPage() {
                     )}
 
                     {!isLogin && (
-                        <div key={`code-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "160ms" }}>
+                        <div key={`group-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "120ms" }}>
+                            <label style={styles.label}>Grupo</label>
+                            <select
+                                style={{ ...styles.input, color: group ? "#1e293b" : "#94a3b8" }}
+                                value={group}
+                                onChange={(e) => setGroup(e.target.value)}
+                                required
+                            >
+                                <option value="" disabled>Selecciona tu grupo</option>
+                                <option value="E1">E1</option>
+                                <option value="E2">E2</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {!isLogin && (
+                        <div key={`code-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "200ms" }}>
                             <label style={styles.label}>Código de acceso</label>
                             <input
                                 type="text"

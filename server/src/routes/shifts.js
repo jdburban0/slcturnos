@@ -195,6 +195,39 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             return res.status(400).json({ message: "Ya tienes una solicitud activa para este turno" });
         }
 
+        // Business rules for DAY shifts
+        if (shift.type === "DAY") {
+            const user = await prisma.user.findUnique({ where: { id: userId }, select: { group: true } });
+
+            // E1 operators cannot take DAY shifts on Monday (day 1 in JS)
+            const shiftDay = new Date(shift.date).getDay();
+            if (user.group === "E1" && shiftDay === 1) {
+                return res.status(400).json({ message: "Operadores E1 no pueden tomar turnos diurnos el lunes" });
+            }
+
+            // No DAY shift if approved for NIGHT shift of previous day
+            const prevDay = new Date(shift.date);
+            prevDay.setDate(prevDay.getDate() - 1);
+            const prevDayStart = new Date(prevDay);
+            prevDayStart.setHours(0, 0, 0, 0);
+            const prevDayEnd = new Date(prevDay);
+            prevDayEnd.setHours(23, 59, 59, 999);
+
+            const prevNightApproved = await prisma.shiftRequest.findFirst({
+                where: {
+                    userId,
+                    status: "APPROVED",
+                    shift: {
+                        type: "NIGHT",
+                        date: { gte: prevDayStart, lte: prevDayEnd },
+                    },
+                },
+            });
+            if (prevNightApproved) {
+                return res.status(400).json({ message: "No puedes tomar un turno diurno si tienes un turno nocturno aprobado el día anterior" });
+            }
+        }
+
         const holdExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min hold
         const request = await prisma.shiftRequest.create({
             data: { shiftId: id, userId, holdExpiresAt },

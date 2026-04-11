@@ -24,12 +24,12 @@ export async function login(email, password) {
     );
 }
 
-export async function register(name, email, password, code) {
+export async function register(name, email, password, code, group) {
     return handle(
         await fetch(`${BASE}/api/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password, code }),
+            body: JSON.stringify({ name, email, password, code, group }),
         })
     );
 }

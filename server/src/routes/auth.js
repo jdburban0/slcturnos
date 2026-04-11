@@ -42,7 +42,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/register", async (req, res) => {
-    const { name, email, password, code } = req.body;
+    const { name, email, password, code, group } = req.body;
 
     if (!name || !name.trim()) {
         return res.status(400).json({ message: "El nombre es requerido" });
@@ -71,6 +71,10 @@ router.post("/register", async (req, res) => {
             return res.status(409).json({ message: "Ya existe una cuenta con ese correo" });
         }
 
+        if (group && group !== "E1" && group !== "E2") {
+            return res.status(400).json({ message: "Grupo inválido" });
+        }
+
         const passwordHash = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
             data: {
@@ -78,6 +82,7 @@ router.post("/register", async (req, res) => {
                 email: email.toLowerCase().trim(),
                 passwordHash,
                 role: "operator",
+                ...(group && { group }),
             },
         });
 
