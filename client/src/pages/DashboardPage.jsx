@@ -16,7 +16,6 @@ function groupByDay(shifts) {
         if (!map.has(key)) map.set(key, []);
         map.get(key).push(s);
     }
-    // Ordena cada día: Diurno primero, luego Nocturno
     for (const [key, list] of map) {
         map.set(key, list.sort((a, b) => (a.type === "DAY" ? -1 : 1) - (b.type === "DAY" ? -1 : 1)));
     }
@@ -33,6 +32,79 @@ function dayLabel(isoDate) {
     return `${DAY_NAMES[date.getDay()]} ${d} de ${date.toLocaleString("es-CO", { month: "long" })}`;
 }
 
+// ── Week day strip (filter bar) ────────────────────────────────
+function WeekStrip({ shifts, selectedDay, onSelectDay }) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    // Get unique days from upcoming shifts
+    const days = [...new Set(shifts.map((s) => s.date.slice(0, 10)))].sort();
+    if (days.length === 0) return null;
+
+    return (
+        <div style={stripStyles.row}>
+            {days.map((iso) => {
+                const [y, m, d] = iso.split("-").map(Number);
+                const date = new Date(y, m - 1, d);
+                const isToday = date.getTime() === today.getTime();
+                const isSelected = selectedDay === iso;
+                const dayName = DAY_NAMES[date.getDay()].slice(0, 3);
+                const hasOpen = shifts.filter((s) => s.date.slice(0, 10) === iso && s.status === "OPEN").length > 0;
+
+                return (
+                    <button
+                        key={iso}
+                        onClick={() => onSelectDay(isSelected ? null : iso)}
+                        style={{
+                            ...stripStyles.btn,
+                            ...(isSelected ? stripStyles.btnSelected : {}),
+                            ...(isToday && !isSelected ? stripStyles.btnToday : {}),
+                        }}
+                    >
+                        <span style={stripStyles.dayName}>{dayName}</span>
+                        <span style={stripStyles.dayNum}>{d}</span>
+                        {hasOpen && <div style={{ ...stripStyles.dot, background: isSelected ? "#fff" : "#60a5fa" }} />}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+const stripStyles = {
+    row: {
+        display: "flex",
+        gap: "6px",
+        marginBottom: "20px",
+        flexWrap: "wrap",
+    },
+    btn: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "2px",
+        padding: "8px 12px",
+        borderRadius: "10px",
+        border: "1px solid rgba(255,255,255,0.1)",
+        background: "rgba(255,255,255,0.04)",
+        cursor: "pointer",
+        minWidth: "52px",
+        color: "#94a3b8",
+    },
+    btnSelected: {
+        background: "#3b82f6",
+        border: "1px solid #3b82f6",
+        color: "#fff",
+    },
+    btnToday: {
+        border: "1.5px solid #38bdf8",
+        color: "#38bdf8",
+    },
+    dayName: { fontSize: "0.68rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" },
+    dayNum: { fontSize: "1rem", fontWeight: "800", lineHeight: 1 },
+    dot: { width: "5px", height: "5px", borderRadius: "50%", marginTop: "2px" },
+};
+
+// ── Main Page ──────────────────────────────────────────────────
 function DashboardPage() {
     const navigate = useNavigate();
     const { user, token, logout } = useAuth();
@@ -43,6 +115,7 @@ function DashboardPage() {
     const [toast, setToast] = useState(null);
     const [notifSignal, setNotifSignal] = useState(0);
     const [leaving, setLeaving] = useState(false);
+    const [selectedDay, setSelectedDay] = useState(null);
 
     const loadShifts = useCallback(async () => {
         try {
@@ -65,6 +138,12 @@ function DashboardPage() {
             showToast(notif?.title || "Nueva notificación", notif?.message || "");
         },
     });
+
+    useEffect(() => {
+        if (!selectedDay) return;
+        const el = document.getElementById(`day-${selectedDay}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, [selectedDay]);
 
     function showToast(title, message) {
         setToast({ title, message });
@@ -96,7 +175,15 @@ function DashboardPage() {
     const myApprovedShifts = upcomingShifts.filter((s) =>
         s.requests?.some((r) => r.user?.id === user?.id && r.status === "APPROVED")
     );
+    const myPendingCount = upcomingShifts.filter((s) =>
+        s.requests?.some((r) => r.user?.id === user?.id && r.status === "PENDING")
+    ).length;
+    const openShiftsCount = upcomingShifts.filter((s) => s.status === "OPEN").length;
+
     const grouped = groupByDay(upcomingShifts);
+    const visibleGroups = selectedDay
+        ? grouped.filter(([date]) => date === selectedDay)
+        : grouped;
 
     return (
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
@@ -108,6 +195,7 @@ function DashboardPage() {
             )}
 
             <div style={styles.container}>
+                {/* ── Header ── */}
                 <header style={styles.header}>
                     <div>
                         <h1 style={styles.title}>SLC Turnos</h1>
@@ -121,48 +209,69 @@ function DashboardPage() {
                     </div>
                 </header>
 
-                {myApprovedShifts.length > 0 && (
-                    <section style={styles.approvedBanner}>
-                        <span>✅</span>
-                        <div>
-                            <strong style={styles.bannerTitle}>Turnos confirmados esta semana</strong>
-                            <p style={styles.bannerText}>{myApprovedShifts.map((s) => s.title).join("  ·  ")}</p>
-                        </div>
-                    </section>
-                )}
-
-                <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
-
-                {loading && <p style={styles.info}>Cargando turnos...</p>}
-                {error && <p style={styles.errorMsg}>{error}</p>}
-
-                {!loading && upcomingShifts.length === 0 && (
-                    <div style={styles.emptyState}>
-                        <p style={styles.emptyIcon}>📋</p>
-                        <p style={styles.emptyText}>No hay turnos disponibles esta semana.</p>
-                        <p style={styles.emptySubtext}>El supervisor publicará los turnos pronto.</p>
+                {/* ── Stats row ── */}
+                <div style={styles.statsRow}>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#4ade80" }}>{myApprovedShifts.length}</span>
+                        <span style={styles.statLabel}>Aprobados</span>
                     </div>
-                )}
-
-                {grouped.map(([date, dayShifts]) => (
-                    <div key={date} style={styles.dayGroup}>
-                        <div style={styles.dayHeader}>
-                            <span style={styles.dayLabel}>{dayLabel(date)}</span>
-                            <span style={styles.dayCount}>{dayShifts.length} turno{dayShifts.length !== 1 ? "s" : ""}</span>
-                        </div>
-                        <div style={styles.list}>
-                            {dayShifts.map((shift) => (
-                                <ShiftCard
-                                    key={shift.id}
-                                    shift={shift}
-                                    myRequest={getMyRequest(shift)}
-                                    onRequest={handleRequest}
-                                    onCancelRequest={handleCancelRequest}
-                                />
-                            ))}
-                        </div>
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#fbbf24" }}>{myPendingCount}</span>
+                        <span style={styles.statLabel}>Pendientes</span>
                     </div>
-                ))}
+                    <div style={styles.statCard}>
+                        <span style={{ ...styles.statValue, color: "#60a5fa" }}>{openShiftsCount}</span>
+                        <span style={styles.statLabel}>Disponibles</span>
+                    </div>
+                </div>
+
+                {/* ── Two column body ── */}
+                <div className="dashboard-body">
+                    {/* Left: shift list */}
+                    <main className="dashboard-main">
+                        <WeekStrip
+                            shifts={upcomingShifts}
+                            selectedDay={selectedDay}
+                            onSelectDay={setSelectedDay}
+                        />
+
+                        {loading && <p style={styles.info}>Cargando turnos...</p>}
+                        {error && <p style={styles.errorMsg}>{error}</p>}
+
+                        {!loading && upcomingShifts.length === 0 && (
+                            <div style={styles.emptyState}>
+                                <p style={styles.emptyIcon}>📋</p>
+                                <p style={styles.emptyText}>No hay turnos disponibles esta semana.</p>
+                                <p style={styles.emptySubtext}>El supervisor publicará los turnos pronto.</p>
+                            </div>
+                        )}
+
+                        {visibleGroups.map(([date, dayShifts]) => (
+                            <div key={date} id={`day-${date}`} style={styles.dayGroup}>
+                                <div style={styles.dayHeader}>
+                                    <span style={styles.dayLabel}>{dayLabel(date)}</span>
+                                    <span style={styles.dayCount}>{dayShifts.length} turno{dayShifts.length !== 1 ? "s" : ""}</span>
+                                </div>
+                                <div style={styles.list}>
+                                    {dayShifts.map((shift) => (
+                                        <ShiftCard
+                                            key={shift.id}
+                                            shift={shift}
+                                            myRequest={getMyRequest(shift)}
+                                            onRequest={handleRequest}
+                                            onCancelRequest={handleCancelRequest}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </main>
+
+                    {/* Right: schedule table */}
+                    <aside className="dashboard-sidebar">
+                        <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
+                    </aside>
+                </div>
             </div>
         </div>
     );
@@ -175,13 +284,13 @@ const styles = {
         fontFamily: "Arial, sans-serif",
         padding: "28px 20px",
     },
-    container: { maxWidth: "860px", margin: "0 auto" },
+    container: { maxWidth: "1280px", margin: "0 auto" },
     header: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         gap: "16px",
-        marginBottom: "24px",
+        marginBottom: "20px",
         flexWrap: "wrap",
     },
     title: { margin: 0, color: "#ffffff", fontSize: "1.6rem", fontWeight: "800" },
@@ -197,19 +306,36 @@ const styles = {
         fontWeight: "bold",
         fontSize: "0.85rem",
     },
-    approvedBanner: {
+    statsRow: {
         display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        background: "rgba(22,163,74,0.15)",
-        border: "1px solid rgba(22,163,74,0.35)",
-        borderRadius: "12px",
-        padding: "12px 16px",
-        marginBottom: "20px",
-        fontSize: "0.9rem",
+        gap: "10px",
+        marginBottom: "24px",
+        flexWrap: "wrap",
     },
-    bannerTitle: { color: "#86efac", display: "block" },
-    bannerText: { margin: "2px 0 0", color: "#4ade80", fontSize: "0.82rem" },
+    statCard: {
+        background: "#1e293b",
+        borderRadius: "12px",
+        padding: "14px 20px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "3px",
+        flex: 1,
+        minWidth: "90px",
+        border: "1px solid rgba(255,255,255,0.07)",
+    },
+    statValue: {
+        fontSize: "1.7rem",
+        fontWeight: "800",
+        lineHeight: 1,
+    },
+    statLabel: {
+        fontSize: "0.68rem",
+        color: "#64748b",
+        fontWeight: "700",
+        textTransform: "uppercase",
+        letterSpacing: "0.04em",
+    },
     dayGroup: { marginBottom: "20px" },
     dayHeader: {
         display: "flex",
@@ -225,10 +351,7 @@ const styles = {
         fontSize: "0.95rem",
         textTransform: "capitalize",
     },
-    dayCount: {
-        color: "#64748b",
-        fontSize: "0.78rem",
-    },
+    dayCount: { color: "#64748b", fontSize: "0.78rem" },
     list: { display: "flex", flexDirection: "column", gap: "8px" },
     info: { color: "#94a3b8", textAlign: "center", padding: "40px 0" },
     errorMsg: {

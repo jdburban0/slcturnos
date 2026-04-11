@@ -164,3 +164,34 @@ input:focus, select:focus {
     width: auto !important;
   }
 }
+
+/* ─── Dashboard: two-column layout ─────────────────────── */
+
+.dashboard-body {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.dashboard-sidebar {
+  width: 360px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .dashboard-body {
+    flex-direction: column;
+  }
+  .dashboard-sidebar {
+    width: 100%;
+    position: static;
+    order: -1;
+  }
+}

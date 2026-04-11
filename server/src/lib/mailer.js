@@ -1,7 +1,12 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "SLC Turnos <onboarding@resend.dev>";
+
+let _resend = null;
+function getResend() {
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+    return _resend;
+}
 
 // Cola de notificaciones pendientes por operador (debounce 15s)
 const pendingQueue = new Map(); // userId -> { to, name, shifts: [], timer }
@@ -68,7 +73,7 @@ async function flushShiftResultEmail({ to, name, shifts }) {
     `;
 
     try {
-        await resend.emails.send({ from: FROM, to, subject, html });
+        await getResend().emails.send({ from: FROM, to, subject, html });
         console.log(`[Mailer] Resultado enviado a ${to} (${shifts.length} turno${shifts.length !== 1 ? "s" : ""})`);
     } catch (err) {
         console.error("[Mailer] Error al enviar resultado:", err.message);
@@ -94,7 +99,7 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
         `;
 
         try {
-            await resend.emails.send({
+            await getResend().emails.send({
                 from: FROM,
                 to: op.email,
                 subject,
@@ -137,7 +142,7 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
         `;
 
         try {
-            await resend.emails.send({ from: FROM, to: op.email, subject, html });
+            await getResend().emails.send({ from: FROM, to: op.email, subject, html });
             console.log(`[Mailer] Nuevo cupo notificado a ${op.email}`);
         } catch (err) {
             console.error(`[Mailer] Error al notificar a ${op.email}:`, err.message);
