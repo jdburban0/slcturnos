@@ -14,7 +14,10 @@
       "Bash(node src/init-code.js)",
       "Bash(npx vite:*)",
       "WebFetch(domain:www.callmebot.com)",
-      "Bash(del \"C:\\\\Users\\\\juand\\\\slc-turnos\\\\server\\\\src\\\\lib\\\\whatsapp.js\")"
+      "Bash(del \"C:\\\\Users\\\\juand\\\\slc-turnos\\\\server\\\\src\\\\lib\\\\whatsapp.js\")",
+      "Bash(find . -type f \\\\\\( -name \"*.js\" -o -name \"*.jsx\" -o -name \"*.json\" -o -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"./node_modules/*\" ! -path \"./.git/*\" ! -path \"./dist/*\" -exec grep -l \"whatsapp\\\\|WhatsApp\\\\|CallMeBot\\\\|callmebot\\\\|greenapi\\\\|Green API\" {} \\\\;)",
+      "Bash(find . -type f \\\\\\( -name \"*.js\" -o -name \"*.jsx\" \\\\\\) ! -path \"./node_modules/*\" ! -path \"./.git/*\" ! -path \"./dist/*\" -exec grep -l \"sendWhatsApp\\\\|whatsapp_phone\\\\|whatsapp_apikey\\\\|greenapi_instance\\\\|greenapi_token\\\\|getWhatsappSettings\\\\|updateWhatsappSettings\\\\|handleSaveWhatsapp\\\\|waPhone\\\\|waApikey\\\\|waInstance\\\\|waToken\" {} \\\\;)",
+      "Bash(npm run:*)"
     ]
   }
 }
