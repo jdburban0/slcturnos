@@ -69,24 +69,24 @@ function WeekStrip({ shifts, selectedDay, onSelectDay }) {
 }
 
 const stripStyles = {
-    row: { display: "flex", gap: "6px", flexWrap: "wrap" },
+    row: { display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" },
     btn: {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         gap: "2px",
-        padding: "8px 14px",
-        borderRadius: "10px",
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "rgba(255,255,255,0.04)",
+        padding: "12px 18px",
+        borderRadius: "12px",
+        border: "1px solid rgba(255,255,255,0.07)",
+        background: "#1e293b",
         cursor: "pointer",
-        minWidth: "52px",
+        minWidth: "64px",
         color: "#94a3b8",
     },
     btnSelected: { background: "#3b82f6", border: "1px solid #3b82f6", color: "#fff" },
     btnToday: { border: "1.5px solid #38bdf8", color: "#38bdf8" },
-    dayName: { fontSize: "0.68rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" },
-    dayNum: { fontSize: "1rem", fontWeight: "800", lineHeight: 1 },
+    dayName: { fontSize: "0.65rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em" },
+    dayNum: { fontSize: "1.5rem", fontWeight: "800", lineHeight: 1 },
     dot: { width: "5px", height: "5px", borderRadius: "50%", marginTop: "2px" },
 };
 
@@ -198,28 +198,12 @@ function DashboardPage() {
                 {/* ── Schedule en vivo (ancho completo) ── */}
                 <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
 
-                {/* ── Fila: filtro de días (izq) + stats (der) ── */}
-                <div style={styles.filterRow}>
-                    <WeekStrip
-                        shifts={upcomingShifts}
-                        selectedDay={selectedDay}
-                        onSelectDay={setSelectedDay}
-                    />
-                    <div style={styles.statsRow}>
-                        <div style={styles.statCard}>
-                            <span style={{ ...styles.statValue, color: "#4ade80" }}>{myApprovedShifts.length}</span>
-                            <span style={styles.statLabel}>Aprobados</span>
-                        </div>
-                        <div style={styles.statCard}>
-                            <span style={{ ...styles.statValue, color: "#fbbf24" }}>{myPendingCount}</span>
-                            <span style={styles.statLabel}>Pendientes</span>
-                        </div>
-                        <div style={styles.statCard}>
-                            <span style={{ ...styles.statValue, color: "#60a5fa" }}>{openShiftsCount}</span>
-                            <span style={styles.statLabel}>Disponibles</span>
-                        </div>
-                    </div>
-                </div>
+                {/* ── Filtro por día ── */}
+                <WeekStrip
+                    shifts={upcomingShifts}
+                    selectedDay={selectedDay}
+                    onSelectDay={setSelectedDay}
+                />
 
                 {/* ── Shift cards ── */}
                 {loading && <p style={styles.info}>Cargando turnos...</p>}
@@ -288,28 +272,21 @@ const styles = {
         fontWeight: "bold",
         fontSize: "0.85rem",
     },
-    filterRow: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "12px",
-        marginBottom: "16px",
-        flexWrap: "wrap",
-    },
     statsRow: {
         display: "flex",
-        gap: "8px",
-        flexShrink: 0,
+        gap: "10px",
+        marginBottom: "16px",
     },
     statCard: {
         background: "#1e293b",
-        borderRadius: "10px",
-        padding: "8px 16px",
+        borderRadius: "12px",
+        padding: "12px 18px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "1px",
+        gap: "2px",
         border: "1px solid rgba(255,255,255,0.07)",
+        flex: 1,
     },
     statValue: {
         fontSize: "1.5rem",
