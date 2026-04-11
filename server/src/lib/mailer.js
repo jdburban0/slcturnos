@@ -48,7 +48,7 @@ async function flushShiftResultEmail({ to, name, shifts }) {
     const rows = shifts.map((s) => {
         const approved = s.status === "APPROVED";
         return `
-            <div style="background:#ffffff;border-radius:8px;padding:14px;border:1px solid #e2e8f0;margin-bottom:10px;">
+            <div style="background:#ffffff;border-radius:8px;padding:14px;border:1px solid #bfdbfe;margin-bottom:10px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
                     <div>
                         <p style="margin:0 0 2px;font-weight:700;color:#0f172a;font-size:0.9rem;">${s.shiftTitle}</p>
@@ -64,7 +64,7 @@ async function flushShiftResultEmail({ to, name, shifts }) {
     }).join("");
 
     const html = `
-        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#eef4ff;border-radius:12px;">
             <h2 style="color:#0f172a;margin:0 0 8px;">📋 Resultado de tus solicitudes</h2>
             <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, aquí está el resultado de tus solicitudes de turno.</p>
             ${rows}
