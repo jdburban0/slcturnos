@@ -195,6 +195,29 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             return res.status(400).json({ message: "Ya tienes una solicitud activa para este turno" });
         }
 
+        // No DAY + NIGHT for the same day (pending or approved)
+        const oppositeType = shift.type === "DAY" ? "NIGHT" : "DAY";
+        const sameDayStart = new Date(shift.date);
+        sameDayStart.setHours(0, 0, 0, 0);
+        const sameDayEnd = new Date(shift.date);
+        sameDayEnd.setHours(23, 59, 59, 999);
+
+        const sameDayOpposite = await prisma.shiftRequest.findFirst({
+            where: {
+                userId,
+                status: { in: ["PENDING", "APPROVED"] },
+                shift: {
+                    type: oppositeType,
+                    date: { gte: sameDayStart, lte: sameDayEnd },
+                },
+            },
+        });
+        if (sameDayOpposite) {
+            return res.status(400).json({
+                message: `Ya tienes un turno ${oppositeType === "NIGHT" ? "nocturno" : "diurno"} activo para este día`,
+            });
+        }
+
         // Business rules for DAY shifts
         if (shift.type === "DAY") {
             const user = await prisma.user.findUnique({ where: { id: userId }, select: { group: true } });
