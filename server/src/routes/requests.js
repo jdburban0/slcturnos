@@ -76,7 +76,7 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
             },
         });
 
-        // Auto-close shift if all slots are now filled
+        // Auto-close shift if all slots are now filled, and reject remaining pending requests
         if (action === "approve") {
             const approvedCount = await prisma.shiftRequest.count({
                 where: { shiftId: request.shiftId, status: "APPROVED" },
@@ -86,6 +86,47 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
                     where: { id: request.shiftId },
                     data: { status: "FULL" },
                 });
+
+                // Reject all remaining pending requests for this shift
+                const pendingRequests = await prisma.shiftRequest.findMany({
+                    where: { shiftId: request.shiftId, status: "PENDING" },
+                    select: { id: true, userId: true, user: { select: { name: true, email: true } } },
+                });
+
+                if (pendingRequests.length > 0) {
+                    await prisma.shiftRequest.updateMany({
+                        where: { id: { in: pendingRequests.map((r) => r.id) } },
+                        data: {
+                            status: "REJECTED",
+                            reviewedBy: req.user.id,
+                            reviewedAt: new Date(),
+                            notes: "Turno no disponible",
+                        },
+                    });
+
+                    await prisma.notification.createMany({
+                        data: pendingRequests.map((r) => ({
+                            userId: r.userId,
+                            title: "Turno rechazado",
+                            message: `Tu solicitud para "${request.shift.title}" fue rechazada. Turno no disponible.`,
+                        })),
+                    });
+
+                    const io = req.app.get("io");
+                    const shiftDate = new Date(request.shift.date).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+                    for (const r of pendingRequests) {
+                        io.to(`user:${r.userId}`).emit("notification:new");
+                        queueShiftResultEmail({
+                            userId: r.userId,
+                            to: r.user.email,
+                            name: r.user.name,
+                            shiftTitle: request.shift.title,
+                            shiftDate,
+                            status: "REJECTED",
+                            notes: "Turno no disponible",
+                        });
+                    }
+                }
             }
         }
 
