@@ -222,10 +222,11 @@ router.post("/:id/request", requireAuth, async (req, res) => {
         if (shift.type === "DAY") {
             const user = await prisma.user.findUnique({ where: { id: userId }, select: { group: true } });
 
-            // E1 operators cannot take DAY shifts on Monday (day 1 in JS)
+            // E1 operators cannot take DAY shifts on Monday or Saturday
             const shiftDay = new Date(shift.date).getDay();
-            if (user.group === "E1" && shiftDay === 1) {
-                return res.status(400).json({ message: "Operadores E1 no pueden tomar turnos diurnos el lunes" });
+            if (user.group === "E1" && (shiftDay === 1 || shiftDay === 6)) {
+                const dayName = shiftDay === 1 ? "lunes" : "sábado";
+                return res.status(400).json({ message: `Operadores E1 no pueden tomar turnos diurnos el ${dayName}` });
             }
 
             // No DAY shift if approved for NIGHT shift of previous day
