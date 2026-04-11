@@ -286,7 +286,7 @@ router.post("/close-week", requireAuth, requireRole("admin", "lead"), async (req
 
 // POST enviar horario semanal por email a todos los operadores (admin/lead)
 router.post("/send-schedule", requireAuth, requireRole("admin", "lead"), async (req, res) => {
-    const { imageBase64, weekLabel } = req.body;
+    const { imageBase64, weekLabel, customMessage } = req.body;
     if (!imageBase64 || !weekLabel) {
         return res.status(400).json({ message: "imageBase64 y weekLabel son requeridos" });
     }
@@ -295,7 +295,7 @@ router.post("/send-schedule", requireAuth, requireRole("admin", "lead"), async (
             where: { role: "operator", active: true },
             select: { name: true, email: true },
         });
-        await sendWeeklyScheduleEmail({ operators, imageBase64, weekLabel });
+        await sendWeeklyScheduleEmail({ operators, imageBase64, weekLabel, customMessage });
         res.json({ message: `Horario enviado a ${operators.length} operador${operators.length !== 1 ? "es" : ""}` });
     } catch (err) {
         console.error(err);

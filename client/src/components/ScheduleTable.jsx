@@ -119,6 +119,8 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const tableRef = useRef(null);
     const [sending, setSending] = useState(false);
     const [sendMsg, setSendMsg] = useState("");
+    const [showMsgForm, setShowMsgForm] = useState(false);
+    const [customMessage, setCustomMessage] = useState("");
 
     const dates = [...new Set(shifts.map((s) => s.date.slice(0, 10)))].sort();
     const dayShifts = shifts.filter((s) => s.type === "DAY");
@@ -178,6 +180,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         if (!tableRef.current || sending) return;
         setSending(true);
         setSendMsg("");
+        setShowMsgForm(false);
         try {
             const canvas = await html2canvas(tableRef.current, {
                 backgroundColor: "#ffffff",
@@ -186,8 +189,9 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                 logging: false,
             });
             const imageBase64 = canvas.toDataURL("image/jpeg", 0.9).split(",")[1];
-            const result = await sendScheduleEmail(token, imageBase64, dateRange);
+            const result = await sendScheduleEmail(token, imageBase64, dateRange, customMessage.trim() || null);
             setSendMsg(result.message);
+            setCustomMessage("");
             setTimeout(() => setSendMsg(""), 4000);
         } catch (err) {
             setSendMsg("Error al enviar");
@@ -200,22 +204,45 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     return (
         <div style={styles.tableBlock}>
             {canExport && (
-                <div style={styles.exportRow}>
-                    <button
-                        style={{ ...styles.exportBtn, ...(exporting ? styles.exportBtnDisabled : {}) }}
-                        onClick={handleExport}
-                        disabled={exporting}
-                    >
-                        {exporting ? "Exportando..." : "⬇ Exportar JPG"}
-                    </button>
-                    <button
-                        style={{ ...styles.exportBtn, ...(sending ? styles.exportBtnDisabled : {}), background: "#16a34a" }}
-                        onClick={handleSendEmail}
-                        disabled={sending}
-                    >
-                        {sending ? "Enviando..." : "📧 Enviar a operadores"}
-                    </button>
-                    {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
+                <div>
+                    <div style={styles.exportRow}>
+                        <button
+                            style={{ ...styles.exportBtn, ...(exporting ? styles.exportBtnDisabled : {}) }}
+                            onClick={handleExport}
+                            disabled={exporting}
+                        >
+                            {exporting ? "Exportando..." : "⬇ Exportar JPG"}
+                        </button>
+                        <button
+                            style={{ ...styles.exportBtn, ...(sending ? styles.exportBtnDisabled : {}), background: "#16a34a" }}
+                            onClick={() => setShowMsgForm((v) => !v)}
+                            disabled={sending}
+                        >
+                            {sending ? "Enviando..." : "📧 Enviar a operadores"}
+                        </button>
+                        {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
+                    </div>
+
+                    {showMsgForm && (
+                        <div style={styles.msgForm}>
+                            <label style={styles.msgLabel}>Mensaje adicional (opcional)</label>
+                            <textarea
+                                style={styles.msgTextarea}
+                                rows={3}
+                                placeholder="Ej: Recuerden confirmar asistencia antes del viernes..."
+                                value={customMessage}
+                                onChange={(e) => setCustomMessage(e.target.value)}
+                            />
+                            <div style={styles.msgActions}>
+                                <button style={styles.msgCancel} onClick={() => { setShowMsgForm(false); setCustomMessage(""); }}>
+                                    Cancelar
+                                </button>
+                                <button style={styles.msgSend} onClick={handleSendEmail} disabled={sending}>
+                                    {sending ? "Enviando..." : "Confirmar y enviar"}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -405,6 +432,57 @@ const styles = {
     exportBtnDisabled: {
         background: "#94a3b8",
         cursor: "not-allowed",
+    },
+    msgForm: {
+        background: "#f8fafc",
+        border: "1px solid #e2e8f0",
+        borderRadius: "10px",
+        padding: "14px 16px",
+        marginBottom: "12px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+    },
+    msgLabel: {
+        fontSize: "0.82rem",
+        fontWeight: "700",
+        color: "#475569",
+    },
+    msgTextarea: {
+        width: "100%",
+        border: "1px solid #cbd5e1",
+        borderRadius: "8px",
+        padding: "10px 12px",
+        fontSize: "0.88rem",
+        color: "#0f172a",
+        resize: "vertical",
+        fontFamily: "Arial, sans-serif",
+        boxSizing: "border-box",
+    },
+    msgActions: {
+        display: "flex",
+        gap: "8px",
+        justifyContent: "flex-end",
+    },
+    msgCancel: {
+        background: "#e2e8f0",
+        color: "#475569",
+        border: "none",
+        padding: "8px 16px",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontWeight: "700",
+        fontSize: "0.82rem",
+    },
+    msgSend: {
+        background: "#16a34a",
+        color: "#fff",
+        border: "none",
+        padding: "8px 18px",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontWeight: "700",
+        fontSize: "0.82rem",
     },
     captureArea: {
         background: "#ffffff",
