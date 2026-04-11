@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { sendShiftResultEmail } from "../lib/mailer.js";
+import { queueShiftResultEmail } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -106,8 +106,9 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         io.emit("shifts:refresh");
         io.to(`user:${request.userId}`).emit("notification:new", notification);
 
-        // Email al operador (no bloquea la respuesta)
-        sendShiftResultEmail({
+        // Email al operador con debounce de 15s (agrupa múltiples aprobaciones en un solo email)
+        queueShiftResultEmail({
+            userId: request.userId,
             to: request.user.email,
             name: request.user.name,
             shiftTitle: request.shift.title,

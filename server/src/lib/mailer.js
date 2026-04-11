@@ -3,49 +3,75 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "SLC Turnos <onboarding@resend.dev>";
 
+// Cola de notificaciones pendientes por operador (debounce 15s)
+const pendingQueue = new Map(); // userId -> { to, name, shifts: [], timer }
+
 /**
- * Envía un correo al operador cuando su turno es aprobado o rechazado.
+ * Encola una notificación de resultado de turno.
+ * Si llegan varias del mismo operador en 15s, se mandan todas en un solo email.
  */
-export async function sendShiftResultEmail({ to, name, shiftTitle, shiftDate, status, notes }) {
-    if (!process.env.RESEND_API_KEY) {
-        console.log("[Mailer] RESEND_API_KEY no configurado, omitiendo email.");
-        return;
+export function queueShiftResultEmail({ userId, to, name, shiftTitle, shiftDate, status, notes }) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    if (pendingQueue.has(userId)) {
+        clearTimeout(pendingQueue.get(userId).timer);
+        pendingQueue.get(userId).shifts.push({ shiftTitle, shiftDate, status, notes });
+    } else {
+        pendingQueue.set(userId, { to, name, shifts: [{ shiftTitle, shiftDate, status, notes }] });
     }
 
-    const approved = status === "APPROVED";
-    const subject = approved
-        ? `✅ Tu turno fue aprobado — ${shiftTitle}`
-        : `❌ Tu turno fue rechazado — ${shiftTitle}`;
+    const timer = setTimeout(async () => {
+        const entry = pendingQueue.get(userId);
+        pendingQueue.delete(userId);
+        await flushShiftResultEmail(entry);
+    }, 15000);
+
+    pendingQueue.get(userId).timer = timer;
+}
+
+async function flushShiftResultEmail({ to, name, shifts }) {
+    const single = shifts.length === 1;
+    const allApproved = shifts.every((s) => s.status === "APPROVED");
+    const allRejected = shifts.every((s) => s.status === "REJECTED");
+
+    const subject = single
+        ? (shifts[0].status === "APPROVED" ? `✅ Tu turno fue aprobado — ${shifts[0].shiftTitle}` : `❌ Tu turno fue rechazado — ${shifts[0].shiftTitle}`)
+        : allApproved ? `✅ Tus ${shifts.length} turnos fueron aprobados`
+        : allRejected ? `❌ Tus ${shifts.length} turnos fueron rechazados`
+        : `📋 Resultado de tus solicitudes de turno`;
+
+    const rows = shifts.map((s) => {
+        const approved = s.status === "APPROVED";
+        return `
+            <div style="background:#ffffff;border-radius:8px;padding:14px;border:1px solid #e2e8f0;margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <div>
+                        <p style="margin:0 0 2px;font-weight:700;color:#0f172a;font-size:0.9rem;">${s.shiftTitle}</p>
+                        <p style="margin:0;color:#64748b;font-size:0.82rem;">📅 ${s.shiftDate}</p>
+                        ${s.notes ? `<p style="margin:4px 0 0;color:#374151;font-size:0.82rem;">Nota: ${s.notes}</p>` : ""}
+                    </div>
+                    <span style="white-space:nowrap;font-weight:700;font-size:0.85rem;color:${approved ? "#15803d" : "#b91c1c"};">
+                        ${approved ? "✅ Aprobado" : "❌ Rechazado"}
+                    </span>
+                </div>
+            </div>
+        `;
+    }).join("");
 
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
-            <h2 style="color:#0f172a;margin:0 0 8px;">
-                ${approved ? "✅ Turno aprobado" : "❌ Turno rechazado"}
-            </h2>
-            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, tu solicitud de turno ha sido revisada.</p>
-
-            <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
-                <p style="margin:0 0 6px;color:#64748b;font-size:0.85rem;">TURNO</p>
-                <p style="margin:0 0 4px;font-weight:700;color:#0f172a;">${shiftTitle}</p>
-                <p style="margin:0;color:#475569;font-size:0.9rem;">📅 ${shiftDate}</p>
-            </div>
-
-            <div style="background:${approved ? "#f0fdf4" : "#fef2f2"};border-radius:8px;padding:14px;border:1px solid ${approved ? "#bbf7d0" : "#fecaca"};">
-                <p style="margin:0;font-weight:700;color:${approved ? "#15803d" : "#b91c1c"};">
-                    ${approved ? "¡Tu solicitud fue aprobada! Recuerda presentarte a tiempo." : "Tu solicitud no fue aprobada esta vez."}
-                </p>
-                ${notes ? `<p style="margin:8px 0 0;color:#374151;font-size:0.88rem;">Nota: ${notes}</p>` : ""}
-            </div>
-
-            <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
+            <h2 style="color:#0f172a;margin:0 0 8px;">📋 Resultado de tus solicitudes</h2>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, aquí está el resultado de tus solicitudes de turno.</p>
+            ${rows}
+            <p style="color:#94a3b8;font-size:0.78rem;margin:16px 0 0;">— SLC Turnos</p>
         </div>
     `;
 
     try {
         await resend.emails.send({ from: FROM, to, subject, html });
-        console.log(`[Mailer] Email enviado a ${to}`);
+        console.log(`[Mailer] Resultado enviado a ${to} (${shifts.length} turno${shifts.length !== 1 ? "s" : ""})`);
     } catch (err) {
-        console.error("[Mailer] Error al enviar email:", err.message);
+        console.error("[Mailer] Error al enviar resultado:", err.message);
     }
 }
 
