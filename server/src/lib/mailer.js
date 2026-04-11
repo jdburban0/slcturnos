@@ -1,19 +1,14 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-    },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = "SLC Turnos <onboarding@resend.dev>";
 
 /**
  * Envía un correo al operador cuando su turno es aprobado o rechazado.
  */
 export async function sendShiftResultEmail({ to, name, shiftTitle, shiftDate, status, notes }) {
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-        console.log("[Mailer] GMAIL_USER/GMAIL_PASS no configurados, omitiendo email.");
+    if (!process.env.RESEND_API_KEY) {
+        console.log("[Mailer] RESEND_API_KEY no configurado, omitiendo email.");
         return;
     }
 
@@ -47,12 +42,7 @@ export async function sendShiftResultEmail({ to, name, shiftTitle, shiftDate, st
     `;
 
     try {
-        await transporter.sendMail({
-            from: `"SLC Turnos" <${process.env.GMAIL_USER}>`,
-            to,
-            subject,
-            html,
-        });
+        await resend.emails.send({ from: FROM, to, subject, html });
         console.log(`[Mailer] Email enviado a ${to}`);
     } catch (err) {
         console.error("[Mailer] Error al enviar email:", err.message);
@@ -63,8 +53,7 @@ export async function sendShiftResultEmail({ to, name, shiftTitle, shiftDate, st
  * Envía el horario semanal como imagen adjunta a todos los operadores activos.
  */
 export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabel }) {
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) return;
-    if (!operators.length) return;
+    if (!process.env.RESEND_API_KEY || !operators.length) return;
 
     const subject = `📅 Horario de turnos — ${weekLabel}`;
 
@@ -72,23 +61,21 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
         const html = `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
                 <h2 style="color:#0f172a;margin:0 0 8px;">📅 Horario de turnos</h2>
-                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, Estos son los cupos disponibles para la proxima semana <strong>${weekLabel}</strong>.</p>
+                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, aquí está el horario de turnos disponibles para <strong>${weekLabel}</strong>.</p>
                 <img src="cid:schedule" style="width:100%;border-radius:8px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
                 <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
             </div>
         `;
 
         try {
-            await transporter.sendMail({
-                from: `"SLC Turnos" <${process.env.GMAIL_USER}>`,
+            await resend.emails.send({
+                from: FROM,
                 to: op.email,
                 subject,
                 html,
                 attachments: [{
                     filename: `horario-${weekLabel}.jpg`,
                     content: Buffer.from(imageBase64, "base64"),
-                    cid: "schedule",
-                    contentType: "image/jpeg",
                 }],
             });
             console.log(`[Mailer] Horario enviado a ${op.email}`);
@@ -99,21 +86,18 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
 }
 
 /**
- * Notifica a todos los operadores activos que hay un nuevo turno disponible.
- * operators: array de { name, email }
+ * Notifica a todos los operadores activos que hay un nuevo cupo disponible.
  */
 export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, startTime, endTime, totalSlots, extraMsg }) {
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) return;
-    if (!operators.length) return;
+    if (!process.env.RESEND_API_KEY || !operators.length) return;
 
-    const appUrl = process.env.CLIENT_URL || "https://slc-turnos.vercel.app";
-    const subject = `🆕 Nuevo turno disponible — ${shiftTitle}`;
+    const subject = `🆕 Nuevo cupo disponible — ${shiftTitle}`;
 
     for (const op of operators) {
         const html = `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
-                <h2 style="color:#0f172a;margin:0 0 8px;">🆕 Nuevo turno disponible</h2>
-                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, hay un nuevo turno disponible para solicitar.</p>
+                <h2 style="color:#0f172a;margin:0 0 8px;">🆕 Nuevo cupo disponible</h2>
+                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, hay un cupo disponible para solicitar.</p>
 
                 <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
                     <p style="margin:0 0 4px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
@@ -122,22 +106,13 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
                     <p style="margin:0;color:#475569;font-size:0.9rem;">👥 ${extraMsg || `${totalSlots} cupo${totalSlots !== 1 ? "s" : ""} disponible${totalSlots !== 1 ? "s" : ""}`}</p>
                 </div>
 
-                <a href="${appUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:0.9rem;">
-                    Ver turnos →
-                </a>
-
                 <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
             </div>
         `;
 
         try {
-            await transporter.sendMail({
-                from: `"SLC Turnos" <${process.env.GMAIL_USER}>`,
-                to: op.email,
-                subject,
-                html,
-            });
-            console.log(`[Mailer] Nuevo turno notificado a ${op.email}`);
+            await resend.emails.send({ from: FROM, to: op.email, subject, html });
+            console.log(`[Mailer] Nuevo cupo notificado a ${op.email}`);
         } catch (err) {
             console.error(`[Mailer] Error al notificar a ${op.email}:`, err.message);
         }
