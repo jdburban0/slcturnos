@@ -8,13 +8,8 @@ function getResend() {
     return _resend;
 }
 
-// Cola de notificaciones pendientes por operador (debounce 15s)
-const pendingQueue = new Map(); // userId -> { to, name, shifts: [], timer }
+const pendingQueue = new Map();
 
-/**
- * Encola una notificación de resultado de turno.
- * Si llegan varias del mismo operador en 15s, se mandan todas en un solo email.
- */
 export function queueShiftResultEmail({ userId, to, name, shiftTitle, shiftDate, status, notes }) {
     if (!process.env.RESEND_API_KEY) return;
 

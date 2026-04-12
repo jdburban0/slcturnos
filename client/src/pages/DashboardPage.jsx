@@ -32,7 +32,6 @@ function dayLabel(isoDate) {
     return `${DAY_NAMES[date.getDay()]} ${d} de ${date.toLocaleString("es-CO", { month: "long" })}`;
 }
 
-// ── Week day strip (filter bar) ────────────────────────────────
 function WeekStrip({ shifts, selectedDay, onSelectDay }) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const days = [...new Set(shifts.map((s) => s.date.slice(0, 10)))].sort();
@@ -90,7 +89,6 @@ const stripStyles = {
     dot: { width: "5px", height: "5px", borderRadius: "50%", marginTop: "2px" },
 };
 
-// ── Main Page ──────────────────────────────────────────────────
 function DashboardPage() {
     const navigate = useNavigate();
     const { user, token, logout } = useAuth();
@@ -238,7 +236,6 @@ function DashboardPage() {
             )}
 
             <div style={styles.container}>
-                {/* ── Header ── */}
                 <header style={styles.header}>
                     <div>
                         <h1 style={styles.title}>SLC Turnos</h1>
@@ -255,7 +252,7 @@ function DashboardPage() {
                     </div>
                 </header>
 
-                {/* ── Stats ── */}
+                {/* Stats */}
                 <div style={styles.statsRow}>
                     <div style={styles.statCard}>
                         <span style={{ ...styles.statValue, color: "#4ade80" }}>{myApprovedShifts.length}</span>
@@ -271,17 +268,17 @@ function DashboardPage() {
                     </div>
                 </div>
 
-                {/* ── Schedule en vivo (ancho completo) ── */}
+                {/* Horario */}
                 <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
 
-                {/* ── Filtro por día ── */}
+                {/* Filtro por día */}
                 <WeekStrip
                     shifts={upcomingShifts}
                     selectedDay={selectedDay}
                     onSelectDay={setSelectedDay}
                 />
 
-                {/* ── Shift cards ── */}
+                {/* Turnos */}
                 {loading && <p style={styles.info}>Cargando turnos...</p>}
                 {error && <p style={styles.errorMsg}>{error}</p>}
 

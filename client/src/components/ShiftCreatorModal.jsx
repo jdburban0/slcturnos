@@ -160,7 +160,6 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
     return (
         <div style={s.overlay} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
             <div style={s.modal}>
-                {/* Encabezado */}
                 <div style={s.modalHeader} className="modal-header">
                     <div>
                         <h2 style={s.modalTitle}>Crear turnos</h2>
@@ -191,7 +190,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
 
                 {error && <div style={s.errorBox} className="modal-error">⚠️ {error}</div>}
 
-                {/* ─── MODO SEMANA ─── */}
+                {/* Semana completa */}
                 {mode === "week" && (
                     <div style={s.body} className="modal-body">
                         {/* Selector de semana */}
@@ -369,7 +368,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                     </div>
                 )}
 
-                {/* ─── MODO INDIVIDUAL ─── */}
+                {/* Turno individual */}
                 {mode === "single" && (
                     <form style={s.body} className="modal-body" onSubmit={handleSingleCreate}>
                         <div style={s.singleGrid} className="modal-single-grid">

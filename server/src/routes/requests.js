@@ -147,7 +147,6 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         io.emit("shifts:refresh");
         io.to(`user:${request.userId}`).emit("notification:new", notification);
 
-        // Email al operador con debounce de 15s (agrupa múltiples aprobaciones en un solo email)
         queueShiftResultEmail({
             userId: request.userId,
             to: request.user.email,

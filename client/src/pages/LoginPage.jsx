@@ -16,7 +16,6 @@ function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [leaving, setLeaving] = useState(false);
-    // Clave para re-montar campos al cambiar de modo (activa fadeInDown)
     const [fieldKey, setFieldKey] = useState(0);
 
     function switchMode(newMode) {

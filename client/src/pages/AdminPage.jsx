@@ -133,15 +133,15 @@ function AdminPage() {
     const [pwdSuccess, setPwdSuccess] = useState("");
 
     const loadShifts = useCallback(async () => {
-        try { const s = await getShifts(token); setShifts(s); setShiftsUpdatedAt(Date.now()); } catch { /* silent */ }
+        try { const s = await getShifts(token); setShifts(s); setShiftsUpdatedAt(Date.now()); } catch {}
     }, [token]);
 
     const loadRequests = useCallback(async () => {
-        try { setRequests(await getRequests(token)); } catch { /* silent */ }
+        try { setRequests(await getRequests(token)); } catch {}
     }, [token]);
 
     const loadUsers = useCallback(async () => {
-        try { setUsers(await getUsers(token)); } catch { /* silent */ }
+        try { setUsers(await getUsers(token)); } catch {}
     }, [token]);
 
     useEffect(() => {
@@ -305,7 +305,6 @@ function AdminPage() {
             )}
 
             <div style={styles.container}>
-                {/* Encabezado */}
                 <header style={styles.header}>
                     <div>
                         <h1 style={styles.title}>Panel {user?.role === "admin" ? "Admin" : "Lead"}</h1>
@@ -358,7 +357,6 @@ function AdminPage() {
                     ))}
                 </div>
 
-                {/* === SOLICITUDES === */}
                 {activeTab === "requests" && (
                     <section style={styles.section}>
                         {requests.length === 0 ? (
@@ -384,7 +382,6 @@ function AdminPage() {
                     </section>
                 )}
 
-                {/* === TURNOS === */}
                 {activeTab === "shifts" && (
                     <section style={styles.section}>
                         <div style={styles.sectionHeader}>
@@ -468,7 +465,6 @@ function AdminPage() {
                     </section>
                 )}
 
-                {/* === OPERADORES === */}
                 {activeTab === "users" && (
                     <section style={styles.section}>
                         <h2 style={styles.sectionTitle}>Operadores del equipo</h2>
@@ -528,7 +524,6 @@ function AdminPage() {
                     </section>
                 )}
 
-                {/* === AJUSTES === */}
                 {activeTab === "settings" && user?.role === "admin" && (
                     <section style={styles.section}>
                         <h2 style={styles.sectionTitle}>Ajustes del sistema</h2>

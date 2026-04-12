@@ -12,9 +12,7 @@ function NotificationBell({ token, refreshSignal }) {
         try {
             const data = await getNotifications(token);
             setNotifications(data);
-        } catch {
-            // silent
-        }
+        } catch {}
     }
 
     useEffect(() => {
@@ -22,7 +20,6 @@ function NotificationBell({ token, refreshSignal }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token, refreshSignal]);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         function handleClick(e) {
             if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -35,9 +32,7 @@ function NotificationBell({ token, refreshSignal }) {
         try {
             await markAllNotificationsRead(token);
             setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-        } catch {
-            // silent
-        }
+        } catch {}
     }
 
     async function handleMarkOne(id) {
@@ -46,9 +41,7 @@ function NotificationBell({ token, refreshSignal }) {
             setNotifications((prev) =>
                 prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
             );
-        } catch {
-            // silent
-        }
+        } catch {}
     }
 
     return (

@@ -61,7 +61,6 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
     const { title, date, startTime, endTime, totalSlots, status } = req.body;
 
     try {
-        // Guardar cupos anteriores para detectar si aumentaron
         const before = totalSlots !== undefined
             ? await prisma.shift.findUnique({ where: { id }, select: { totalSlots: true } })
             : null;
