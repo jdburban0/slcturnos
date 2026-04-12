@@ -17,7 +17,16 @@
       "Bash(del \"C:\\\\Users\\\\juand\\\\slc-turnos\\\\server\\\\src\\\\lib\\\\whatsapp.js\")",
       "Bash(find . -type f \\\\\\( -name \"*.js\" -o -name \"*.jsx\" -o -name \"*.json\" -o -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"./node_modules/*\" ! -path \"./.git/*\" ! -path \"./dist/*\" -exec grep -l \"whatsapp\\\\|WhatsApp\\\\|CallMeBot\\\\|callmebot\\\\|greenapi\\\\|Green API\" {} \\\\;)",
       "Bash(find . -type f \\\\\\( -name \"*.js\" -o -name \"*.jsx\" \\\\\\) ! -path \"./node_modules/*\" ! -path \"./.git/*\" ! -path \"./dist/*\" -exec grep -l \"sendWhatsApp\\\\|whatsapp_phone\\\\|whatsapp_apikey\\\\|greenapi_instance\\\\|greenapi_token\\\\|getWhatsappSettings\\\\|updateWhatsappSettings\\\\|handleSaveWhatsapp\\\\|waPhone\\\\|waApikey\\\\|waInstance\\\\|waToken\" {} \\\\;)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(node --input-type=module)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(curl -s \"https://rdap.org/domain/sig.systems\")",
+      "Bash(python -m json.tool)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(e['vcardArray']\\) for e in d.get\\('entities',[]\\) if 'registrar' in e.get\\('roles',[]\\)]\")",
+      "Bash(nslookup -type=NS sig.systems)",
+      "Bash(host -t NS sig.systems)"
     ]
   }
 }
