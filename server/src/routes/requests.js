@@ -52,10 +52,13 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         }
 
         if (action === "approve") {
-            const approvedCount = await prisma.shiftRequest.count({
+            const approvedRequests = await prisma.shiftRequest.count({
                 where: { shiftId: request.shiftId, status: "APPROVED" },
             });
-            if (approvedCount >= request.shift.totalSlots) {
+            const manualCount = await prisma.manualAssignment.count({
+                where: { shiftId: request.shiftId },
+            });
+            if (approvedRequests + manualCount >= request.shift.totalSlots) {
                 return res.status(400).json({ message: "No hay cupos disponibles en este turno" });
             }
         }
@@ -78,9 +81,13 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
 
         // Auto-close shift if all slots are now filled, and reject remaining pending requests
         if (action === "approve") {
-            const approvedCount = await prisma.shiftRequest.count({
+            const approvedReqs = await prisma.shiftRequest.count({
                 where: { shiftId: request.shiftId, status: "APPROVED" },
             });
+            const manualAssigned = await prisma.manualAssignment.count({
+                where: { shiftId: request.shiftId },
+            });
+            const approvedCount = approvedReqs + manualAssigned;
             if (approvedCount >= request.shift.totalSlots) {
                 await prisma.shift.update({
                     where: { id: request.shiftId },

@@ -145,10 +145,12 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                 s.endTime === timeEnd
         );
         if (!shift) return null;
-        const approved = (shift.requests ?? [])
+        const fromRequests = (shift.requests ?? [])
             .filter((r) => r.status === "APPROVED")
             .map((r) => r.user?.name ?? "");
-        return { approved, totalSlots: shift.totalSlots };
+        const fromManual = (shift.manualAssignments ?? []).map((a) => a.name);
+        const approved = [...fromRequests, ...fromManual];
+        return { approved, totalSlots: shift.totalSlots, isFull: shift.status === "FULL" };
     }
 
     const dayRanges = getTimeRanges(dayShifts);
