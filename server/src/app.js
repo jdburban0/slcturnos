@@ -7,6 +7,7 @@ import requestsRouter from "./routes/requests.js";
 import notificationsRouter from "./routes/notifications.js";
 import usersRouter from "./routes/users.js";
 import settingsRouter from "./routes/settings.js";
+import transfersRouter from "./routes/transfers.js";
 
 dotenv.config();
 
@@ -37,5 +38,6 @@ app.use("/api/requests", requestsRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/settings", settingsRouter);
+app.use("/api/transfers", transfersRouter);
 
 export default app;

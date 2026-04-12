@@ -1,4 +1,4 @@
-function ShiftCard({ shift, myRequest, onRequest, onCancelRequest }) {
+function ShiftCard({ shift, myRequest, onRequest, onCancelRequest, onDesist }) {
     const approvedCount = shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0;
     const availableSlots = shift.totalSlots - approvedCount;
     const isFull = shift.status === "FULL" || availableSlots <= 0;
@@ -18,7 +18,11 @@ function ShiftCard({ shift, myRequest, onRequest, onCancelRequest }) {
     else if (isFull) { statusBg = "#fee2e2"; statusColor = "#b91c1c"; statusText = "Sin cupos"; }
 
     function getAction() {
-        if (isApproved) return null;
+        if (isApproved) return (
+            <button style={styles.desistBtn} onClick={() => onDesist(myRequest.id, shift.title)}>
+                Desistir
+            </button>
+        );
         if (isPending) return (
             <button style={styles.cancelBtn} onClick={() => onCancelRequest(myRequest.id)}>
                 Cancelar
@@ -140,6 +144,16 @@ const styles = {
         background: "transparent",
         border: "1px solid #d97706",
         color: "#b45309",
+        padding: "6px 12px",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontWeight: "600",
+        fontSize: "0.82rem",
+    },
+    desistBtn: {
+        background: "transparent",
+        border: "1px solid #ef4444",
+        color: "#ef4444",
         padding: "6px 12px",
         borderRadius: "8px",
         cursor: "pointer",

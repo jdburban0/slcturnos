@@ -5,6 +5,7 @@ import { useSocket } from "../hooks/useSocket.js";
 import {
     getShifts, getRequests, deleteShift, updateShift, closeWeek, reviewRequest,
     getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode, changePassword, assignShift,
+    getTransfers, reviewTransfer,
 } from "../api/index.js";
 
 function getMondayOfWeek(isoDate) {
@@ -123,6 +124,7 @@ function AdminPage() {
     const [shiftsUpdatedAt, setShiftsUpdatedAt] = useState(0);
     const [requests, setRequests] = useState([]);
     const [users, setUsers] = useState([]);
+    const [transfers, setTransfers] = useState([]);
     const [activeTab, setActiveTab] = useState("requests");
     const [registerCode, setRegisterCode] = useState("");
     const [newCode, setNewCode] = useState("");
@@ -156,11 +158,16 @@ function AdminPage() {
         try { setUsers(await getUsers(token)); } catch {}
     }, [token]);
 
+    const loadTransfers = useCallback(async () => {
+        try { setTransfers(await getTransfers(token)); } catch {}
+    }, [token]);
+
     useEffect(() => {
         loadShifts();
         loadRequests();
         loadUsers();
-    }, [loadShifts, loadRequests, loadUsers]);
+        loadTransfers();
+    }, [loadShifts, loadRequests, loadUsers, loadTransfers]);
 
     useEffect(() => {
         if (activeTab === "settings" && user?.role === "admin") {
@@ -173,6 +180,7 @@ function AdminPage() {
     useSocket(token, {
         "shifts:refresh": () => { loadShifts(); loadRequests(); },
         "requests:refresh": () => loadRequests(),
+        "transfers:refresh": () => loadTransfers(),
         "notification:new": () => setNotifSignal((s) => s + 1),
     });
 
@@ -259,6 +267,15 @@ function AdminPage() {
             showToast("Código actualizado");
         } catch (err) { showToast("Error", err.message); }
         finally { setCodeLoading(false); }
+    }
+
+    async function handleReviewTransfer(transferId, action) {
+        try {
+            await reviewTransfer(token, transferId, action, "");
+            showToast(action === "approve" ? "Cesión aprobada" : "Cesión rechazada");
+            loadTransfers();
+            loadShifts();
+        } catch (err) { showToast("Error", err.message); }
     }
 
     async function handleAssign(e) {
@@ -403,7 +420,7 @@ function AdminPage() {
                 {/* Pestañas de navegación */}
                 <div style={styles.tabs}>
                     {[
-                        { id: "requests", label: `Solicitudes${requests.length > 0 ? ` (${requests.length})` : ""}` },
+                        { id: "requests", label: `Solicitudes${requests.length + transfers.length > 0 ? ` (${requests.length + transfers.length})` : ""}` },
                         { id: "shifts", label: "Turnos" },
                         { id: "users", label: "Operadores" },
                         ...(user?.role === "admin" ? [{ id: "settings", label: "⚙ Ajustes" }] : []),
@@ -420,9 +437,35 @@ function AdminPage() {
 
                 {activeTab === "requests" && (
                     <section style={styles.section}>
-                        {requests.length === 0 ? (
+                        {transfers.length > 0 && (
+                            <div style={{ marginBottom: "24px" }}>
+                                <p style={{ ...styles.requestListHint, marginBottom: "10px", color: "#a78bfa", fontWeight: "700" }}>
+                                    Cesiones pendientes · {transfers.length}
+                                </p>
+                                {transfers.map((t) => (
+                                    <div key={t.id} style={styles.transferCard}>
+                                        <div style={{ flex: 1 }}>
+                                            <p style={styles.transferTitle}>{t.shift?.title}</p>
+                                            <p style={styles.transferMeta}>
+                                                {new Date(t.shift?.date).toLocaleDateString("es-CO", { weekday: "short", month: "short", day: "numeric" })}
+                                                {" · "}{t.shift?.startTime} – {t.shift?.endTime}
+                                            </p>
+                                            <p style={styles.transferMeta}>
+                                                <strong>{t.fromUser?.name}</strong> quiere ceder a <strong>{t.toName}</strong> ({t.toEmail})
+                                            </p>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                                            <button style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve")}>Aprobar</button>
+                                            <button style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject")}>Rechazar</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {requests.length === 0 && transfers.length === 0 ? (
                             <p style={styles.empty}>No hay solicitudes pendientes.</p>
-                        ) : (
+                        ) : requests.length > 0 && (
                             <div style={styles.requestList}>
                                 <div style={styles.requestListHeader}>
                                     <span style={styles.requestListHint}>
@@ -863,6 +906,27 @@ const styles = {
         display: "flex",
         gap: "6px",
         flexWrap: "wrap",
+    },
+    transferCard: {
+        background: "rgba(167,139,250,0.08)",
+        border: "1px solid rgba(167,139,250,0.3)",
+        borderRadius: "12px",
+        padding: "14px 16px",
+        marginBottom: "10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        flexWrap: "wrap",
+    },
+    transferTitle: { margin: "0 0 2px", color: "#f1f5f9", fontWeight: "700", fontSize: "0.9rem" },
+    transferMeta: { margin: "0 0 2px", color: "#94a3b8", fontSize: "0.82rem" },
+    approveBtn: {
+        background: "#16a34a", color: "#fff", border: "none",
+        padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem",
+    },
+    rejectTransferBtn: {
+        background: "transparent", color: "#f87171", border: "1px solid #f87171",
+        padding: "6px 12px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem",
     },
     assignBtn: {
         background: "#7c3aed",

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
-import { getShifts, requestShift, cancelRequest, changePassword } from "../api/index.js";
+import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
@@ -104,6 +104,10 @@ function DashboardPage() {
     const [pwdForm, setPwdForm] = useState({ current: "", next: "", confirm: "" });
     const [pwdError, setPwdError] = useState("");
     const [pwdSuccess, setPwdSuccess] = useState("");
+    const [desistModal, setDesistModal] = useState(null); // { requestId, shiftTitle }
+    const [desistMode, setDesistMode] = useState("choose"); // "choose" | "transfer"
+    const [transferForm, setTransferForm] = useState({ name: "", email: "" });
+    const [transferLoading, setTransferLoading] = useState(false);
 
     const loadShifts = useCallback(async () => {
         try {
@@ -158,6 +162,28 @@ function DashboardPage() {
         return shift.requests?.find((r) => r.user?.id === user?.id) ?? null;
     }
 
+    async function handleDesistCancel() {
+        try {
+            await cancelRequest(token, desistModal.requestId);
+            showToast("Has desistido del turno", "El cupo ha quedado libre.");
+            setDesistModal(null);
+            loadShifts();
+        } catch (err) { showToast("Error", err.message); }
+    }
+
+    async function handleTransferSubmit(e) {
+        e.preventDefault();
+        setTransferLoading(true);
+        try {
+            await requestTransfer(token, desistModal.requestId, transferForm.name, transferForm.email);
+            showToast("Cesión enviada", "El administrador revisará la solicitud.");
+            setDesistModal(null);
+            setTransferForm({ name: "", email: "" });
+            loadShifts();
+        } catch (err) { showToast("Error", err.message); }
+        finally { setTransferLoading(false); }
+    }
+
     async function handleChangePwd(e) {
         e.preventDefault();
         setPwdError(""); setPwdSuccess("");
@@ -192,6 +218,59 @@ function DashboardPage() {
                 <div className="anim-slide-right" style={styles.toast}>
                     <strong>{toast.title}</strong>
                     {toast.message && <p style={styles.toastMsg}>{toast.message}</p>}
+                </div>
+            )}
+
+            {desistModal && (
+                <div style={styles.modalOverlay} onClick={() => setDesistModal(null)}>
+                    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                        <h3 style={styles.modalTitle}>Desistir del turno</h3>
+                        <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "0.85rem" }}>{desistModal.shiftTitle}</p>
+
+                        {desistMode === "choose" && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                <button style={styles.modalSave} onClick={() => setDesistMode("transfer")}>
+                                    Ceder a un compañero
+                                </button>
+                                <button style={{ ...styles.modalCancel, background: "#fee2e2", color: "#b91c1c", border: "none" }} onClick={handleDesistCancel}>
+                                    Solo cancelar mi cupo
+                                </button>
+                                <button style={styles.modalCancel} onClick={() => setDesistModal(null)}>
+                                    Volver
+                                </button>
+                            </div>
+                        )}
+
+                        {desistMode === "transfer" && (
+                            <form onSubmit={handleTransferSubmit} style={styles.modalForm}>
+                                <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: "0.82rem" }}>
+                                    La cesión queda pendiente de aprobación del administrador.
+                                </p>
+                                <input
+                                    style={styles.modalInput}
+                                    type="text"
+                                    placeholder="Nombre del compañero"
+                                    value={transferForm.name}
+                                    onChange={(e) => setTransferForm((f) => ({ ...f, name: e.target.value }))}
+                                    required
+                                />
+                                <input
+                                    style={styles.modalInput}
+                                    type="email"
+                                    placeholder="Correo del compañero"
+                                    value={transferForm.email}
+                                    onChange={(e) => setTransferForm((f) => ({ ...f, email: e.target.value }))}
+                                    required
+                                />
+                                <div style={styles.modalActions}>
+                                    <button type="button" style={styles.modalCancel} onClick={() => setDesistMode("choose")}>Atrás</button>
+                                    <button type="submit" style={styles.modalSave} disabled={transferLoading}>
+                                        {transferLoading ? "Enviando..." : "Solicitar cesión"}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -305,6 +384,7 @@ function DashboardPage() {
                                         myRequest={getMyRequest(shift)}
                                         onRequest={handleRequest}
                                         onCancelRequest={handleCancelRequest}
+                                        onDesist={(reqId, title) => { setDesistModal({ requestId: reqId, shiftTitle: title }); setDesistMode("choose"); setTransferForm({ name: "", email: "" }); }}
                                     />
                                 ))}
                             </div>

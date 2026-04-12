@@ -201,6 +201,30 @@ export async function changePassword(token, currentPassword, newPassword) {
     );
 }
 
+export async function requestTransfer(token, requestId, toName, toEmail) {
+    return handle(
+        await fetch(`${BASE}/api/requests/${requestId}/transfer`, {
+            method: "POST",
+            headers: headers(token),
+            body: JSON.stringify({ toName, toEmail }),
+        })
+    );
+}
+
+export async function getTransfers(token) {
+    return handle(await fetch(`${BASE}/api/transfers`, { headers: headers(token) }));
+}
+
+export async function reviewTransfer(token, transferId, action, notes) {
+    return handle(
+        await fetch(`${BASE}/api/transfers/${transferId}`, {
+            method: "PATCH",
+            headers: headers(token),
+            body: JSON.stringify({ action, notes }),
+        })
+    );
+}
+
 export async function sendScheduleEmail(token, imageBase64, weekLabel, customMessage) {
     return handle(
         await fetch(`${BASE}/api/shifts/send-schedule`, {

@@ -42,6 +42,7 @@ model User {
   createdAt     DateTime        @default(now())
   requests      ShiftRequest[]
   notifications Notification[]
+  transfers     ShiftTransfer[]
 }
 
 model Shift {
@@ -57,6 +58,7 @@ model Shift {
   createdAt         DateTime             @default(now())
   requests          ShiftRequest[]
   manualAssignments ManualAssignment[]
+  transfers         ShiftTransfer[]
 }
 
 model ManualAssignment {
@@ -81,11 +83,30 @@ model ShiftRequest {
   notes         String?
   createdAt     DateTime       @default(now())
 
-  shift Shift @relation(fields: [shiftId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  shift    Shift          @relation(fields: [shiftId], references: [id])
+  user     User           @relation(fields: [userId], references: [id])
+  transfer ShiftTransfer?
 
   @@index([shiftId, status])
   @@index([userId, status])
+}
+
+model ShiftTransfer {
+  id         String    @id @default(cuid())
+  requestId  String    @unique
+  shiftId    String
+  fromUserId String
+  toName     String
+  toEmail    String
+  status     String    @default("PENDING")
+  reviewedBy String?
+  reviewedAt DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+
+  request  ShiftRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  shift    Shift        @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  fromUser User         @relation(fields: [fromUserId], references: [id])
 }
 
 model Notification {

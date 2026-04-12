@@ -171,35 +171,28 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
     }
 });
 
-// DELETE cancel own pending request (operator)
+// DELETE cancel own pending or approved request (operator desiste)
 router.delete("/:id", requireAuth, async (req, res) => {
     const { id } = req.params;
     try {
-        const request = await prisma.shiftRequest.findUnique({ where: { id } });
+        const request = await prisma.shiftRequest.findUnique({ where: { id }, include: { shift: true } });
         if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
         if (request.userId !== req.user.id && req.user.role === "operator") {
             return res.status(403).json({ message: "Sin permisos" });
         }
-        if (request.status !== "PENDING") {
-            return res.status(400).json({ message: "Solo se pueden cancelar solicitudes pendientes" });
+        if (!["PENDING", "APPROVED"].includes(request.status)) {
+            return res.status(400).json({ message: "No se puede cancelar esta solicitud" });
         }
 
-        const cancelled = await prisma.shiftRequest.update({
-            where: { id },
-            data: { status: "CANCELLED" },
-            include: { shift: true },
-        });
+        await prisma.shiftRequest.update({ where: { id }, data: { status: "CANCELLED" } });
 
-        // Si el turno estaba FULL, verificar si ahora hay cupos libres
-        if (cancelled.shift.status === "FULL") {
+        if (request.shift.status === "FULL") {
             const approvedCount = await prisma.shiftRequest.count({
-                where: { shiftId: cancelled.shiftId, status: "APPROVED" },
+                where: { shiftId: request.shiftId, status: "APPROVED" },
             });
-            if (approvedCount < cancelled.shift.totalSlots) {
-                await prisma.shift.update({
-                    where: { id: cancelled.shiftId },
-                    data: { status: "OPEN" },
-                });
+            const manualCount = await prisma.manualAssignment.count({ where: { shiftId: request.shiftId } });
+            if (approvedCount + manualCount < request.shift.totalSlots) {
+                await prisma.shift.update({ where: { id: request.shiftId }, data: { status: "OPEN" } });
             }
         }
 
@@ -211,6 +204,42 @@ router.delete("/:id", requireAuth, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al cancelar solicitud" });
+    }
+});
+
+// POST solicitar cesión de turno aprobado a un compañero
+router.post("/:id/transfer", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { toName, toEmail } = req.body;
+    if (!toName || !toEmail) return res.status(400).json({ message: "Nombre y correo del compañero son requeridos" });
+
+    try {
+        const request = await prisma.shiftRequest.findUnique({
+            where: { id },
+            include: { shift: true, transfer: true },
+        });
+        if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
+        if (request.userId !== req.user.id) return res.status(403).json({ message: "Sin permisos" });
+        if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes ceder turnos aprobados" });
+        if (request.transfer) return res.status(400).json({ message: "Ya existe una cesión pendiente para este turno" });
+
+        const transfer = await prisma.shiftTransfer.create({
+            data: {
+                requestId: id,
+                shiftId: request.shiftId,
+                fromUserId: req.user.id,
+                toName: toName.trim(),
+                toEmail: toEmail.trim(),
+            },
+        });
+
+        const io = req.app.get("io");
+        io.to("admins").emit("transfers:refresh");
+
+        res.status(201).json(transfer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al crear cesión" });
     }
 });
 
