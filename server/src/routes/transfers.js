@@ -57,33 +57,39 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
                 });
             }
 
-            // Notify the original operator
+            const isTransfer = !!transfer.toName;
+
             await prisma.notification.create({
                 data: {
                     userId: transfer.fromUserId,
-                    title: "Traspaso aprobada",
-                    message: `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue aprobada.`,
+                    title: isTransfer ? "Traspaso aprobado" : "Desistimiento aprobado",
+                    message: isTransfer
+                        ? `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue aprobado.`
+                        : `Tu solicitud para desistir del turno "${transfer.shift.title}" fue aprobada.`,
                 },
             });
 
-            // Email to the new person
-            sendAssignmentEmail({
-                name: transfer.toName,
-                email: transfer.toEmail,
-                shiftTitle: transfer.shift.title,
-                shiftDate: new Date(transfer.shift.date).toLocaleDateString("es-CO", {
-                    weekday: "long", year: "numeric", month: "long", day: "numeric",
-                }),
-                startTime: transfer.shift.startTime,
-                endTime: transfer.shift.endTime,
-            });
+            if (isTransfer) {
+                sendAssignmentEmail({
+                    name: transfer.toName,
+                    email: transfer.toEmail,
+                    shiftTitle: transfer.shift.title,
+                    shiftDate: new Date(transfer.shift.date).toLocaleDateString("es-CO", {
+                        weekday: "long", year: "numeric", month: "long", day: "numeric",
+                    }),
+                    startTime: transfer.shift.startTime,
+                    endTime: transfer.shift.endTime,
+                });
+            }
         } else {
-            // Notify the operator that the transfer was rejected
+            const isTransfer = !!transfer.toName;
             await prisma.notification.create({
                 data: {
                     userId: transfer.fromUserId,
-                    title: "Traspaso rechazada",
-                    message: `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue rechazada.${notes ? ` Motivo: ${notes}` : ""}`,
+                    title: isTransfer ? "Traspaso rechazado" : "Desistimiento rechazado",
+                    message: isTransfer
+                        ? `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue rechazado.${notes ? ` Motivo: ${notes}` : ""}`
+                        : `Tu solicitud para desistir del turno "${transfer.shift.title}" fue rechazada.${notes ? ` Motivo: ${notes}` : ""}`,
                 },
             });
         }

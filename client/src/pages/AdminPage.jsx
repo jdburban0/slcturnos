@@ -451,7 +451,10 @@ function AdminPage() {
                                                 {" · "}{t.shift?.startTime} – {t.shift?.endTime}
                                             </p>
                                             <p style={styles.transferMeta}>
-                                                <strong>{t.fromUser?.name}</strong> quiere pasar su turno a <strong>{t.toName}</strong> ({t.toEmail})
+                                                {t.toName
+                                                    ? <><strong>{t.fromUser?.name}</strong> quiere pasar su turno a <strong>{t.toName}</strong> ({t.toEmail})</>
+                                                    : <><strong>{t.fromUser?.name}</strong> quiere desistir de este turno</>
+                                                }
                                             </p>
                                         </div>
                                         <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>

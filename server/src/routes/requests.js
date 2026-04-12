@@ -207,6 +207,33 @@ router.delete("/:id", requireAuth, async (req, res) => {
     }
 });
 
+// POST solicitar desistir (sin traspaso) — queda pendiente de aprobación del admin
+router.post("/:id/withdraw", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const request = await prisma.shiftRequest.findUnique({
+            where: { id },
+            include: { shift: true, transfer: true },
+        });
+        if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
+        if (request.userId !== req.user.id) return res.status(403).json({ message: "Sin permisos" });
+        if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes desistir de turnos aprobados" });
+        if (request.transfer) return res.status(400).json({ message: "Ya tienes una solicitud pendiente para este turno" });
+
+        const transfer = await prisma.shiftTransfer.create({
+            data: { requestId: id, shiftId: request.shiftId, fromUserId: req.user.id },
+        });
+
+        const io = req.app.get("io");
+        io.to("admins").emit("transfers:refresh");
+
+        res.status(201).json(transfer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al solicitar desistimiento" });
+    }
+});
+
 // POST solicitar traspaso de turno aprobado a un compañero
 router.post("/:id/transfer", requireAuth, async (req, res) => {
     const { id } = req.params;
@@ -221,16 +248,10 @@ router.post("/:id/transfer", requireAuth, async (req, res) => {
         if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
         if (request.userId !== req.user.id) return res.status(403).json({ message: "Sin permisos" });
         if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes traspasar turnos aprobados" });
-        if (request.transfer) return res.status(400).json({ message: "Ya existe una traspaso pendiente para este turno" });
+        if (request.transfer) return res.status(400).json({ message: "Ya tienes una solicitud pendiente para este turno" });
 
         const transfer = await prisma.shiftTransfer.create({
-            data: {
-                requestId: id,
-                shiftId: request.shiftId,
-                fromUserId: req.user.id,
-                toName: toName.trim(),
-                toEmail: toEmail.trim(),
-            },
+            data: { requestId: id, shiftId: request.shiftId, fromUserId: req.user.id, toName: toName.trim(), toEmail: toEmail.trim() },
         });
 
         const io = req.app.get("io");

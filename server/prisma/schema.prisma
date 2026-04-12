@@ -96,8 +96,8 @@ model ShiftTransfer {
   requestId  String    @unique
   shiftId    String
   fromUserId String
-  toName     String
-  toEmail    String
+  toName     String?
+  toEmail    String?
   status     String    @default("PENDING")
   reviewedBy String?
   reviewedAt DateTime?

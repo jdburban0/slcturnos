@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
-import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, getColleagues } from "../api/index.js";
+import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
@@ -165,10 +165,9 @@ function DashboardPage() {
 
     async function handleDesistCancel() {
         try {
-            await cancelRequest(token, desistModal.requestId);
-            showToast("Has desistido del turno", "El cupo ha quedado libre.");
+            await requestWithdrawal(token, desistModal.requestId);
+            showToast("Solicitud enviada", "El administrador revisará tu desistimiento.");
             setDesistModal(null);
-            loadShifts();
         } catch (err) { showToast("Error", err.message); }
     }
 

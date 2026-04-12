@@ -205,6 +205,15 @@ export async function getColleagues(token) {
     return handle(await fetch(`${BASE}/api/users/colleagues`, { headers: headers(token) }));
 }
 
+export async function requestWithdrawal(token, requestId) {
+    return handle(
+        await fetch(`${BASE}/api/requests/${requestId}/withdraw`, {
+            method: "POST",
+            headers: headers(token),
+        })
+    );
+}
+
 export async function requestTransfer(token, requestId, toName, toEmail) {
     return handle(
         await fetch(`${BASE}/api/requests/${requestId}/transfer`, {
