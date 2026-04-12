@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { sendNewShiftEmail, sendWeeklyScheduleEmail } from "../lib/mailer.js";
+import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -15,6 +15,7 @@ router.get("/", requireAuth, async (req, res) => {
                     where: { status: { in: ["PENDING", "APPROVED"] } },
                     include: { user: { select: { id: true, name: true } } },
                 },
+                manualAssignments: { select: { id: true, name: true, email: true, createdAt: true } },
             },
         });
         res.json(shifts);
@@ -173,6 +174,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             where: { id },
             include: {
                 requests: { where: { status: { in: ["PENDING", "APPROVED"] } } },
+                manualAssignments: { select: { id: true } },
             },
         });
 
@@ -181,7 +183,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             return res.status(400).json({ message: "Este turno ya no está disponible" });
         }
 
-        const approvedCount = shift.requests.filter((r) => r.status === "APPROVED").length;
+        const approvedCount = shift.requests.filter((r) => r.status === "APPROVED").length + shift.manualAssignments.length;
         if (approvedCount >= shift.totalSlots) {
             return res.status(400).json({ message: "No hay cupos disponibles" });
         }
@@ -337,6 +339,57 @@ router.post("/close-week", requireAuth, requireRole("admin", "lead"), async (req
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al archivar semana" });
+    }
+});
+
+// POST asignar manualmente un operador fulltime a un turno (admin/lead)
+router.post("/:id/assign", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    const { id } = req.params;
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+        return res.status(400).json({ message: "Nombre y correo son requeridos" });
+    }
+
+    try {
+        const shift = await prisma.shift.findUnique({
+            where: { id },
+            include: {
+                requests: { where: { status: "APPROVED" } },
+                manualAssignments: true,
+            },
+        });
+
+        if (!shift) return res.status(404).json({ message: "Turno no encontrado" });
+        if (shift.status === "CLOSED") return res.status(400).json({ message: "El turno está cerrado" });
+
+        const occupiedSlots = shift.requests.length + shift.manualAssignments.length;
+        if (occupiedSlots >= shift.totalSlots) {
+            return res.status(400).json({ message: "No hay cupos disponibles en este turno" });
+        }
+
+        const assignment = await prisma.manualAssignment.create({
+            data: { shiftId: id, name: name.trim(), email: email.trim(), assignedBy: req.user.id },
+        });
+
+        const newOccupied = occupiedSlots + 1;
+        if (newOccupied >= shift.totalSlots) {
+            await prisma.shift.update({ where: { id }, data: { status: "FULL" } });
+        }
+
+        const shiftDate = new Date(shift.date).toLocaleDateString("es-CO", {
+            weekday: "long", year: "numeric", month: "long", day: "numeric",
+        });
+
+        sendAssignmentEmail({ name: name.trim(), email: email.trim(), shiftTitle: shift.title, shiftDate, startTime: shift.startTime, endTime: shift.endTime });
+
+        const io = req.app.get("io");
+        io.emit("shifts:refresh");
+
+        res.status(201).json(assignment);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al asignar operador" });
     }
 });
 

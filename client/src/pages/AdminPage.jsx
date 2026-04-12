@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
 import {
     getShifts, getRequests, deleteShift, updateShift, closeWeek, reviewRequest,
-    getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode, changePassword,
+    getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode, changePassword, assignShift,
 } from "../api/index.js";
 
 function getMondayOfWeek(isoDate) {
@@ -43,7 +43,7 @@ const STATUS_STYLE = {
     CLOSED: { background: "#e5e7eb", color: "#374151" },
 };
 
-function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId, startEditSlots, handleSaveSlots, handleDeleteShift, userRole, emptyText, styles, muted }) {
+function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId, startEditSlots, handleSaveSlots, handleDeleteShift, onAssign, userRole, emptyText, styles, muted }) {
     const cols = ["Turno", "Fecha", "Horario", "Tipo", "Cupos", "Aprobados", "Pendientes", "Estado", "Acciones"];
     return (
         <div style={styles.tableWrapper}>
@@ -53,7 +53,7 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                 </thead>
                 <tbody>
                     {shifts.map((shift) => {
-                        const approved = shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0;
+                        const approved = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0) + (shift.manualAssignments?.length ?? 0);
                         const pending = shift.requests?.filter((r) => r.status === "PENDING").length ?? 0;
                         return (
                             <tr key={shift.id} style={styles.tr}>
@@ -85,6 +85,9 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                                     ) : (
                                         <div style={styles.actionBtns}>
                                             <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
+                                            {shift.type === "DAY" && shift.status !== "CLOSED" && onAssign && (
+                                                <button style={styles.assignBtn} onClick={() => onAssign(shift.id, shift.title)}>Asignar</button>
+                                            )}
                                             {userRole === "admin" && (
                                                 <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
                                             )}
@@ -131,6 +134,9 @@ function AdminPage() {
     const [pwdForm, setPwdForm] = useState({ current: "", next: "", confirm: "" });
     const [pwdError, setPwdError] = useState("");
     const [pwdSuccess, setPwdSuccess] = useState("");
+    const [assignModal, setAssignModal] = useState(null); // { shiftId, shiftTitle }
+    const [assignForm, setAssignForm] = useState({ name: "", email: "" });
+    const [assignLoading, setAssignLoading] = useState(false);
 
     const loadShifts = useCallback(async () => {
         try { const s = await getShifts(token); setShifts(s); setShiftsUpdatedAt(Date.now()); } catch {}
@@ -249,6 +255,22 @@ function AdminPage() {
         finally { setCodeLoading(false); }
     }
 
+    async function handleAssign(e) {
+        e.preventDefault();
+        setAssignLoading(true);
+        try {
+            await assignShift(token, assignModal.shiftId, assignForm.name, assignForm.email);
+            showToast("Operador asignado", `Se notificó a ${assignForm.email}`);
+            setAssignModal(null);
+            setAssignForm({ name: "", email: "" });
+            loadShifts();
+        } catch (err) {
+            showToast("Error", err.message);
+        } finally {
+            setAssignLoading(false);
+        }
+    }
+
     async function handleChangePwd(e) {
         e.preventDefault();
         setPwdError(""); setPwdSuccess("");
@@ -279,6 +301,39 @@ function AdminPage() {
                 <div className="anim-slide-right" style={styles.toast}>
                     <strong>{toast.title}</strong>
                     {toast.message && <p style={styles.toastMsg}>{toast.message}</p>}
+                </div>
+            )}
+
+            {assignModal && (
+                <div style={styles.modalOverlay} onClick={() => setAssignModal(null)}>
+                    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                        <h3 style={styles.modalTitle}>Asignar operador fulltime</h3>
+                        <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "0.85rem" }}>{assignModal.shiftTitle}</p>
+                        <form onSubmit={handleAssign} style={styles.modalForm}>
+                            <input
+                                style={styles.modalInput}
+                                type="text"
+                                placeholder="Nombre completo"
+                                value={assignForm.name}
+                                onChange={(e) => setAssignForm((f) => ({ ...f, name: e.target.value }))}
+                                required
+                            />
+                            <input
+                                style={styles.modalInput}
+                                type="email"
+                                placeholder="Correo electrónico"
+                                value={assignForm.email}
+                                onChange={(e) => setAssignForm((f) => ({ ...f, email: e.target.value }))}
+                                required
+                            />
+                            <div style={styles.modalActions}>
+                                <button type="button" style={styles.modalCancel} onClick={() => setAssignModal(null)}>Cancelar</button>
+                                <button type="submit" style={styles.modalSave} disabled={assignLoading}>
+                                    {assignLoading ? "Asignando..." : "Asignar y notificar"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
 
@@ -437,6 +492,7 @@ function AdminPage() {
                             startEditSlots={startEditSlots}
                             handleSaveSlots={handleSaveSlots}
                             handleDeleteShift={handleDeleteShift}
+                            onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
                             userRole={user?.role}
                             emptyText="No hay turnos activos"
                             styles={styles}
@@ -801,6 +857,16 @@ const styles = {
         display: "flex",
         gap: "6px",
         flexWrap: "wrap",
+    },
+    assignBtn: {
+        background: "#7c3aed",
+        color: "#fff",
+        border: "none",
+        padding: "5px 10px",
+        borderRadius: "6px",
+        cursor: "pointer",
+        fontSize: "0.78rem",
+        fontWeight: "600",
     },
     editBtn: {
         background: "#eff6ff",

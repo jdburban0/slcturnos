@@ -92,6 +92,16 @@ export async function deleteShift(token, id) {
     );
 }
 
+export async function assignShift(token, shiftId, name, email) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/${shiftId}/assign`, {
+            method: "POST",
+            headers: headers(token),
+            body: JSON.stringify({ name, email }),
+        })
+    );
+}
+
 export async function requestShift(token, shiftId) {
     return handle(
         await fetch(`${BASE}/api/shifts/${shiftId}/request`, {

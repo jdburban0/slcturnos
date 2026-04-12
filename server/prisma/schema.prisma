@@ -45,17 +45,29 @@ model User {
 }
 
 model Shift {
-  id         String         @id @default(cuid())
-  title      String
-  date       DateTime
-  startTime  String
-  endTime    String
-  type       ShiftType
-  totalSlots Int
-  status     ShiftStatus    @default(OPEN)
-  createdBy  String
-  createdAt  DateTime       @default(now())
-  requests   ShiftRequest[]
+  id                String               @id @default(cuid())
+  title             String
+  date              DateTime
+  startTime         String
+  endTime           String
+  type              ShiftType
+  totalSlots        Int
+  status            ShiftStatus          @default(OPEN)
+  createdBy         String
+  createdAt         DateTime             @default(now())
+  requests          ShiftRequest[]
+  manualAssignments ManualAssignment[]
+}
+
+model ManualAssignment {
+  id         String   @id @default(cuid())
+  shiftId    String
+  name       String
+  email      String
+  assignedBy String
+  createdAt  DateTime @default(now())
+
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
 }
 
 model ShiftRequest {
