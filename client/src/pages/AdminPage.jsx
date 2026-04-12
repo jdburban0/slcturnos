@@ -86,7 +86,13 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                                         <div style={styles.actionBtns}>
                                             <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
                                             {shift.type === "DAY" && shift.status !== "CLOSED" && onAssign && (
-                                                <button style={styles.assignBtn} onClick={() => onAssign(shift.id, shift.title)}>Asignar</button>
+                                                <button
+                                                    style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
+                                                    onClick={() => onAssign(shift.id, shift.title)}
+                                                    disabled={shift.status === "FULL"}
+                                                >
+                                                    Asignar
+                                                </button>
                                             )}
                                             {userRole === "admin" && (
                                                 <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
@@ -867,6 +873,10 @@ const styles = {
         cursor: "pointer",
         fontSize: "0.78rem",
         fontWeight: "600",
+    },
+    assignBtnDisabled: {
+        background: "#c4b5fd",
+        cursor: "not-allowed",
     },
     editBtn: {
         background: "#eff6ff",
