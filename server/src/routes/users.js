@@ -5,6 +5,21 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 
 const router = Router();
 
+// GET active operators list (any authenticated user, for transfer modal)
+router.get("/colleagues", requireAuth, async (req, res) => {
+    try {
+        const colleagues = await prisma.user.findMany({
+            where: { role: "operator", active: true, NOT: { id: req.user.id } },
+            select: { id: true, name: true, email: true },
+            orderBy: { name: "asc" },
+        });
+        res.json(colleagues);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al obtener compañeros" });
+    }
+});
+
 // GET all users (admin/lead)
 router.get("/", requireAuth, requireRole("admin", "lead"), async (req, res) => {
     try {

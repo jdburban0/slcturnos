@@ -39,8 +39,8 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
             },
         });
 
-        if (!transfer) return res.status(404).json({ message: "Cesión no encontrada" });
-        if (transfer.status !== "PENDING") return res.status(400).json({ message: "Esta cesión ya fue procesada" });
+        if (!transfer) return res.status(404).json({ message: "Traspaso no encontrada" });
+        if (transfer.status !== "PENDING") return res.status(400).json({ message: "Esta traspaso ya fue procesada" });
 
         if (action === "approve") {
             // Cancel the original request
@@ -61,8 +61,8 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
             await prisma.notification.create({
                 data: {
                     userId: transfer.fromUserId,
-                    title: "Cesión aprobada",
-                    message: `Tu cesión del turno "${transfer.shift.title}" a ${transfer.toName} fue aprobada.`,
+                    title: "Traspaso aprobada",
+                    message: `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue aprobada.`,
                 },
             });
 
@@ -82,8 +82,8 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
             await prisma.notification.create({
                 data: {
                     userId: transfer.fromUserId,
-                    title: "Cesión rechazada",
-                    message: `Tu cesión del turno "${transfer.shift.title}" a ${transfer.toName} fue rechazada.${notes ? ` Motivo: ${notes}` : ""}`,
+                    title: "Traspaso rechazada",
+                    message: `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue rechazada.${notes ? ` Motivo: ${notes}` : ""}`,
                 },
             });
         }
@@ -101,7 +101,7 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         res.json(updated);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Error al procesar cesión" });
+        res.status(500).json({ message: "Error al procesar traspaso" });
     }
 });
 

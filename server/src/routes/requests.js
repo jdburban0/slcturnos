@@ -207,7 +207,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
     }
 });
 
-// POST solicitar cesión de turno aprobado a un compañero
+// POST solicitar traspaso de turno aprobado a un compañero
 router.post("/:id/transfer", requireAuth, async (req, res) => {
     const { id } = req.params;
     const { toName, toEmail } = req.body;
@@ -220,8 +220,8 @@ router.post("/:id/transfer", requireAuth, async (req, res) => {
         });
         if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
         if (request.userId !== req.user.id) return res.status(403).json({ message: "Sin permisos" });
-        if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes ceder turnos aprobados" });
-        if (request.transfer) return res.status(400).json({ message: "Ya existe una cesión pendiente para este turno" });
+        if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes traspasar turnos aprobados" });
+        if (request.transfer) return res.status(400).json({ message: "Ya existe una traspaso pendiente para este turno" });
 
         const transfer = await prisma.shiftTransfer.create({
             data: {
@@ -239,7 +239,7 @@ router.post("/:id/transfer", requireAuth, async (req, res) => {
         res.status(201).json(transfer);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Error al crear cesión" });
+        res.status(500).json({ message: "Error al crear traspaso" });
     }
 });
 

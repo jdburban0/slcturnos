@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
-import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer } from "../api/index.js";
+import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, getColleagues } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
@@ -106,7 +106,8 @@ function DashboardPage() {
     const [pwdSuccess, setPwdSuccess] = useState("");
     const [desistModal, setDesistModal] = useState(null); // { requestId, shiftTitle }
     const [desistMode, setDesistMode] = useState("choose"); // "choose" | "transfer"
-    const [transferForm, setTransferForm] = useState({ name: "", email: "" });
+    const [colleagues, setColleagues] = useState([]);
+    const [selectedColleague, setSelectedColleague] = useState(null);
     const [transferLoading, setTransferLoading] = useState(false);
 
     const loadShifts = useCallback(async () => {
@@ -173,12 +174,13 @@ function DashboardPage() {
 
     async function handleTransferSubmit(e) {
         e.preventDefault();
+        if (!selectedColleague) return;
         setTransferLoading(true);
         try {
-            await requestTransfer(token, desistModal.requestId, transferForm.name, transferForm.email);
-            showToast("Cesión enviada", "El administrador revisará la solicitud.");
+            await requestTransfer(token, desistModal.requestId, selectedColleague.name, selectedColleague.email);
+            showToast("Traspaso enviado", "El administrador revisará la solicitud.");
             setDesistModal(null);
-            setTransferForm({ name: "", email: "" });
+            setSelectedColleague(null);
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
         finally { setTransferLoading(false); }
@@ -230,10 +232,10 @@ function DashboardPage() {
                         {desistMode === "choose" && (
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                 <button style={styles.modalSave} onClick={() => setDesistMode("transfer")}>
-                                    Ceder a un compañero
+                                    Pasar el turno a un compañero
                                 </button>
                                 <button style={{ ...styles.modalCancel, background: "#fee2e2", color: "#b91c1c", border: "none" }} onClick={handleDesistCancel}>
-                                    Solo cancelar mi cupo
+                                    Solo liberar mi cupo
                                 </button>
                                 <button style={styles.modalCancel} onClick={() => setDesistModal(null)}>
                                     Volver
@@ -243,29 +245,28 @@ function DashboardPage() {
 
                         {desistMode === "transfer" && (
                             <form onSubmit={handleTransferSubmit} style={styles.modalForm}>
-                                <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: "0.82rem" }}>
-                                    La cesión queda pendiente de aprobación del administrador.
+                                <p style={{ margin: "0 0 10px", color: "#94a3b8", fontSize: "0.82rem" }}>
+                                    Selecciona un compañero. El traspaso queda pendiente de aprobación.
                                 </p>
-                                <input
-                                    style={styles.modalInput}
-                                    type="text"
-                                    placeholder="Nombre del compañero"
-                                    value={transferForm.name}
-                                    onChange={(e) => setTransferForm((f) => ({ ...f, name: e.target.value }))}
-                                    required
-                                />
-                                <input
-                                    style={styles.modalInput}
-                                    type="email"
-                                    placeholder="Correo del compañero"
-                                    value={transferForm.email}
-                                    onChange={(e) => setTransferForm((f) => ({ ...f, email: e.target.value }))}
-                                    required
-                                />
+                                <div style={styles.colleagueList}>
+                                    {colleagues.length === 0 && (
+                                        <p style={{ color: "#64748b", fontSize: "0.85rem", margin: 0 }}>No hay compañeros disponibles.</p>
+                                    )}
+                                    {colleagues.map((c) => (
+                                        <div
+                                            key={c.id}
+                                            style={{ ...styles.colleagueItem, ...(selectedColleague?.id === c.id ? styles.colleagueItemSelected : {}) }}
+                                            onClick={() => setSelectedColleague(c)}
+                                        >
+                                            <span style={styles.colleagueName}>{c.name}</span>
+                                            <span style={styles.colleagueEmail}>{c.email}</span>
+                                        </div>
+                                    ))}
+                                </div>
                                 <div style={styles.modalActions}>
                                     <button type="button" style={styles.modalCancel} onClick={() => setDesistMode("choose")}>Atrás</button>
-                                    <button type="submit" style={styles.modalSave} disabled={transferLoading}>
-                                        {transferLoading ? "Enviando..." : "Solicitar cesión"}
+                                    <button type="submit" style={styles.modalSave} disabled={transferLoading || !selectedColleague}>
+                                        {transferLoading ? "Enviando..." : "Solicitar traspaso"}
                                     </button>
                                 </div>
                             </form>
@@ -384,7 +385,7 @@ function DashboardPage() {
                                         myRequest={getMyRequest(shift)}
                                         onRequest={handleRequest}
                                         onCancelRequest={handleCancelRequest}
-                                        onDesist={(reqId, title) => { setDesistModal({ requestId: reqId, shiftTitle: title }); setDesistMode("choose"); setTransferForm({ name: "", email: "" }); }}
+                                        onDesist={async (reqId, title) => { setDesistModal({ requestId: reqId, shiftTitle: title }); setDesistMode("choose"); setSelectedColleague(null); try { setColleagues(await getColleagues(token)); } catch {} }}
                                     />
                                 ))}
                             </div>
@@ -523,6 +524,29 @@ const styles = {
     modalError: { margin: 0, color: "#f87171", fontSize: "0.85rem" },
     modalSuccess: { margin: 0, color: "#4ade80", fontSize: "0.85rem" },
     modalActions: { display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" },
+    colleagueList: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+        maxHeight: "220px",
+        overflowY: "auto",
+        marginBottom: "4px",
+    },
+    colleagueItem: {
+        display: "flex",
+        flexDirection: "column",
+        padding: "10px 12px",
+        borderRadius: "8px",
+        border: "1px solid #334155",
+        cursor: "pointer",
+        transition: "background 0.15s",
+    },
+    colleagueItemSelected: {
+        background: "#1e3a5f",
+        border: "1px solid #3b82f6",
+    },
+    colleagueName: { color: "#f1f5f9", fontWeight: "700", fontSize: "0.88rem" },
+    colleagueEmail: { color: "#64748b", fontSize: "0.78rem" },
     modalCancel: {
         background: "#334155", color: "#94a3b8", border: "none",
         padding: "9px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",

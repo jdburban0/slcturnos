@@ -272,7 +272,7 @@ function AdminPage() {
     async function handleReviewTransfer(transferId, action) {
         try {
             await reviewTransfer(token, transferId, action, "");
-            showToast(action === "approve" ? "Cesión aprobada" : "Cesión rechazada");
+            showToast(action === "approve" ? "Traspaso aprobado" : "Traspaso rechazado");
             loadTransfers();
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
@@ -440,7 +440,7 @@ function AdminPage() {
                         {transfers.length > 0 && (
                             <div style={{ marginBottom: "24px" }}>
                                 <p style={{ ...styles.requestListHint, marginBottom: "10px", color: "#a78bfa", fontWeight: "700" }}>
-                                    Cesiones pendientes · {transfers.length}
+                                    Traspasos pendientes · {transfers.length}
                                 </p>
                                 {transfers.map((t) => (
                                     <div key={t.id} style={styles.transferCard}>
@@ -451,7 +451,7 @@ function AdminPage() {
                                                 {" · "}{t.shift?.startTime} – {t.shift?.endTime}
                                             </p>
                                             <p style={styles.transferMeta}>
-                                                <strong>{t.fromUser?.name}</strong> quiere ceder a <strong>{t.toName}</strong> ({t.toEmail})
+                                                <strong>{t.fromUser?.name}</strong> quiere pasar su turno a <strong>{t.toName}</strong> ({t.toEmail})
                                             </p>
                                         </div>
                                         <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>

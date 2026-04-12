@@ -201,6 +201,10 @@ export async function changePassword(token, currentPassword, newPassword) {
     );
 }
 
+export async function getColleagues(token) {
+    return handle(await fetch(`${BASE}/api/users/colleagues`, { headers: headers(token) }));
+}
+
 export async function requestTransfer(token, requestId, toName, toEmail) {
     return handle(
         await fetch(`${BASE}/api/requests/${requestId}/transfer`, {
