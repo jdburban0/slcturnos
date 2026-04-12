@@ -13,7 +13,10 @@ router.get("/", requireAuth, async (req, res) => {
             include: {
                 requests: {
                     where: { status: { in: ["PENDING", "APPROVED"] } },
-                    include: { user: { select: { id: true, name: true } } },
+                    include: {
+                        user: { select: { id: true, name: true } },
+                        transfer: { select: { status: true } },
+                    },
                 },
                 manualAssignments: { select: { id: true, name: true, email: true, createdAt: true } },
             },

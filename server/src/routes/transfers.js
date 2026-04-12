@@ -70,6 +70,28 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
             });
 
             if (isTransfer) {
+                await prisma.manualAssignment.create({
+                    data: {
+                        shiftId: transfer.shiftId,
+                        name: transfer.toName,
+                        email: transfer.toEmail,
+                        assignedBy: req.user.id,
+                    },
+                });
+
+                const approvedReqs = await prisma.shiftRequest.count({
+                    where: { shiftId: transfer.shiftId, status: "APPROVED" },
+                });
+                const manualCount = await prisma.manualAssignment.count({
+                    where: { shiftId: transfer.shiftId },
+                });
+                if (approvedReqs + manualCount >= transfer.shift.totalSlots) {
+                    await prisma.shift.update({
+                        where: { id: transfer.shiftId },
+                        data: { status: "FULL" },
+                    });
+                }
+
                 sendAssignmentEmail({
                     name: transfer.toName,
                     email: transfer.toEmail,

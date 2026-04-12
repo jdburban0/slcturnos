@@ -4,6 +4,8 @@ function ShiftCard({ shift, myRequest, onRequest, onCancelRequest, onDesist }) {
     const isFull = shift.status === "FULL" || availableSlots <= 0;
     const isPending = myRequest?.status === "PENDING";
     const isApproved = myRequest?.status === "APPROVED";
+    const transferStatus = myRequest?.transfer?.status ?? null;
+    const desistDisabled = transferStatus === "PENDING" || transferStatus === "REJECTED";
 
     const dateFormatted = new Date(shift.date).toLocaleDateString("es-CO", {
         weekday: "short", month: "short", day: "numeric",
@@ -19,7 +21,12 @@ function ShiftCard({ shift, myRequest, onRequest, onCancelRequest, onDesist }) {
 
     function getAction() {
         if (isApproved) return (
-            <button style={styles.desistBtn} onClick={() => onDesist(myRequest.id, shift.title)}>
+            <button
+                style={{ ...styles.desistBtn, ...(desistDisabled ? styles.desistBtnDisabled : {}) }}
+                onClick={() => !desistDisabled && onDesist(myRequest.id, shift.title)}
+                disabled={desistDisabled}
+                title={transferStatus === "REJECTED" ? "Traspaso rechazado" : transferStatus === "PENDING" ? "Traspaso en revisión" : undefined}
+            >
                 Desistir
             </button>
         );
@@ -159,6 +166,12 @@ const styles = {
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "0.82rem",
+    },
+    desistBtnDisabled: {
+        border: "1px solid #475569",
+        color: "#475569",
+        cursor: "not-allowed",
+        opacity: 0.6,
     },
 };
 
