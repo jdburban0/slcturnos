@@ -24,12 +24,19 @@ async function main() {
         update: {},
         create: { key: "register_code", value: "SLC2025" },
     });
-    console.log("✓ Código de registro inicial: SLC2025");
+    await prisma.setting.upsert({
+        where: { key: "admin_register_code" },
+        update: {},
+        create: { key: "admin_register_code", value: "SLCADMIN2025" },
+    });
+    console.log("✓ Código operadores: SLC2025");
+    console.log("✓ Código admins: SLCADMIN2025");
 
     console.log("\n✅ Seed completado. Contraseña: slc2025");
     console.log("   Admin: christian.perlaza@sig.systems");
     console.log("   Lead:  lead@slc.com");
-    console.log("   Código de registro: SLC2025");
+    console.log("   Código operadores: SLC2025");
+    console.log("   Código admins:     SLCADMIN2025");
 }
 
 main()

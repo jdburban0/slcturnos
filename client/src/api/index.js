@@ -48,6 +48,20 @@ export async function updateRegisterCode(token, code) {
     );
 }
 
+export async function getAdminRegisterCode(token) {
+    return handle(await fetch(`${BASE}/api/settings/admin-register-code`, { headers: headers(token) }));
+}
+
+export async function updateAdminRegisterCode(token, code) {
+    return handle(
+        await fetch(`${BASE}/api/settings/admin-register-code`, {
+            method: "PATCH",
+            headers: headers(token),
+            body: JSON.stringify({ code }),
+        })
+    );
+}
+
 // Shifts
 export async function getShifts(token) {
     return handle(await fetch(`${BASE}/api/shifts`, { headers: headers(token) }));

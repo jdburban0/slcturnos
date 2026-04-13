@@ -63,9 +63,16 @@ async function expireOldRequests() {
 
 setInterval(expireOldRequests, 5 * 60 * 1000);
 
-// Warm up DB connection on startup
+// Warm up DB connection and ensure default settings exist
 prisma.$queryRaw`SELECT 1`
-    .then(() => console.log("[DB] Conexión lista"))
+    .then(async () => {
+        console.log("[DB] Conexión lista");
+        await prisma.setting.upsert({
+            where: { key: "admin_register_code" },
+            update: {},
+            create: { key: "admin_register_code", value: "SLCADMIN2025" },
+        });
+    })
     .catch((err) => console.error("[DB] Error warmup:", err.message));
 
 // Keep DB alive every 4 minutes

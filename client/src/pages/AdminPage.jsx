@@ -4,7 +4,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
 import {
     getShifts, getRequests, deleteShift, updateShift, closeWeek, reviewRequest,
-    getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode, changePassword, assignShift,
+    getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode,
+    getAdminRegisterCode, updateAdminRegisterCode, changePassword, assignShift,
     getTransfers, reviewTransfer,
 } from "../api/index.js";
 
@@ -130,6 +131,10 @@ function AdminPage() {
     const [newCode, setNewCode] = useState("");
     const [codeVisible, setCodeVisible] = useState(false);
     const [codeLoading, setCodeLoading] = useState(false);
+    const [adminRegisterCode, setAdminRegisterCode] = useState("");
+    const [newAdminCode, setNewAdminCode] = useState("");
+    const [adminCodeVisible, setAdminCodeVisible] = useState(false);
+    const [adminCodeLoading, setAdminCodeLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const [notifSignal, setNotifSignal] = useState(0);
     const [showCreatorModal, setShowCreatorModal] = useState(false);
@@ -173,6 +178,9 @@ function AdminPage() {
         if (activeTab === "settings" && user?.role === "admin") {
             getRegisterCode(token)
                 .then(({ code }) => { setRegisterCode(code ?? ""); setNewCode(code ?? ""); })
+                .catch(() => {});
+            getAdminRegisterCode(token)
+                .then(({ code }) => { setAdminRegisterCode(code ?? ""); setNewAdminCode(code ?? ""); })
                 .catch(() => {});
         }
     }, [activeTab, token, user?.role]);
@@ -267,6 +275,17 @@ function AdminPage() {
             showToast("Código actualizado");
         } catch (err) { showToast("Error", err.message); }
         finally { setCodeLoading(false); }
+    }
+
+    async function handleSaveAdminCode(e) {
+        e.preventDefault();
+        setAdminCodeLoading(true);
+        try {
+            await updateAdminRegisterCode(token, newAdminCode);
+            setAdminRegisterCode(newAdminCode);
+            showToast("Código de admins actualizado");
+        } catch (err) { showToast("Error", err.message); }
+        finally { setAdminCodeLoading(false); }
     }
 
     async function handleReviewTransfer(transferId, action) {
@@ -637,9 +656,9 @@ function AdminPage() {
                         <h2 style={styles.sectionTitle}>Ajustes del sistema</h2>
 
                         <div style={styles.settingsBlock}>
-                            <h3 style={styles.settingsLabel}>Código de acceso para registro</h3>
+                            <h3 style={styles.settingsLabel}>Código de acceso — operadores</h3>
                             <p style={styles.settingsHint}>
-                                Los operadores deben ingresar este código al crear su cuenta. Cámbialo cuando quieras revocar el acceso a nuevos registros.
+                                Los operadores usan este código al registrarse. Cámbialo para revocar el acceso a nuevos registros.
                             </p>
                             <form style={styles.settingsForm} onSubmit={handleSaveCode}>
                                 <div style={styles.codeRow}>
@@ -669,6 +688,43 @@ function AdminPage() {
                                     disabled={codeLoading || newCode === registerCode || newCode.length < 4}
                                 >
                                     {codeLoading ? "Guardando..." : "Guardar nuevo código"}
+                                </button>
+                            </form>
+                        </div>
+
+                        <div style={{ marginTop: "24px", borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: "24px" }}>
+                            <h3 style={styles.settingsLabel}>Código de acceso — administradores</h3>
+                            <p style={styles.settingsHint}>
+                                Los administradores usan este código al registrarse. No es necesario seleccionar grupo con este código.
+                            </p>
+                            <form style={styles.settingsForm} onSubmit={handleSaveAdminCode}>
+                                <div style={styles.codeRow}>
+                                    <input
+                                        type={adminCodeVisible ? "text" : "password"}
+                                        style={styles.codeInput}
+                                        value={newAdminCode}
+                                        onChange={(e) => setNewAdminCode(e.target.value)}
+                                        required
+                                        minLength={4}
+                                        placeholder="Nuevo código admin"
+                                    />
+                                    <button
+                                        type="button"
+                                        style={styles.codeToggleBtn}
+                                        onClick={() => setAdminCodeVisible((v) => !v)}
+                                    >
+                                        {adminCodeVisible ? "Ocultar" : "Ver"}
+                                    </button>
+                                </div>
+                                <p style={styles.codeCurrentHint}>
+                                    Código actual: <strong>{adminCodeVisible ? adminRegisterCode : "••••••••"}</strong>
+                                </p>
+                                <button
+                                    type="submit"
+                                    style={styles.createButton}
+                                    disabled={adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4}
+                                >
+                                    {adminCodeLoading ? "Guardando..." : "Guardar nuevo código"}
                                 </button>
                             </form>
                         </div>

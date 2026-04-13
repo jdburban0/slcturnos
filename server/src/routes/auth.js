@@ -61,18 +61,30 @@ router.post("/register", async (req, res) => {
     }
 
     try {
-        const setting = await prisma.setting.findUnique({ where: { key: "register_code" } });
-        if (!setting || code.trim() !== setting.value) {
+        const [operatorSetting, adminSetting] = await Promise.all([
+            prisma.setting.findUnique({ where: { key: "register_code" } }),
+            prisma.setting.findUnique({ where: { key: "admin_register_code" } }),
+        ]);
+
+        const isAdminCode = adminSetting && code.trim() === adminSetting.value;
+        const isOperatorCode = operatorSetting && code.trim() === operatorSetting.value;
+
+        if (!isAdminCode && !isOperatorCode) {
             return res.status(403).json({ message: "Código de acceso incorrecto" });
+        }
+
+        const role = isAdminCode ? "admin" : "operator";
+
+        if (role === "operator" && !group) {
+            return res.status(400).json({ message: "Debes seleccionar tu grupo (E1 o E2)" });
+        }
+        if (group && group !== "E1" && group !== "E2") {
+            return res.status(400).json({ message: "Grupo inválido" });
         }
 
         const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
         if (existing) {
             return res.status(409).json({ message: "Ya existe una cuenta con ese correo" });
-        }
-
-        if (group && group !== "E1" && group !== "E2") {
-            return res.status(400).json({ message: "Grupo inválido" });
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
@@ -81,8 +93,8 @@ router.post("/register", async (req, res) => {
                 name: name.trim(),
                 email: email.toLowerCase().trim(),
                 passwordHash,
-                role: "operator",
-                ...(group && { group }),
+                role,
+                ...(role === "operator" && group && { group }),
             },
         });
 

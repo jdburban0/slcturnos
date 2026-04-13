@@ -53,9 +53,6 @@ function LoginPage() {
         setError("");
 
         if (mode === "register") {
-            if (!group) {
-                return setError("Debes seleccionar tu grupo (E1 o E2)");
-            }
             if (!email.toLowerCase().endsWith("@sig.systems")) {
                 return setError("Solo se permiten correos @sig.systems");
             }
@@ -170,14 +167,13 @@ function LoginPage() {
 
                     {!isLogin && (
                         <div key={`group-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "120ms" }}>
-                            <label style={styles.label}>Grupo</label>
+                            <label style={styles.label}>Grupo <span style={{ color: "#64748b", fontWeight: 400 }}>(solo operadores)</span></label>
                             <select
                                 style={{ ...styles.input, color: group ? "#1e293b" : "#94a3b8" }}
                                 value={group}
                                 onChange={(e) => setGroup(e.target.value)}
-                                required
                             >
-                                <option value="" disabled>Selecciona tu grupo</option>
+                                <option value="">Sin grupo (administrador)</option>
                                 <option value="E1">E1</option>
                                 <option value="E2">E2</option>
                             </select>
