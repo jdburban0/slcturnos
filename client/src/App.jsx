@@ -18,7 +18,7 @@ function ProtectedRoute({ children, allowedRoles }) {
 function AppRoutes() {
     const { user, token, loading } = useAuth();
 
-    if (loading) return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#0f172a", color: "#94a3b8", fontSize: "1rem" }}>Cargando…</div>;
+    if (loading) return null;
 
     return (
         <Routes>
