@@ -38,6 +38,16 @@ body,
   to   { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes formEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes formExit {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-10px); }
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%       { transform: translateX(-6px); }
@@ -67,6 +77,15 @@ body,
 
 .anim-shake {
   animation: shake 0.4s ease both;
+}
+
+.form-enter {
+  animation: formEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.form-exit {
+  animation: formExit 0.18s ease forwards;
+  pointer-events: none;
 }
 
 .anim-field {

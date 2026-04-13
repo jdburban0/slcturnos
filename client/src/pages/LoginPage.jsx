@@ -17,6 +17,7 @@ function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [fieldKey, setFieldKey] = useState(0);
+    const [formAnim, setFormAnim] = useState("form-enter");
 
     useEffect(() => {
         const base = import.meta.env.VITE_API_URL || "";
@@ -24,16 +25,20 @@ function LoginPage() {
     }, []);
 
     function switchMode(newMode) {
-        if (newMode === mode) return;
-        setMode(newMode);
-        setError("");
-        setName("");
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-        setAccessCode("");
-        setGroup("");
-        setFieldKey((k) => k + 1);
+        if (newMode === mode || formAnim === "form-exit") return;
+        setFormAnim("form-exit");
+        setTimeout(() => {
+            setMode(newMode);
+            setError("");
+            setName("");
+            setEmail("");
+            setPassword("");
+            setConfirmPassword("");
+            setAccessCode("");
+            setGroup("");
+            setFieldKey((k) => k + 1);
+            setFormAnim("form-enter");
+        }, 180);
     }
 
     function afterAuth(token, user) {
@@ -96,6 +101,7 @@ function LoginPage() {
 
                 {/* Tabs */}
                 <div style={styles.tabs}>
+                    <div style={{ ...styles.tabPill, transform: `translateX(${isLogin ? "0%" : "100%"})` }} />
                     <button
                         style={{ ...styles.tab, ...(isLogin ? styles.tabActive : {}) }}
                         onClick={() => switchMode("login")}
@@ -112,6 +118,7 @@ function LoginPage() {
                     </button>
                 </div>
 
+                <div key={fieldKey} className={formAnim}>
                 <form style={styles.form} onSubmit={handleSubmit}>
                     {!isLogin && (
                         <div key={`name-${fieldKey}`} className="anim-field" style={styles.field}>
@@ -205,6 +212,7 @@ function LoginPage() {
                         }
                     </button>
                 </form>
+                </div>
             </div>
         </div>
     );
@@ -246,11 +254,24 @@ const styles = {
     },
     tabs: {
         display: "flex",
+        position: "relative",
         borderRadius: "10px",
         background: "#f1f5f9",
         padding: "4px",
         marginBottom: "24px",
-        gap: "4px",
+        gap: "0",
+    },
+    tabPill: {
+        position: "absolute",
+        top: "4px",
+        left: "4px",
+        width: "calc(50% - 4px)",
+        height: "calc(100% - 8px)",
+        background: "#ffffff",
+        borderRadius: "7px",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+        transition: "transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        pointerEvents: "none",
     },
     tab: {
         flex: 1,
@@ -262,12 +283,12 @@ const styles = {
         fontWeight: "600",
         fontSize: "0.88rem",
         cursor: "pointer",
-        transition: "background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease",
+        position: "relative",
+        zIndex: 1,
+        transition: "color 0.2s ease",
     },
     tabActive: {
-        background: "#ffffff",
         color: "#1e293b",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
     },
     form: {
         display: "flex",
