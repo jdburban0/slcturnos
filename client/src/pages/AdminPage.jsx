@@ -192,6 +192,10 @@ function AdminPage() {
         "requests:refresh": () => loadRequests(),
         "transfers:refresh": () => loadTransfers(),
         "notification:new": () => setNotifSignal((s) => s + 1),
+        "force:logout": () => {
+            logout();
+            navigate("/login");
+        },
     });
 
     function showToast(title, message = "") {

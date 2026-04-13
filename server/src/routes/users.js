@@ -80,6 +80,12 @@ router.patch("/:id/toggle", requireAuth, requireRole("admin", "lead"), async (re
             data: { active: !current.active },
             select: { id: true, name: true, email: true, role: true, active: true },
         });
+
+        if (!user.active) {
+            const io = req.app.get("io");
+            io.to(`user:${user.id}`).emit("force:logout");
+        }
+
         res.json(user);
     } catch (err) {
         console.error(err);

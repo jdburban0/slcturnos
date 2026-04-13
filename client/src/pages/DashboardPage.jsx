@@ -133,6 +133,10 @@ function DashboardPage() {
             setNotifSignal((s) => s + 1);
             showToast(notif?.title || "Nueva notificación", notif?.message || "");
         },
+        "force:logout": () => {
+            logout();
+            navigate("/login");
+        },
     });
 
     useEffect(() => {
