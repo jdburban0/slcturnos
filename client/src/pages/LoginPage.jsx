@@ -488,6 +488,38 @@ const styles = {
         background: "var(--warning)",
         animation: "pulse 1.2s ease-in-out infinite",
     },
+    forgotLink: {
+        display: "inline-block",
+        marginTop: "6px",
+        fontSize: "0.82rem",
+        color: "var(--primary)",
+        cursor: "pointer",
+        userSelect: "none",
+    },
+    backLink: {
+        textAlign: "center",
+        marginTop: "16px",
+        fontSize: "0.85rem",
+        color: "var(--primary)",
+        cursor: "pointer",
+        userSelect: "none",
+    },
+    resetTitle: {
+        textAlign: "center",
+        fontWeight: "700",
+        fontSize: "1.1rem",
+        color: "var(--text-main)",
+        marginBottom: "24px",
+    },
+    successMsg: {
+        textAlign: "center",
+        color: "var(--success, #16a34a)",
+        fontSize: "0.9rem",
+        padding: "12px",
+        background: "rgba(22,163,74,0.1)",
+        borderRadius: "10px",
+        border: "1px solid rgba(22,163,74,0.2)",
+    },
 };
 
 export default LoginPage;
