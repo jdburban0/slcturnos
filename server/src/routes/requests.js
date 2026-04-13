@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { queueShiftResultEmail } from "../lib/mailer.js";
+import { queueShiftResultEmail, sendAdminTransferAlertEmail } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -224,8 +224,34 @@ router.post("/:id/withdraw", requireAuth, async (req, res) => {
             data: { requestId: id, shiftId: request.shiftId, fromUserId: req.user.id },
         });
 
+        const admins = await prisma.user.findMany({
+            where: { role: { in: ["admin", "lead"] }, active: true },
+            select: { id: true, name: true, email: true },
+        });
+
+        const shiftDate = new Date(request.shift.date).toLocaleDateString("es-CO", {
+            weekday: "long", year: "numeric", month: "long", day: "numeric",
+        });
+
+        await prisma.notification.createMany({
+            data: admins.map((a) => ({
+                userId: a.id,
+                title: "Solicitud de desistimiento",
+                message: `${req.user.name} quiere desistir del turno "${request.shift.title}" (${shiftDate}).`,
+            })),
+        });
+
+        sendAdminTransferAlertEmail({
+            admins,
+            operatorName: req.user.name,
+            shiftTitle: request.shift.title,
+            shiftDate,
+            type: "withdraw",
+        });
+
         const io = req.app.get("io");
         io.to("admins").emit("transfers:refresh");
+        io.to("admins").emit("notification:new");
 
         res.status(201).json(transfer);
     } catch (err) {
@@ -254,8 +280,35 @@ router.post("/:id/transfer", requireAuth, async (req, res) => {
             data: { requestId: id, shiftId: request.shiftId, fromUserId: req.user.id, toName: toName.trim(), toEmail: toEmail.trim() },
         });
 
+        const admins = await prisma.user.findMany({
+            where: { role: { in: ["admin", "lead"] }, active: true },
+            select: { id: true, name: true, email: true },
+        });
+
+        const shiftDate = new Date(request.shift.date).toLocaleDateString("es-CO", {
+            weekday: "long", year: "numeric", month: "long", day: "numeric",
+        });
+
+        await prisma.notification.createMany({
+            data: admins.map((a) => ({
+                userId: a.id,
+                title: "Solicitud de traspaso",
+                message: `${req.user.name} quiere traspasar el turno "${request.shift.title}" (${shiftDate}) a ${toName.trim()}.`,
+            })),
+        });
+
+        sendAdminTransferAlertEmail({
+            admins,
+            operatorName: req.user.name,
+            shiftTitle: request.shift.title,
+            shiftDate,
+            type: "transfer",
+            toName: toName.trim(),
+        });
+
         const io = req.app.get("io");
         io.to("admins").emit("transfers:refresh");
+        io.to("admins").emit("notification:new");
 
         res.status(201).json(transfer);
     } catch (err) {

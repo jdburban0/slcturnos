@@ -170,3 +170,37 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
         }
     }
 }
+
+export async function sendAdminTransferAlertEmail({ admins, operatorName, shiftTitle, shiftDate, type, toName }) {
+    if (!process.env.RESEND_API_KEY || !admins.length) return;
+
+    const isTransfer = type === "transfer";
+    const subject = isTransfer
+        ? `Solicitud de traspaso — ${shiftTitle}`
+        : `Solicitud de desistimiento — ${shiftTitle}`;
+
+    for (const admin of admins) {
+        const html = `
+            <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
+                <h2 style="color:#0f172a;margin:0 0 8px;">${isTransfer ? "🔄 Solicitud de traspaso" : "⚠️ Solicitud de desistimiento"}</h2>
+                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${admin.name}</strong>, hay una solicitud pendiente que requiere tu revisión.</p>
+
+                <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;">👤 <strong>Operador:</strong> ${operatorName}</p>
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;">📋 <strong>Turno:</strong> ${shiftTitle}</p>
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;">📅 <strong>Fecha:</strong> ${shiftDate}</p>
+                    ${isTransfer ? `<p style="margin:0;color:#0f172a;font-size:0.95rem;">➡️ <strong>Ceder a:</strong> ${toName}</p>` : ""}
+                </div>
+
+                <p style="color:#475569;font-size:0.9rem;">Ingresa a SLC Turnos para aprobar o rechazar la solicitud.</p>
+                <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
+            </div>
+        `;
+
+        try {
+            await getResend().emails.send({ from: FROM, to: admin.email, subject, html });
+        } catch (err) {
+            console.error(`[Mailer] Error al notificar admin ${admin.email}:`, err.message);
+        }
+    }
+}
