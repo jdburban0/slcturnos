@@ -8,8 +8,8 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const storedToken = localStorage.getItem("slc_token");
-        const storedUser = localStorage.getItem("slc_user");
+        const storedToken = sessionStorage.getItem("slc_token");
+        const storedUser = sessionStorage.getItem("slc_user");
         if (storedToken && storedUser) {
             setToken(storedToken);
             setUser(JSON.parse(storedUser));
@@ -18,15 +18,15 @@ export function AuthProvider({ children }) {
     }, []);
 
     const login = (newToken, newUser) => {
-        localStorage.setItem("slc_token", newToken);
-        localStorage.setItem("slc_user", JSON.stringify(newUser));
+        sessionStorage.setItem("slc_token", newToken);
+        sessionStorage.setItem("slc_user", JSON.stringify(newUser));
         setToken(newToken);
         setUser(newUser);
     };
 
     const logout = () => {
-        localStorage.removeItem("slc_token");
-        localStorage.removeItem("slc_user");
+        sessionStorage.removeItem("slc_token");
+        sessionStorage.removeItem("slc_user");
         setToken(null);
         setUser(null);
     };
