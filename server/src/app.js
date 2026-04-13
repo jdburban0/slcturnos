@@ -28,9 +28,8 @@ app.use(
 );
 app.use(express.json({ limit: "5mb" }));
 
-app.get("/", (req, res) => {
-    res.json({ message: "Backend SLC Turnos OK" });
-});
+app.get("/", (req, res) => res.json({ ok: true }));
+app.get("/api/ping", (req, res) => res.json({ ok: true }));
 
 app.use("/api/auth", authRouter);
 app.use("/api/shifts", shiftsRouter);

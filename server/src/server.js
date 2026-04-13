@@ -62,7 +62,16 @@ async function expireOldRequests() {
 }
 
 setInterval(expireOldRequests, 5 * 60 * 1000);
-expireOldRequests(); // Run on startup too
+
+// Warm up DB connection on startup
+prisma.$queryRaw`SELECT 1`
+    .then(() => console.log("[DB] Conexión lista"))
+    .catch((err) => console.error("[DB] Error warmup:", err.message));
+
+// Keep DB alive every 4 minutes
+setInterval(() => prisma.$queryRaw`SELECT 1`.catch(() => {}), 4 * 60 * 1000);
+
+expireOldRequests();
 
 httpServer.listen(PORT, () => {
     console.log(`Servidor SLC Turnos corriendo en http://localhost:${PORT}`);

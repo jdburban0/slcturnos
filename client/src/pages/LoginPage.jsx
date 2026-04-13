@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, register } from "../api/index.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -17,6 +17,11 @@ function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [fieldKey, setFieldKey] = useState(0);
+
+    useEffect(() => {
+        const base = import.meta.env.VITE_API_URL || "";
+        fetch(`${base}/api/ping`).catch(() => {});
+    }, []);
 
     function switchMode(newMode) {
         if (newMode === mode) return;

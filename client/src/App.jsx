@@ -7,7 +7,7 @@ import AdminPage from "./pages/AdminPage.jsx";
 function ProtectedRoute({ children, allowedRoles }) {
     const { user, token, loading } = useAuth();
 
-    if (loading) return null;
+    if (loading) return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#0f172a", color: "#94a3b8", fontSize: "1rem" }}>Cargando…</div>;
     if (!token || !user) return <Navigate to="/login" replace />;
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         return <Navigate to={user.role === "operator" ? "/dashboard" : "/admin"} replace />;
@@ -18,7 +18,7 @@ function ProtectedRoute({ children, allowedRoles }) {
 function AppRoutes() {
     const { user, token, loading } = useAuth();
 
-    if (loading) return null;
+    if (loading) return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#0f172a", color: "#94a3b8", fontSize: "1rem" }}>Cargando…</div>;
 
     return (
         <Routes>
