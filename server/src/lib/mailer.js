@@ -171,6 +171,35 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
     }
 }
 
+export async function sendPasswordResetEmail({ email, name, code }) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    const html = `
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
+            <h2 style="color:#0f172a;margin:0 0 8px;">🔑 Restablecer contraseña</h2>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, recibimos una solicitud para restablecer tu contraseña.</p>
+            <div style="background:#ffffff;border-radius:8px;padding:24px;border:1px solid #e2e8f0;margin-bottom:20px;text-align:center;">
+                <p style="margin:0 0 8px;color:#475569;font-size:0.9rem;">Tu código de verificación es:</p>
+                <p style="margin:0;font-size:2.5rem;font-weight:700;letter-spacing:0.25em;color:#0f172a;">${code}</p>
+            </div>
+            <p style="color:#475569;font-size:0.9rem;margin:0 0 8px;">Usa este código para restablecer tu contraseña. Expira en 15 minutos.</p>
+            <p style="color:#94a3b8;font-size:0.78rem;margin:16px 0 0;">Si no solicitaste esto, ignora este mensaje. — SLC Turnos</p>
+        </div>
+    `;
+
+    try {
+        await getResend().emails.send({
+            from: FROM,
+            to: email,
+            subject: "Código para restablecer tu contraseña — SLC Turnos",
+            html,
+        });
+        console.log(`[Mailer] Código de recuperación enviado a ${email}`);
+    } catch (err) {
+        console.error("[Mailer] Error enviando código de recuperación:", err.message);
+    }
+}
+
 export async function sendAdminTransferAlertEmail({ admins, operatorName, shiftTitle, shiftDate, type, toName }) {
     if (!process.env.RESEND_API_KEY || !admins.length) return;
 

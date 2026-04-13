@@ -262,3 +262,17 @@ export async function sendScheduleEmail(token, imageBase64, weekLabel, customMes
     );
 }
 
+export async function forgotPassword(email) {
+    return handle(await fetch(`${BASE}/api/auth/forgot-password`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+    }));
+}
+
+export async function resetPassword(email, code, newPassword) {
+    return handle(await fetch(`${BASE}/api/auth/reset-password`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code, newPassword }),
+    }));
+}
+

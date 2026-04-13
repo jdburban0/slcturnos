@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.js";
+import { sendPasswordResetEmail } from "../lib/mailer.js";
 
 const router = Router();
 const SECRET = process.env.JWT_SECRET || "slc_dev_secret_change_in_prod";
@@ -139,6 +140,81 @@ router.patch("/change-password", async (req, res) => {
         await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
 
         res.json({ message: "Contraseña actualizada correctamente" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error del servidor" });
+    }
+});
+
+router.post("/forgot-password", async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ message: "El correo es requerido" });
+    }
+
+    try {
+        const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+        if (user) {
+            const code = String(Math.floor(100000 + Math.random() * 900000));
+
+            await prisma.passwordResetToken.deleteMany({ where: { email: email.toLowerCase() } });
+            await prisma.passwordResetToken.create({
+                data: {
+                    email: email.toLowerCase(),
+                    code,
+                    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+                },
+            });
+
+            await sendPasswordResetEmail({ email: email.toLowerCase(), name: user.name, code });
+        }
+
+        res.json({ message: "Si el correo existe, recibirás un código" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error del servidor" });
+    }
+});
+
+router.post("/reset-password", async (req, res) => {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+        return res.status(400).json({ message: "Faltan campos requeridos" });
+    }
+    if (newPassword.length < 6) {
+        return res.status(400).json({ message: "La nueva contraseña debe tener al menos 6 caracteres" });
+    }
+
+    try {
+        const token = await prisma.passwordResetToken.findFirst({
+            where: {
+                email: email.toLowerCase(),
+                code,
+                used: false,
+                expiresAt: { gt: new Date() },
+            },
+        });
+
+        if (!token) {
+            return res.status(400).json({ message: "Código inválido o expirado" });
+        }
+
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+
+        await prisma.$transaction([
+            prisma.passwordResetToken.update({
+                where: { id: token.id },
+                data: { used: true },
+            }),
+            prisma.user.update({
+                where: { email: email.toLowerCase() },
+                data: { passwordHash },
+            }),
+        ]);
+
+        res.json({ message: "Contraseña actualizada" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error del servidor" });
