@@ -228,5 +228,17 @@ html, body, #root {
 @media (max-width: 520px) {
   .schedule-wrapper { padding: 14px !important; border-radius: 12px !important; }
   .week-nav { gap: 8px !important; flex-wrap: wrap !important; }
-  .modal-body { padding: 16px !important; gap: 16px !important; }
+
+  /* Modal móvil */
+  .modal-header  { padding: 16px 16px 0 !important; }
+  .modal-tabs    { padding: 12px 16px 0 !important; gap: 6px !important; }
+  .modal-error   { margin: 10px 16px 0 !important; }
+  .modal-body    { padding: 14px 16px 16px !important; gap: 14px !important; }
+  .modal-preset-cards  { grid-template-columns: 1fr !important; }
+  .modal-single-grid   { grid-template-columns: 1fr !important; }
+  .modal-footer  {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .modal-footer button { width: 100% !important; }
 }
