@@ -703,8 +703,8 @@ const s = {
     },
     // Vista previa
     preview: {
-        background: "#f0fdf4",
-        border: "1.5px solid #bbf7d0",
+        background: "var(--success-bg)",
+        border: "1.5px solid var(--success)",
         borderRadius: "12px",
         padding: "12px 16px",
         display: "flex",
