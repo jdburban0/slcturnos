@@ -18,10 +18,14 @@ function LoginPage() {
     const [leaving, setLeaving] = useState(false);
     const [fieldKey, setFieldKey] = useState(0);
     const [formAnim, setFormAnim] = useState("form-enter");
+    const [serverReady, setServerReady] = useState(false);
 
     useEffect(() => {
         const base = import.meta.env.VITE_API_URL || "";
-        fetch(`${base}/api/ping`).catch(() => { });
+        const ping = () => fetch(`${base}/api/ping`)
+            .then(() => setServerReady(true))
+            .catch(() => setTimeout(ping, 3000));
+        ping();
     }, []);
 
     function switchMode(newMode) {
@@ -205,7 +209,14 @@ function LoginPage() {
                         <p key={error} className="anim-shake" style={styles.error}>{error}</p>
                     )}
 
-                    <button type="submit" style={styles.button} disabled={loading}>
+                    {!serverReady && (
+                        <div style={styles.serverWaiting}>
+                            <span style={styles.dot} />
+                            Iniciando servidor…
+                        </div>
+                    )}
+
+                    <button type="submit" style={{ ...styles.button, ...(!serverReady ? styles.buttonDisabled : {}) }} disabled={loading || !serverReady}>
                         {loading
                             ? isLogin ? "Ingresando..." : "Creando cuenta..."
                             : isLogin ? "Iniciar sesión" : "Crear cuenta"
@@ -329,6 +340,26 @@ const styles = {
         fontWeight: "bold",
         fontSize: "1rem",
         cursor: "pointer",
+    },
+    buttonDisabled: {
+        background: "#93c5fd",
+        cursor: "not-allowed",
+    },
+    serverWaiting: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        fontSize: "0.82rem",
+        color: "#64748b",
+        justifyContent: "center",
+    },
+    dot: {
+        display: "inline-block",
+        width: "8px",
+        height: "8px",
+        borderRadius: "50%",
+        background: "#f59e0b",
+        animation: "pulse 1.2s ease-in-out infinite",
     },
 };
 
