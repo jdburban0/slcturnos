@@ -337,7 +337,7 @@ function AdminPage() {
         } catch (err) { showToast("Error", err.message); }
     }
 
-    const approvedRequests = shifts.flatMap((s) => (s.requests ?? []).filter((r) => r.status === "APPROVED"));
+    const approvedRequests = shifts.filter((s) => s.status !== "CLOSED").flatMap((s) => (s.requests ?? []).filter((r) => r.status === "APPROVED"));
 
     return (
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
