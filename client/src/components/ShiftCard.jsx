@@ -1,5 +1,6 @@
 function ShiftCard({ shift, myRequest, onRequest, onCancelRequest, onDesist }) {
-    const approvedCount = shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0;
+    const approvedCount = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0)
+        + (shift.manualAssignments?.length ?? 0);
     const availableSlots = shift.totalSlots - approvedCount;
     const isFull = shift.status === "FULL" || availableSlots <= 0;
     const isPending = myRequest?.status === "PENDING";
