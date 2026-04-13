@@ -224,6 +224,13 @@ html, body, #root {
   background: var(--hover-overlay);
 }
 
+/* ─── Preset cards turno (tema claro) ────────────────── */
+.preset-card-day   { border: 2px solid #fde68a !important; background: #fffbeb !important; }
+.preset-card-night { border: 2px solid #c7d2fe !important; background: #eef2ff !important; }
+
+[data-theme="dark"] .preset-card-day   { border: 2px solid rgba(253,230,138,0.3) !important; background: rgba(253,230,138,0.07) !important; }
+[data-theme="dark"] .preset-card-night { border: 2px solid rgba(199,210,254,0.3) !important; background: rgba(99,102,241,0.08) !important; }
+
 /* ─── Responsive Adjustments ──────────────────────────── */
 @media (max-width: 520px) {
   .schedule-wrapper { padding: 14px !important; border-radius: 12px !important; }

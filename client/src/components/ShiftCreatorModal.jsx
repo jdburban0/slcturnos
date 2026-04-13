@@ -243,7 +243,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                             <label style={s.fieldLabel}>Tipos de turno</label>
                             <div style={s.presetCards} className="modal-preset-cards">
                                 {/* Turno diurno */}
-                                <div style={{ ...s.presetCard, ...(dayPreset.enabled ? s.presetCardDay : {}) }}>
+                                <div style={s.presetCard} className={dayPreset.enabled ? "preset-card-day" : ""}>
                                     <div style={s.presetHeader}>
                                         <span style={s.presetIcon}>☀️</span>
                                         <span style={s.presetName}>Diurno</span>
@@ -285,7 +285,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                 </div>
 
                                 {/* Turno nocturno */}
-                                <div style={{ ...s.presetCard, ...(nightPreset.enabled ? s.presetCardNight : {}) }}>
+                                <div style={s.presetCard} className={nightPreset.enabled ? "preset-card-night" : ""}>
                                     <div style={s.presetHeader}>
                                         <span style={s.presetIcon}>🌙</span>
                                         <span style={s.presetName}>Nocturno</span>
@@ -608,14 +608,8 @@ const s = {
         background: "var(--bg-color)",
         transition: "border-color 0.2s, background 0.2s",
     },
-    presetCardDay: {
-        border: "2px solid #fde68a",
-        background: "#fffbeb",
-    },
-    presetCardNight: {
-        border: "2px solid #c7d2fe",
-        background: "#eef2ff",
-    },
+    presetCardDay: {},
+    presetCardNight: {},
     presetHeader: {
         display: "flex",
         alignItems: "center",
