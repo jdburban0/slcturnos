@@ -356,7 +356,7 @@ function LoginPage() {
                             style={styles.backLink}
                             onClick={() => switchMode("login")}
                         >
-                            ← Volver al inicio de sesión
+                            Volver al inicio de sesión
                         </p>
                     )}
                     {isReset && (
@@ -364,7 +364,7 @@ function LoginPage() {
                             style={styles.backLink}
                             onClick={() => switchMode("forgot")}
                         >
-                            ← Volver
+                            Volver
                         </p>
                     )}
                 </div>
