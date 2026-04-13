@@ -20,7 +20,7 @@ function LoginPage() {
 
     useEffect(() => {
         const base = import.meta.env.VITE_API_URL || "";
-        fetch(`${base}/api/ping`).catch(() => {});
+        fetch(`${base}/api/ping`).catch(() => { });
     }, []);
 
     function switchMode(newMode) {
@@ -173,7 +173,7 @@ function LoginPage() {
                                 value={group}
                                 onChange={(e) => setGroup(e.target.value)}
                             >
-                                <option value="">Sin grupo (administrador)</option>
+                                <option value="">Sin grupo</option>
                                 <option value="E1">E1</option>
                                 <option value="E2">E2</option>
                             </select>
