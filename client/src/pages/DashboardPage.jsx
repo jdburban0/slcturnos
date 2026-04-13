@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
 import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
@@ -59,7 +60,7 @@ function WeekStrip({ shifts, selectedDay, onSelectDay }) {
                     >
                         <span style={stripStyles.dayName}>{dayName}</span>
                         <span style={stripStyles.dayNum}>{d}</span>
-                        {hasOpen && <div style={{ ...stripStyles.dot, background: isSelected ? "#fff" : "#60a5fa" }} />}
+                        {hasOpen && <div style={{ ...stripStyles.dot, background: isSelected ? "var(--text-inverse)" : "var(--primary)" }} />}
                     </button>
                 );
             })}
@@ -76,14 +77,15 @@ const stripStyles = {
         gap: "2px",
         padding: "12px 18px",
         borderRadius: "12px",
-        border: "1px solid rgba(255,255,255,0.07)",
-        background: "#1e293b",
+        border: "1px solid var(--card-border)",
+        background: "var(--card-bg)",
         cursor: "pointer",
         minWidth: "64px",
-        color: "#94a3b8",
+        color: "var(--text-muted)",
+        transition: "all 0.2s ease"
     },
-    btnSelected: { background: "#3b82f6", border: "1px solid #3b82f6", color: "#fff" },
-    btnToday: { border: "1.5px solid #38bdf8", color: "#38bdf8" },
+    btnSelected: { background: "var(--primary)", border: "1px solid var(--primary)", color: "#fff" },
+    btnToday: { border: "1.5px solid var(--primary-hover)", color: "var(--primary-hover)" },
     dayName: { fontSize: "0.65rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em" },
     dayNum: { fontSize: "1.5rem", fontWeight: "800", lineHeight: 1 },
     dot: { width: "5px", height: "5px", borderRadius: "50%", marginTop: "2px" },
@@ -92,6 +94,7 @@ const stripStyles = {
 function DashboardPage() {
     const navigate = useNavigate();
     const { user, token, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const [shifts, setShifts] = useState([]);
     const [shiftsUpdatedAt, setShiftsUpdatedAt] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -226,14 +229,14 @@ function DashboardPage() {
                 <div style={styles.modalOverlay} onClick={() => setDesistModal(null)}>
                     <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                         <h3 style={styles.modalTitle}>Desistir del turno</h3>
-                        <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "0.85rem" }}>{desistModal.shiftTitle}</p>
+                        <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{desistModal.shiftTitle}</p>
 
                         {desistMode === "choose" && (
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                 <button style={styles.modalSave} onClick={() => setDesistMode("transfer")}>
                                     Pasar el turno a un compañero
                                 </button>
-                                <button style={{ ...styles.modalCancel, background: "#fee2e2", color: "#b91c1c", border: "none" }} onClick={handleDesistCancel}>
+                                <button style={{ ...styles.modalCancel, background: "var(--danger-bg)", color: "var(--danger)", border: "none" }} onClick={handleDesistCancel}>
                                     Solo liberar mi cupo
                                 </button>
                                 <button style={styles.modalCancel} onClick={() => setDesistModal(null)}>
@@ -244,12 +247,12 @@ function DashboardPage() {
 
                         {desistMode === "transfer" && (
                             <form onSubmit={handleTransferSubmit} style={styles.modalForm}>
-                                <p style={{ margin: "0 0 10px", color: "#94a3b8", fontSize: "0.82rem" }}>
+                                <p style={{ margin: "0 0 10px", color: "var(--text-muted)", fontSize: "0.82rem" }}>
                                     Selecciona un compañero. El traspaso queda pendiente de aprobación.
                                 </p>
                                 <div style={styles.colleagueList}>
                                     {colleagues.length === 0 && (
-                                        <p style={{ color: "#64748b", fontSize: "0.85rem", margin: 0 }}>No hay compañeros disponibles.</p>
+                                        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>No hay compañeros disponibles.</p>
                                     )}
                                     {colleagues.map((c) => (
                                         <div
@@ -324,6 +327,9 @@ function DashboardPage() {
                         <button style={styles.pwdButton} onClick={() => { setShowChangePwd(true); setPwdError(""); setPwdSuccess(""); }}>
                             🔒 Contraseña
                         </button>
+                        <button onClick={toggleTheme} className="theme-toggle" title="Alternar tema">
+                            {theme === 'dark' ? '☀️' : '🌙'}
+                        </button>
                         <button style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
                             Cerrar sesión
                         </button>
@@ -334,15 +340,15 @@ function DashboardPage() {
                 {/* Stats */}
                 <div style={styles.statsRow}>
                     <div style={styles.statCard}>
-                        <span style={{ ...styles.statValue, color: "#4ade80" }}>{myApprovedShifts.length}</span>
+                        <span style={{ ...styles.statValue, color: "var(--success)" }}>{myApprovedShifts.length}</span>
                         <span style={styles.statLabel}>Aprobados</span>
                     </div>
                     <div style={styles.statCard}>
-                        <span style={{ ...styles.statValue, color: "#fbbf24" }}>{myPendingCount}</span>
+                        <span style={{ ...styles.statValue, color: "var(--warning)" }}>{myPendingCount}</span>
                         <span style={styles.statLabel}>Pendientes</span>
                     </div>
                     <div style={styles.statCard}>
-                        <span style={{ ...styles.statValue, color: "#60a5fa" }}>{openShiftsCount}</span>
+                        <span style={{ ...styles.statValue, color: "var(--primary)" }}>{openShiftsCount}</span>
                         <span style={styles.statLabel}>Disponibles</span>
                     </div>
                 </div>
@@ -399,8 +405,8 @@ function DashboardPage() {
 const styles = {
     page: {
         minHeight: "100vh",
-        background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
-        fontFamily: "Arial, sans-serif",
+        background: "transparent",
+        fontFamily: "var(--font-family)",
         padding: "28px 20px",
     },
     container: { maxWidth: "1100px", margin: "0 auto" },
@@ -412,13 +418,13 @@ const styles = {
         marginBottom: "20px",
         flexWrap: "wrap",
     },
-    title: { margin: 0, color: "#ffffff", fontSize: "1.6rem", fontWeight: "800" },
-    subtitle: { margin: "4px 0 0", color: "#94a3b8", fontSize: "0.9rem" },
+    title: { margin: 0, color: "var(--text-main)", fontSize: "1.6rem", fontWeight: "800" },
+    subtitle: { margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.9rem" },
     headerActions: { display: "flex", gap: "10px", alignItems: "center" },
     pwdButton: {
-        background: "#334155",
-        color: "#e2e8f0",
-        border: "none",
+        background: "var(--card-bg)",
+        color: "var(--text-main)",
+        border: "1px solid var(--border-color)",
         padding: "9px 14px",
         borderRadius: "9px",
         cursor: "pointer",
@@ -426,7 +432,7 @@ const styles = {
         fontSize: "0.85rem",
     },
     logoutButton: {
-        background: "#ef4444",
+        background: "var(--danger)",
         color: "#fff",
         border: "none",
         padding: "9px 14px",
@@ -441,15 +447,16 @@ const styles = {
         marginBottom: "16px",
     },
     statCard: {
-        background: "#1e293b",
+        background: "var(--card-bg)",
         borderRadius: "12px",
-        padding: "12px 18px",
+        padding: "16px 18px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "2px",
-        border: "1px solid rgba(255,255,255,0.07)",
+        gap: "4px",
+        border: "1px solid var(--border-color)",
         flex: 1,
+        backdropFilter: "blur(16px)",
     },
     statValue: {
         fontSize: "1.5rem",
@@ -458,7 +465,7 @@ const styles = {
     },
     statLabel: {
         fontSize: "0.65rem",
-        color: "#64748b",
+        color: "var(--text-muted)",
         fontWeight: "700",
         textTransform: "uppercase",
         letterSpacing: "0.04em",
@@ -475,53 +482,55 @@ const styles = {
         alignItems: "center",
         marginBottom: "8px",
         paddingBottom: "6px",
-        borderBottom: "1px solid rgba(255,255,255,0.1)",
+        borderBottom: "1px solid var(--border-color)",
     },
-    dayLabel: { color: "#e2e8f0", fontWeight: "700", fontSize: "0.95rem", textTransform: "capitalize" },
-    dayCount: { color: "#64748b", fontSize: "0.78rem" },
+    dayLabel: { color: "var(--text-main)", fontWeight: "700", fontSize: "0.95rem", textTransform: "capitalize" },
+    dayCount: { color: "var(--text-muted)", fontSize: "0.78rem" },
     list: { display: "flex", flexDirection: "column", gap: "8px" },
-    info: { color: "#94a3b8", textAlign: "center", padding: "40px 0" },
+    info: { color: "var(--text-muted)", textAlign: "center", padding: "40px 0" },
     errorMsg: {
-        background: "#fee2e2",
-        color: "#991b1b",
+        background: "var(--danger-bg)",
+        color: "var(--danger)",
         padding: "12px 16px",
         borderRadius: "10px",
         marginBottom: "16px",
     },
     emptyState: { textAlign: "center", padding: "60px 20px" },
     emptyIcon: { fontSize: "3rem", margin: "0 0 12px" },
-    emptyText: { color: "#e2e8f0", fontSize: "1.1rem", margin: "0 0 6px" },
-    emptySubtext: { color: "#64748b", fontSize: "0.9rem" },
+    emptyText: { color: "var(--text-main)", fontSize: "1.1rem", margin: "0 0 6px" },
+    emptySubtext: { color: "var(--text-muted)", fontSize: "0.9rem" },
     toast: {
         position: "fixed",
         bottom: "24px",
         right: "24px",
-        background: "#1e293b",
-        color: "#f1f5f9",
+        background: "var(--card-bg)",
+        color: "var(--text-main)",
         padding: "14px 18px",
         borderRadius: "12px",
-        boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+        boxShadow: "var(--card-shadow)",
         zIndex: 200,
         maxWidth: "320px",
-        border: "1px solid #334155",
+        border: "1px solid var(--border-color)",
+        backdropFilter: "blur(12px)",
     },
-    toastMsg: { margin: "4px 0 0", fontSize: "0.85rem", color: "#94a3b8" },
+    toastMsg: { margin: "4px 0 0", fontSize: "0.85rem", color: "var(--text-muted)" },
     modalOverlay: {
         position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
         display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300,
+        backdropFilter: "blur(4px)",
     },
     modalBox: {
-        background: "#1e293b", borderRadius: "16px", padding: "28px 24px",
-        width: "100%", maxWidth: "380px", border: "1px solid #334155",
+        background: "var(--bg-color)", borderRadius: "16px", padding: "28px 24px",
+        width: "100%", maxWidth: "380px", border: "1px solid var(--border-color)",
     },
-    modalTitle: { margin: "0 0 20px", color: "#f1f5f9", fontSize: "1.1rem", fontWeight: "800" },
+    modalTitle: { margin: "0 0 20px", color: "var(--text-main)", fontSize: "1.1rem", fontWeight: "800" },
     modalForm: { display: "flex", flexDirection: "column", gap: "12px" },
     modalInput: {
-        background: "#0f172a", border: "1px solid #334155", borderRadius: "8px",
-        padding: "10px 14px", color: "#f1f5f9", fontSize: "0.9rem", width: "100%",
+        background: "var(--input-bg)", border: "1px solid var(--border-color)", borderRadius: "8px",
+        padding: "10px 14px", color: "var(--text-main)", fontSize: "0.9rem", width: "100%", outline: "none",
     },
-    modalError: { margin: 0, color: "#f87171", fontSize: "0.85rem" },
-    modalSuccess: { margin: 0, color: "#4ade80", fontSize: "0.85rem" },
+    modalError: { margin: 0, color: "var(--danger)", fontSize: "0.85rem" },
+    modalSuccess: { margin: 0, color: "var(--success)", fontSize: "0.85rem" },
     modalActions: { display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" },
     colleagueList: {
         display: "flex",
@@ -536,22 +545,22 @@ const styles = {
         flexDirection: "column",
         padding: "10px 12px",
         borderRadius: "8px",
-        border: "1px solid #334155",
+        border: "1px solid var(--border-color)",
         cursor: "pointer",
         transition: "background 0.15s",
     },
     colleagueItemSelected: {
-        background: "#1e3a5f",
-        border: "1px solid #3b82f6",
+        background: "var(--primary-light)",
+        border: "1px solid var(--primary)",
     },
-    colleagueName: { color: "#f1f5f9", fontWeight: "700", fontSize: "0.88rem" },
-    colleagueEmail: { color: "#64748b", fontSize: "0.78rem" },
+    colleagueName: { color: "var(--text-main)", fontWeight: "700", fontSize: "0.88rem" },
+    colleagueEmail: { color: "var(--text-muted)", fontSize: "0.78rem" },
     modalCancel: {
-        background: "#334155", color: "#94a3b8", border: "none",
+        background: "var(--card-bg)", color: "var(--text-muted)", border: "1px solid var(--border-color)",
         padding: "9px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
     },
     modalSave: {
-        background: "#3b82f6", color: "#fff", border: "none",
+        background: "var(--primary)", color: "#fff", border: "none",
         padding: "9px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
     },
 };

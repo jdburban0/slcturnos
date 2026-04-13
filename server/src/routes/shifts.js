@@ -88,10 +88,11 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         // Si aumentaron los cupos, reabrir turno si estaba FULL y ahora hay espacio
         const newSlots = parseInt(totalSlots);
         if (before && newSlots > before.totalSlots && shift.status === "FULL") {
-            const approvedCount = await prisma.shiftRequest.count({
-                where: { shiftId: shift.id, status: "APPROVED" },
-            });
-            if (approvedCount < newSlots) {
+            const [approvedCount, manualCount] = await Promise.all([
+                prisma.shiftRequest.count({ where: { shiftId: shift.id, status: "APPROVED" } }),
+                prisma.manualAssignment.count({ where: { shiftId: shift.id } }),
+            ]);
+            if (approvedCount + manualCount < newSlots) {
                 await prisma.shift.update({
                     where: { id: shift.id },
                     data: { status: "OPEN" },

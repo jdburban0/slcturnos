@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, register } from "../api/index.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 function LoginPage() {
     const navigate = useNavigate();
     const { login: saveAuth } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const [mode, setMode] = useState("login"); // "login" | "register"
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -93,8 +95,15 @@ function LoginPage() {
 
     return (
         <div style={styles.page}>
+            {/* Theme Toggle Button */}
+            <div style={styles.themeToggleContainer}>
+                <button onClick={toggleTheme} className="theme-toggle" title="Alternar tema">
+                    {theme === 'dark' ? '☀️' : '🌙'}
+                </button>
+            </div>
+
             <div
-                className={leaving ? "anim-fade-out" : "anim-fade-in-up"}
+                className={`glass-container ${leaving ? "anim-fade-out" : "anim-fade-in-up"}`}
                 style={styles.card}
             >
                 {/* Logo */}
@@ -123,106 +132,112 @@ function LoginPage() {
                 </div>
 
                 <div key={fieldKey} className={formAnim}>
-                <form style={styles.form} onSubmit={handleSubmit}>
-                    {!isLogin && (
-                        <div key={`name-${fieldKey}`} className="anim-field" style={styles.field}>
-                            <label style={styles.label}>Nombre completo</label>
+                    <form style={styles.form} onSubmit={handleSubmit}>
+                        {!isLogin && (
+                            <div key={`name-${fieldKey}`} className="anim-field" style={styles.field}>
+                                <label style={styles.label}>Nombre completo</label>
+                                <input
+                                    type="text"
+                                    placeholder="Tu nombre"
+                                    className="input-field"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        )}
+
+                        <div key={`email-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: isLogin ? "0ms" : "40ms" }}>
+                            <label style={styles.label}>Correo</label>
                             <input
-                                type="text"
-                                placeholder="Tu nombre"
-                                style={styles.input}
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                type="email"
+                                placeholder="correo@sig.systems"
+                                className="input-field"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
-                    )}
 
-                    <div key={`email-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: isLogin ? "0ms" : "40ms" }}>
-                        <label style={styles.label}>Correo</label>
-                        <input
-                            type="email"
-                            placeholder="correo@sig.systems"
-                            style={styles.input}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div key={`pass-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: isLogin ? "40ms" : "80ms" }}>
-                        <label style={styles.label}>Contraseña</label>
-                        <input
-                            type="password"
-                            placeholder="••••••••"
-                            style={styles.input}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    {!isLogin && (
-                        <div key={`confirm-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "80ms" }}>
-                            <label style={styles.label}>Confirmar contraseña</label>
+                        <div key={`pass-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: isLogin ? "40ms" : "80ms" }}>
+                            <label style={styles.label}>Contraseña</label>
                             <input
                                 type="password"
                                 placeholder="••••••••"
-                                style={styles.input}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="input-field"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
                         </div>
-                    )}
 
-                    {!isLogin && (
-                        <div key={`group-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "120ms" }}>
-                            <label style={styles.label}>Grupo <span style={{ color: "#64748b", fontWeight: 400 }}>(solo operadores)</span></label>
-                            <select
-                                style={{ ...styles.input, color: group ? "#1e293b" : "#94a3b8" }}
-                                value={group}
-                                onChange={(e) => setGroup(e.target.value)}
-                            >
-                                <option value="">Sin grupo</option>
-                                <option value="E1">E1</option>
-                                <option value="E2">E2</option>
-                            </select>
-                        </div>
-                    )}
+                        {!isLogin && (
+                            <div key={`confirm-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "80ms" }}>
+                                <label style={styles.label}>Confirmar contraseña</label>
+                                <input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="input-field"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        )}
 
-                    {!isLogin && (
-                        <div key={`code-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "200ms" }}>
-                            <label style={styles.label}>Código de acceso</label>
-                            <input
-                                type="text"
-                                placeholder="Código proporcionado por el administrador"
-                                style={styles.input}
-                                value={accessCode}
-                                onChange={(e) => setAccessCode(e.target.value)}
-                                required
-                            />
-                        </div>
-                    )}
+                        {!isLogin && (
+                            <div key={`group-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "120ms" }}>
+                                <label style={styles.label}>Grupo <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>(solo operadores)</span></label>
+                                <select
+                                    className="input-field"
+                                    style={{ color: group ? "var(--text-main)" : "var(--text-muted)" }}
+                                    value={group}
+                                    onChange={(e) => setGroup(e.target.value)}
+                                >
+                                    <option value="">Sin grupo</option>
+                                    <option value="E1">E1</option>
+                                    <option value="E2">E2</option>
+                                </select>
+                            </div>
+                        )}
 
-                    {error && (
-                        <p key={error} className="anim-shake" style={styles.error}>{error}</p>
-                    )}
+                        {!isLogin && (
+                            <div key={`code-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "200ms" }}>
+                                <label style={styles.label}>Código de acceso</label>
+                                <input
+                                    type="text"
+                                    placeholder="Código proporcionado por el administrador"
+                                    className="input-field"
+                                    value={accessCode}
+                                    onChange={(e) => setAccessCode(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        )}
 
-                    {!serverReady && (
-                        <div style={styles.serverWaiting}>
-                            <span style={styles.dot} />
-                            Iniciando servidor…
-                        </div>
-                    )}
+                        {error && (
+                            <p key={error} className="anim-shake" style={styles.error}>{error}</p>
+                        )}
 
-                    <button type="submit" style={{ ...styles.button, ...(!serverReady ? styles.buttonDisabled : {}) }} disabled={loading || !serverReady}>
-                        {loading
-                            ? isLogin ? "Ingresando..." : "Creando cuenta..."
-                            : isLogin ? "Iniciar sesión" : "Crear cuenta"
-                        }
-                    </button>
-                </form>
+                        {!serverReady && (
+                            <div style={styles.serverWaiting}>
+                                <span style={styles.dot} />
+                                Iniciando servidor…
+                            </div>
+                        )}
+
+                        <button 
+                            type="submit" 
+                            className="btn btn-primary" 
+                            style={{ marginTop: "10px", width: "100%", padding: "14px" }} 
+                            disabled={loading || !serverReady}
+                        >
+                            {loading
+                                ? isLogin ? "Ingresando..." : "Creando cuenta..."
+                                : isLogin ? "Iniciar sesión" : "Crear cuenta"
+                            }
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -235,76 +250,79 @@ const styles = {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
+        background: "var(--bg-gradient)",
         padding: "20px",
-        fontFamily: "Arial, sans-serif",
+        position: "relative"
+    },
+    themeToggleContainer: {
+        position: "absolute",
+        top: "20px",
+        right: "20px",
     },
     card: {
         width: "100%",
         maxWidth: "420px",
-        background: "#ffffff",
-        borderRadius: "20px",
-        padding: "36px 32px",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+        padding: "40px 32px",
     },
     logo: {
         textAlign: "center",
-        marginBottom: "24px",
+        marginBottom: "28px",
     },
     logoText: {
-        fontSize: "2.2rem",
+        fontSize: "2.5rem",
         fontWeight: "900",
-        color: "#2563eb",
-        letterSpacing: "2px",
+        color: "var(--primary)",
+        letterSpacing: "1px",
     },
     logoSub: {
-        fontSize: "1rem",
+        fontSize: "1.1rem",
         fontWeight: "600",
-        color: "#64748b",
+        color: "var(--text-muted)",
         marginLeft: "6px",
     },
     tabs: {
         display: "flex",
         position: "relative",
-        borderRadius: "10px",
-        background: "#f1f5f9",
-        padding: "4px",
-        marginBottom: "24px",
+        borderRadius: "12px",
+        background: "var(--hover-overlay)",
+        padding: "5px",
+        marginBottom: "28px",
         gap: "0",
     },
     tabPill: {
         position: "absolute",
-        top: "4px",
-        left: "4px",
-        width: "calc(50% - 4px)",
-        height: "calc(100% - 8px)",
-        background: "#ffffff",
-        borderRadius: "7px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-        transition: "transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        top: "5px",
+        left: "5px",
+        width: "calc(50% - 5px)",
+        height: "calc(100% - 10px)",
+        background: "var(--card-bg)",
+        borderRadius: "8px",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+        transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
         pointerEvents: "none",
+        border: "1px solid var(--card-border)"
     },
     tab: {
         flex: 1,
-        padding: "9px",
+        padding: "10px",
         border: "none",
         borderRadius: "8px",
         background: "transparent",
-        color: "#64748b",
+        color: "var(--text-muted)",
         fontWeight: "600",
-        fontSize: "0.88rem",
+        fontSize: "0.9rem",
         cursor: "pointer",
         position: "relative",
         zIndex: 1,
         transition: "color 0.2s ease",
     },
     tabActive: {
-        color: "#1e293b",
+        color: "var(--text-main)",
     },
     form: {
         display: "flex",
         flexDirection: "column",
-        gap: "16px",
+        gap: "18px",
     },
     field: {
         display: "flex",
@@ -313,44 +331,24 @@ const styles = {
     },
     label: {
         fontWeight: "600",
-        color: "#1e293b",
+        color: "var(--text-main)",
         fontSize: "0.9rem",
-    },
-    input: {
-        padding: "12px 14px",
-        borderRadius: "10px",
-        border: "1.5px solid #cbd5e1",
-        fontSize: "1rem",
     },
     error: {
-        background: "#fee2e2",
-        color: "#991b1b",
-        padding: "10px 14px",
-        borderRadius: "8px",
+        background: "var(--danger-bg)",
+        color: "var(--danger)",
+        padding: "12px 14px",
+        borderRadius: "10px",
         margin: 0,
         fontSize: "0.9rem",
-    },
-    button: {
-        marginTop: "4px",
-        padding: "13px",
-        border: "none",
-        borderRadius: "10px",
-        background: "#2563eb",
-        color: "#ffffff",
-        fontWeight: "bold",
-        fontSize: "1rem",
-        cursor: "pointer",
-    },
-    buttonDisabled: {
-        background: "#93c5fd",
-        cursor: "not-allowed",
+        border: "1px solid rgba(220, 38, 38, 0.2)"
     },
     serverWaiting: {
         display: "flex",
         alignItems: "center",
         gap: "8px",
-        fontSize: "0.82rem",
-        color: "#64748b",
+        fontSize: "0.85rem",
+        color: "var(--text-muted)",
         justifyContent: "center",
     },
     dot: {
@@ -358,7 +356,7 @@ const styles = {
         width: "8px",
         height: "8px",
         borderRadius: "50%",
-        background: "#f59e0b",
+        background: "var(--warning)",
         animation: "pulse 1.2s ease-in-out infinite",
     },
 };

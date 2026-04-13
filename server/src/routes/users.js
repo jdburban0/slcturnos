@@ -36,9 +36,13 @@ router.get("/", requireAuth, requireRole("admin", "lead"), async (req, res) => {
 
 // POST create user (admin only)
 router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, group } = req.body;
     if (!name || !email || !password) {
         return res.status(400).json({ message: "Nombre, correo y contraseña son requeridos" });
+    }
+    const assignedRole = role || "operator";
+    if (assignedRole === "operator" && (!group || !["E1", "E2"].includes(group))) {
+        return res.status(400).json({ message: "Los operadores deben tener grupo E1 o E2" });
     }
 
     try {
@@ -53,7 +57,8 @@ router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
                 name,
                 email: email.toLowerCase(),
                 passwordHash,
-                role: role || "operator",
+                role: assignedRole,
+                ...(assignedRole === "operator" && { group }),
             },
             select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
         });
@@ -95,9 +100,12 @@ router.delete("/:id", requireAuth, requireRole("admin"), async (req, res) => {
         const user = await prisma.user.findUnique({ where: { id } });
         if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-        await prisma.notification.deleteMany({ where: { userId: id } });
-        await prisma.shiftRequest.deleteMany({ where: { userId: id } });
-        await prisma.user.delete({ where: { id } });
+        await prisma.$transaction([
+            prisma.notification.deleteMany({ where: { userId: id } }),
+            prisma.shiftTransfer.deleteMany({ where: { fromUserId: id } }),
+            prisma.shiftRequest.deleteMany({ where: { userId: id } }),
+            prisma.user.delete({ where: { id } }),
+        ]);
 
         res.json({ message: "Usuario eliminado" });
     } catch (err) {

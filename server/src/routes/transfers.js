@@ -42,56 +42,56 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         if (!transfer) return res.status(404).json({ message: "Traspaso no encontrada" });
         if (transfer.status !== "PENDING") return res.status(400).json({ message: "Esta traspaso ya fue procesada" });
 
+        const isTransfer = !!transfer.toName;
+
         if (action === "approve") {
-            // Cancel the original request
-            await prisma.shiftRequest.update({
-                where: { id: transfer.requestId },
-                data: { status: "CANCELLED" },
-            });
-
-            // Reopen shift if it was FULL
-            if (transfer.shift.status === "FULL") {
-                await prisma.shift.update({
-                    where: { id: transfer.shiftId },
-                    data: { status: "OPEN" },
-                });
-            }
-
-            const isTransfer = !!transfer.toName;
-
-            await prisma.notification.create({
-                data: {
-                    userId: transfer.fromUserId,
-                    title: isTransfer ? "Traspaso aprobado" : "Desistimiento aprobado",
-                    message: isTransfer
-                        ? `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue aprobado.`
-                        : `Tu solicitud para desistir del turno "${transfer.shift.title}" fue aprobada.`,
-                },
-            });
-
-            if (isTransfer) {
-                await prisma.manualAssignment.create({
-                    data: {
-                        shiftId: transfer.shiftId,
-                        name: transfer.toName,
-                        email: transfer.toEmail,
-                        assignedBy: req.user.id,
-                    },
+            await prisma.$transaction(async (tx) => {
+                await tx.shiftRequest.update({
+                    where: { id: transfer.requestId },
+                    data: { status: "CANCELLED" },
                 });
 
-                const approvedReqs = await prisma.shiftRequest.count({
-                    where: { shiftId: transfer.shiftId, status: "APPROVED" },
-                });
-                const manualCount = await prisma.manualAssignment.count({
-                    where: { shiftId: transfer.shiftId },
-                });
-                if (approvedReqs + manualCount >= transfer.shift.totalSlots) {
-                    await prisma.shift.update({
+                if (transfer.shift.status === "FULL") {
+                    await tx.shift.update({
                         where: { id: transfer.shiftId },
-                        data: { status: "FULL" },
+                        data: { status: "OPEN" },
                     });
                 }
 
+                await tx.notification.create({
+                    data: {
+                        userId: transfer.fromUserId,
+                        title: isTransfer ? "Traspaso aprobado" : "Desistimiento aprobado",
+                        message: isTransfer
+                            ? `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue aprobado.`
+                            : `Tu solicitud para desistir del turno "${transfer.shift.title}" fue aprobada.`,
+                    },
+                });
+
+                if (isTransfer) {
+                    await tx.manualAssignment.create({
+                        data: {
+                            shiftId: transfer.shiftId,
+                            name: transfer.toName,
+                            email: transfer.toEmail,
+                            assignedBy: req.user.id,
+                        },
+                    });
+
+                    const [approvedReqs, manualCount] = await Promise.all([
+                        tx.shiftRequest.count({ where: { shiftId: transfer.shiftId, status: "APPROVED" } }),
+                        tx.manualAssignment.count({ where: { shiftId: transfer.shiftId } }),
+                    ]);
+                    if (approvedReqs + manualCount >= transfer.shift.totalSlots) {
+                        await tx.shift.update({
+                            where: { id: transfer.shiftId },
+                            data: { status: "FULL" },
+                        });
+                    }
+                }
+            });
+
+            if (isTransfer) {
                 sendAssignmentEmail({
                     name: transfer.toName,
                     email: transfer.toEmail,
@@ -104,7 +104,6 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
                 });
             }
         } else {
-            const isTransfer = !!transfer.toName;
             await prisma.notification.create({
                 data: {
                     userId: transfer.fromUserId,
