@@ -255,6 +255,21 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             if (prevNightApproved) {
                 return res.status(400).json({ message: "No puedes tomar un turno diurno si tienes un turno nocturno aprobado el día anterior" });
             }
+
+            // También verificar asignaciones manuales de turno nocturno el día anterior
+            const requestingUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+            const prevNightManual = await prisma.manualAssignment.findFirst({
+                where: {
+                    email: requestingUser.email,
+                    shift: {
+                        type: "NIGHT",
+                        date: { gte: prevDayStart, lte: prevDayEnd },
+                    },
+                },
+            });
+            if (prevNightManual) {
+                return res.status(400).json({ message: "No puedes tomar un turno diurno si tienes un turno nocturno aprobado el día anterior" });
+            }
         }
 
         const holdExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min hold
