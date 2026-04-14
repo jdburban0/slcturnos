@@ -16,8 +16,8 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
         weekday: "short", month: "short", day: "numeric",
     });
 
-    let statusBg = "rgba(255,255,255,0.08)";
-    let statusColor = "#94a3b8";
+    let statusBg = "var(--primary-light)";
+    let statusColor = "var(--primary)";
     let statusText = `${availableSlots} cupo${availableSlots !== 1 ? "s" : ""} libre${availableSlots !== 1 ? "s" : ""}`;
 
     if (isApproved || isManualAssigned) { statusBg = "#dcfce7"; statusColor = "#15803d"; statusText = "Aprobado ✓"; }
@@ -94,10 +94,10 @@ const styles = {
         alignItems: "flex-start",
         gap: "14px",
         padding: "14px 18px",
-        background: "rgba(255,255,255,0.05)",
+        background: "var(--hover-overlay)",
         borderRadius: "12px",
+        border: "1px solid var(--border-color)",
         borderLeft: "4px solid transparent",
-        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.07)",
         transition: "box-shadow 0.15s",
     },
     rowPending: { borderLeft: "4px solid #f59e0b" },
@@ -129,8 +129,8 @@ const styles = {
         marginTop: "3px",
         flexWrap: "wrap",
     },
-    metaItem: { color: "#64748b", fontSize: "0.82rem" },
-    metaDot: { color: "#cbd5e1", fontSize: "0.8rem" },
+    metaItem: { color: "var(--text-muted)", fontSize: "0.82rem" },
+    metaDot: { color: "var(--text-muted)", fontSize: "0.8rem" },
     pill: {
         padding: "4px 10px",
         borderRadius: "999px",
