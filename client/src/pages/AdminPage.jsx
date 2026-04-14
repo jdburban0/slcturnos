@@ -88,7 +88,7 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                                     ) : (
                                         <div style={styles.actionBtns}>
                                             <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
-                                            {shift.type === "DAY" && shift.status !== "CLOSED" && onAssign && (
+                                            {shift.status !== "CLOSED" && onAssign && (
                                                 <button
                                                     style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
                                                     onClick={() => onAssign(shift.id, shift.title)}
