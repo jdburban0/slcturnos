@@ -1,10 +1,12 @@
-function ShiftCard({ shift, myRequest, onRequest, onCancelRequest, onDesist }) {
+function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, onDesist }) {
     const approvedCount = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0)
         + (shift.manualAssignments?.length ?? 0);
     const availableSlots = shift.totalSlots - approvedCount;
     const isFull = shift.status === "FULL" || availableSlots <= 0;
     const isPending = myRequest?.status === "PENDING";
     const isApproved = myRequest?.status === "APPROVED";
+    const isManualAssigned = !isApproved && !!userEmail &&
+        (shift.manualAssignments?.some((a) => a.email?.toLowerCase() === userEmail.toLowerCase()) ?? false);
     const transferStatus = myRequest?.transfer?.status ?? null;
     const desistDisabled = transferStatus === "PENDING" || transferStatus === "REJECTED";
 
@@ -16,11 +18,12 @@ function ShiftCard({ shift, myRequest, onRequest, onCancelRequest, onDesist }) {
     let statusColor = "#94a3b8";
     let statusText = `${availableSlots} cupo${availableSlots !== 1 ? "s" : ""} libre${availableSlots !== 1 ? "s" : ""}`;
 
-    if (isApproved) { statusBg = "#dcfce7"; statusColor = "#15803d"; statusText = "Aprobado ✓"; }
+    if (isApproved || isManualAssigned) { statusBg = "#dcfce7"; statusColor = "#15803d"; statusText = "Aprobado ✓"; }
     else if (isPending) { statusBg = "#fef9c3"; statusColor = "#92400e"; statusText = "En revisión…"; }
     else if (isFull) { statusBg = "#fee2e2"; statusColor = "#b91c1c"; statusText = "Sin cupos"; }
 
     function getAction() {
+        if (isManualAssigned) return null;
         if (isApproved) return (
             <button
                 style={{ ...styles.desistBtn, ...(desistDisabled ? styles.desistBtnDisabled : {}) }}
@@ -47,7 +50,7 @@ function ShiftCard({ shift, myRequest, onRequest, onCancelRequest, onDesist }) {
     return (
         <div style={{
             ...styles.row,
-            ...(isPending ? styles.rowPending : isApproved ? styles.rowApproved : {}),
+            ...(isPending ? styles.rowPending : (isApproved || isManualAssigned) ? styles.rowApproved : {}),
         }}>
             {/* Indicador de tipo */}
             <div style={{ ...styles.typeDot, background: shift.type === "DAY" ? "#f59e0b" : "#6366f1" }}

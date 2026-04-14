@@ -392,6 +392,7 @@ function DashboardPage() {
                                         key={shift.id}
                                         shift={shift}
                                         myRequest={getMyRequest(shift)}
+                                        userEmail={user?.email}
                                         onRequest={handleRequest}
                                         onCancelRequest={handleCancelRequest}
                                         onDesist={async (reqId, title) => { setDesistModal({ requestId: reqId, shiftTitle: title }); setDesistMode("choose"); setSelectedColleague(null); try { setColleagues(await getColleagues(token)); } catch {} }}
