@@ -115,14 +115,18 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
     const bodyMsg = customMessage || `aquí está el horario de turnos para la semana de ${weekLabel}.`;
 
     for (const op of operators) {
+        const paragraphs = bodyMsg
+            .replace(/\[nombre\]/gi, op.name)
+            .split(/\n+/)
+            .filter(Boolean)
+            .map((p) => `<p style="margin:0 0 16px;font-size:1rem;color:#0f172a;line-height:1.6;">${p}</p>`)
+            .join("");
+
         const html = `
-            <div style="font-family:Arial,sans-serif;margin:0;padding:0;background:#ffffff;">
-                <div style="padding:20px 16px 12px;">
-                    <h2 style="color:#0f172a;margin:0 0 8px;">📅 Horario de turnos</h2>
-                    <p style="color:#475569;margin:0;font-size:1rem;">Hola <strong>${op.name}</strong>, ${bodyMsg}</p>
-                </div>
-                <img src="data:image/jpeg;base64,${imageBase64}" width="800" style="width:800px;max-width:100%;height:auto;display:block;" alt="Horario de turnos" />
-                <p style="color:#94a3b8;font-size:0.78rem;margin:12px 16px 0;">— SLC Turnos</p>
+            <div style="font-family:Arial,sans-serif;margin:0;padding:24px 20px;background:#ffffff;">
+                ${paragraphs}
+                <img src="data:image/jpeg;base64,${imageBase64}" width="800" style="width:100%;max-width:800px;height:auto;display:block;margin:8px 0 20px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
+                <p style="color:#94a3b8;font-size:0.78rem;margin:0;">— SLC Turnos</p>
             </div>
         `;
 
