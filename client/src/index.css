@@ -2,11 +2,11 @@
 
 :root {
   /* Default: Light Mode */
-  --bg-color: #f8fafc;
-  --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --card-border: rgba(255, 255, 255, 0.6);
-  --card-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  --bg-color: #dce8f5;
+  --bg-gradient: linear-gradient(135deg, #d4e4f4 0%, #c2d4e8 100%);
+  --card-bg: #ffffff;
+  --card-border: #b8ccd8;
+  --card-shadow: 0 4px 20px rgba(15, 23, 42, 0.13);
   
   --text-main: #0f172a;
   --text-muted: #64748b;
@@ -66,7 +66,8 @@ html, body, #root {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: var(--bg-color);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text-main);
   transition: background-color 0.4s ease, color 0.4s ease;
 }
