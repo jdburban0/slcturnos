@@ -409,6 +409,8 @@ function DashboardPage() {
                                         onDesistManual={async (assignmentId, shiftId, shiftTitle) => {
                                             setDesistModal({ assignmentId, shiftId, shiftTitle });
                                             setDesistMode("choose");
+                                            setSelectedColleague(null);
+                                            try { setColleagues(await getColleagues(token)); } catch {}
                                         }}
                                     />
                                 ))}
