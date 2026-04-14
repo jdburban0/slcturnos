@@ -223,6 +223,23 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             });
         }
 
+        // También verificar asignaciones manuales del tipo opuesto el mismo día
+        const reqUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+        const sameDayManual = await prisma.manualAssignment.findFirst({
+            where: {
+                email: reqUser.email,
+                shift: {
+                    type: oppositeType,
+                    date: { gte: sameDayStart, lte: sameDayEnd },
+                },
+            },
+        });
+        if (sameDayManual) {
+            return res.status(400).json({
+                message: `Ya tienes un turno ${oppositeType === "NIGHT" ? "nocturno" : "diurno"} activo para este día`,
+            });
+        }
+
         // Business rules for DAY shifts
         if (shift.type === "DAY") {
             const user = await prisma.user.findUnique({ where: { id: userId }, select: { group: true } });
