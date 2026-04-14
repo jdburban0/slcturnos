@@ -1,12 +1,14 @@
-function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, onDesist }) {
+function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, onDesist, onDesistManual }) {
     const approvedCount = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0)
         + (shift.manualAssignments?.length ?? 0);
     const availableSlots = shift.totalSlots - approvedCount;
     const isFull = shift.status === "FULL" || availableSlots <= 0;
     const isPending = myRequest?.status === "PENDING";
     const isApproved = myRequest?.status === "APPROVED";
-    const isManualAssigned = !isApproved && !!userEmail &&
-        (shift.manualAssignments?.some((a) => a.email?.toLowerCase() === userEmail.toLowerCase()) ?? false);
+    const myManualAssignment = !isApproved && userEmail
+        ? (shift.manualAssignments?.find((a) => a.email?.toLowerCase() === userEmail.toLowerCase()) ?? null)
+        : null;
+    const isManualAssigned = !!myManualAssignment;
     const transferStatus = myRequest?.transfer?.status ?? null;
     const desistDisabled = transferStatus === "PENDING" || transferStatus === "REJECTED";
 
@@ -23,7 +25,11 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
     else if (isFull) { statusBg = "#fee2e2"; statusColor = "#b91c1c"; statusText = "Sin cupos"; }
 
     function getAction() {
-        if (isManualAssigned) return null;
+        if (isManualAssigned) return (
+            <button style={styles.desistBtn} onClick={() => onDesistManual(myManualAssignment.id, shift.id)}>
+                Desistir
+            </button>
+        );
         if (isApproved) return (
             <button
                 style={{ ...styles.desistBtn, ...(desistDisabled ? styles.desistBtnDisabled : {}) }}

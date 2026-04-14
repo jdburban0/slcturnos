@@ -459,6 +459,38 @@ router.post("/:id/assign", requireAuth, requireRole("admin", "lead"), async (req
     }
 });
 
+// DELETE operador desiste de una asignación manual propia
+router.delete("/:id/assign/:assignmentId", requireAuth, async (req, res) => {
+    const { assignmentId } = req.params;
+    try {
+        const assignment = await prisma.manualAssignment.findUnique({
+            where: { id: assignmentId },
+            include: { shift: true },
+        });
+        if (!assignment) return res.status(404).json({ message: "Asignación no encontrada" });
+
+        const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { email: true } });
+        if (assignment.email.toLowerCase() !== user.email.toLowerCase()) {
+            return res.status(403).json({ message: "No puedes eliminar una asignación que no es tuya" });
+        }
+
+        await prisma.manualAssignment.delete({ where: { id: assignmentId } });
+
+        // Reabrir turno si estaba FULL
+        if (assignment.shift.status === "FULL") {
+            await prisma.shift.update({ where: { id: assignment.shiftId }, data: { status: "OPEN" } });
+        }
+
+        const io = req.app.get("io");
+        io.emit("shifts:refresh");
+
+        res.json({ message: "Asignación eliminada" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al eliminar asignación" });
+    }
+});
+
 // POST enviar horario semanal por email a todos los operadores (admin/lead)
 router.post("/send-schedule", requireAuth, requireRole("admin", "lead"), async (req, res) => {
     const { imageBase64, weekLabel, customMessage } = req.body;

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
-import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues } from "../api/index.js";
+import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues, desistManualAssignment } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
@@ -396,6 +396,14 @@ function DashboardPage() {
                                         onRequest={handleRequest}
                                         onCancelRequest={handleCancelRequest}
                                         onDesist={async (reqId, title) => { setDesistModal({ requestId: reqId, shiftTitle: title }); setDesistMode("choose"); setSelectedColleague(null); try { setColleagues(await getColleagues(token)); } catch {} }}
+                                        onDesistManual={async (assignmentId, shiftId) => {
+                                            if (!confirm("¿Seguro que quieres desistir de este turno?")) return;
+                                            try {
+                                                await desistManualAssignment(token, shiftId, assignmentId);
+                                                showToast("Desististe del turno", "");
+                                                loadShifts();
+                                            } catch (err) { showToast("Error", err.message); }
+                                        }}
                                     />
                                 ))}
                             </div>
