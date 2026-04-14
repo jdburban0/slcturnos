@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
 import { sendScheduleEmail, getOperators } from "../api/index.js";
 
@@ -245,7 +246,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                         {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
                     </div>
 
-                    {showMsgForm && (
+                    {showMsgForm && createPortal(
                         <div style={styles.modalOverlay} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
                             <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                                 <h3 style={styles.modalTitle}>📧 Enviar horario</h3>
@@ -308,7 +309,8 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </div>,
+                        document.body
                     )}
                 </div>
             )}
@@ -502,34 +504,39 @@ const styles = {
     },
     modalOverlay: {
         position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.5)",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0,0,0,0.55)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
+        zIndex: 9999,
     },
     modalBox: {
-        background: "#fff",
+        background: "var(--card-bg)",
         borderRadius: "16px",
         padding: "28px 28px 24px",
         width: "100%",
         maxWidth: "460px",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+        margin: "0 16px",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
         display: "flex",
         flexDirection: "column",
         gap: "14px",
+        backdropFilter: "blur(12px)",
     },
     modalTitle: {
         margin: 0,
         fontSize: "1.1rem",
         fontWeight: "800",
-        color: "#0f172a",
+        color: "var(--text-main)",
     },
     modalSub: {
         margin: 0,
         fontSize: "0.84rem",
-        color: "#64748b",
+        color: "var(--text-muted)",
     },
     selectAllRow: {
         display: "flex",
@@ -542,7 +549,7 @@ const styles = {
         alignItems: "center",
         fontSize: "0.83rem",
         fontWeight: "600",
-        color: "#334155",
+        color: "var(--text-main)",
         cursor: "pointer",
     },
     selectedCount: {
@@ -553,7 +560,7 @@ const styles = {
     msgLabel: {
         fontSize: "0.82rem",
         fontWeight: "700",
-        color: "#475569",
+        color: "var(--text-muted)",
         marginTop: "4px",
     },
     operatorList: {
@@ -562,10 +569,10 @@ const styles = {
         gap: "4px",
         maxHeight: "220px",
         overflowY: "auto",
-        border: "1px solid #e2e8f0",
+        border: "1px solid var(--border-color)",
         borderRadius: "10px",
         padding: "6px 8px",
-        background: "#f8fafc",
+        background: "rgba(0,0,0,0.04)",
     },
     operatorItem: {
         display: "flex",
@@ -573,28 +580,28 @@ const styles = {
         cursor: "pointer",
         padding: "8px 10px",
         borderRadius: "8px",
-        transition: "background 0.1s",
     },
     operatorItemSelected: {
-        background: "#dcfce7",
+        background: "rgba(22,163,74,0.12)",
     },
     operatorName: {
         fontWeight: "600",
-        color: "#0f172a",
+        color: "var(--text-main)",
         fontSize: "0.88rem",
     },
     operatorEmail: {
-        color: "#94a3b8",
+        color: "var(--text-muted)",
         fontSize: "0.76rem",
         marginTop: "1px",
     },
     msgTextarea: {
         width: "100%",
-        border: "1px solid #cbd5e1",
+        border: "1px solid var(--border-color)",
         borderRadius: "8px",
         padding: "10px 12px",
         fontSize: "0.88rem",
-        color: "#0f172a",
+        color: "var(--text-main)",
+        background: "var(--card-bg)",
         resize: "vertical",
         fontFamily: "Arial, sans-serif",
         boxSizing: "border-box",
@@ -605,8 +612,8 @@ const styles = {
         justifyContent: "flex-end",
     },
     msgCancel: {
-        background: "#e2e8f0",
-        color: "#475569",
+        background: "var(--border-color)",
+        color: "var(--text-main)",
         border: "none",
         padding: "8px 16px",
         borderRadius: "8px",
