@@ -107,7 +107,7 @@ const styles = {
     shiftName: {
         display: "block",
         fontWeight: "700",
-        color: "#f1f5f9",
+        color: "var(--text-main)",
         fontSize: "0.95rem",
         whiteSpace: "nowrap",
         overflow: "hidden",
