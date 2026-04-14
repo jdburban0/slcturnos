@@ -16,8 +16,8 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
         weekday: "short", month: "short", day: "numeric",
     });
 
-    let statusBg = "var(--primary-light)";
-    let statusColor = "var(--primary)";
+    let statusBg = "var(--border-color)";
+    let statusColor = "var(--text-muted)";
     let statusText = `${availableSlots} cupo${availableSlots !== 1 ? "s" : ""} libre${availableSlots !== 1 ? "s" : ""}`;
 
     if (isApproved || isManualAssigned) { statusBg = "#dcfce7"; statusColor = "#15803d"; statusText = "Aprobado ✓"; }

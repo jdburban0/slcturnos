@@ -2,11 +2,11 @@
 
 :root {
   /* Default: Light Mode */
-  --bg-color: #dce8f5;
-  --bg-gradient: linear-gradient(135deg, #d4e4f4 0%, #c2d4e8 100%);
+  --bg-color: #f1f4f8;
+  --bg-gradient: linear-gradient(160deg, #edf0f5 0%, #e4e9f0 100%);
   --card-bg: #ffffff;
-  --card-border: #b8ccd8;
-  --card-shadow: 0 4px 20px rgba(15, 23, 42, 0.13);
+  --card-border: #d1d9e0;
+  --card-shadow: 0 2px 12px rgba(15, 23, 42, 0.10);
   
   --text-main: #0f172a;
   --text-muted: #64748b;
