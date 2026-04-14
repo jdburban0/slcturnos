@@ -116,13 +116,13 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
 
     for (const op of operators) {
         const html = `
-            <div style="font-family:Arial,sans-serif;margin:0 auto;padding:20px 0;background:#f8fafc;">
-                <div style="padding:0 16px 16px;">
+            <div style="font-family:Arial,sans-serif;margin:0;padding:0;background:#ffffff;">
+                <div style="padding:20px 16px 12px;">
                     <h2 style="color:#0f172a;margin:0 0 8px;">📅 Horario de turnos</h2>
-                    <p style="color:#475569;margin:0;">Hola <strong>${op.name}</strong>, ${bodyMsg}</p>
+                    <p style="color:#475569;margin:0;font-size:1rem;">Hola <strong>${op.name}</strong>, ${bodyMsg}</p>
                 </div>
-                <img src="data:image/jpeg;base64,${imageBase64}" style="width:100%;height:auto;display:block;" alt="Horario de turnos" />
-                <p style="color:#94a3b8;font-size:0.78rem;margin:16px 16px 0;">— SLC Turnos</p>
+                <img src="data:image/jpeg;base64,${imageBase64}" width="800" style="width:800px;max-width:100%;height:auto;display:block;" alt="Horario de turnos" />
+                <p style="color:#94a3b8;font-size:0.78rem;margin:12px 16px 0;">— SLC Turnos</p>
             </div>
         `;
 
