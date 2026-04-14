@@ -189,7 +189,6 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             setOperators(ops);
             setSelectedIds(ops.map((o) => o.id));
         } catch { setOperators([]); setSelectedIds([]); }
-        if (!customMessage) setCustomMessage(`aquí está el horario de turnos para la semana de ${dateRange}.`);
         setShowMsgForm((v) => !v);
     }
 
@@ -304,7 +303,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                     <button style={styles.msgCancel} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
                                         Cancelar
                                     </button>
-                                    <button style={{ ...styles.msgSend, ...((!selectedIds?.length || sending) ? styles.msgSendDisabled : {}) }} onClick={handleSendEmail} disabled={sending || !selectedIds?.length}>
+                                    <button style={{ ...styles.msgSend, ...((!selectedIds?.length || sending || !customMessage.trim()) ? styles.msgSendDisabled : {}) }} onClick={handleSendEmail} disabled={sending || !selectedIds?.length || !customMessage.trim()}>
                                         {sending ? "Enviando..." : `Enviar a ${selectedIds?.length ?? 0} operador${selectedIds?.length !== 1 ? "es" : ""}`}
                                     </button>
                                 </div>
