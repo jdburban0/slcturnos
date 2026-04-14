@@ -246,40 +246,67 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                     </div>
 
                     {showMsgForm && (
-                        <div style={styles.msgForm}>
-                            <label style={styles.msgLabel}>Seleccionar destinatarios</label>
-                            <div style={styles.operatorList}>
-                                {operators.length === 0 && (
-                                    <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>No hay operadores activos.</p>
-                                )}
-                                {operators.map((op) => (
-                                    <label key={op.id} style={styles.operatorItem}>
+                        <div style={styles.modalOverlay} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
+                            <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                                <h3 style={styles.modalTitle}>📧 Enviar horario</h3>
+
+                                <p style={styles.modalSub}>Selecciona los operadores que recibirán el correo</p>
+
+                                <div style={styles.selectAllRow}>
+                                    <label style={styles.selectAllLabel}>
                                         <input
                                             type="checkbox"
-                                            checked={selectedIds?.includes(op.id) ?? false}
-                                            onChange={() => toggleOperator(op.id)}
-                                            style={{ marginRight: "8px" }}
+                                            checked={selectedIds?.length === operators.length}
+                                            onChange={() => setSelectedIds(
+                                                selectedIds?.length === operators.length ? [] : operators.map((o) => o.id)
+                                            )}
+                                            style={{ marginRight: "6px" }}
                                         />
-                                        <span style={styles.operatorName}>{op.name}</span>
-                                        <span style={styles.operatorEmail}>{op.email}</span>
+                                        Seleccionar todos
                                     </label>
-                                ))}
-                            </div>
-                            <label style={{ ...styles.msgLabel, marginTop: "12px" }}>Mensaje adicional (opcional)</label>
-                            <textarea
-                                style={styles.msgTextarea}
-                                rows={3}
-                                placeholder="Ej: Recuerden confirmar asistencia antes del viernes..."
-                                value={customMessage}
-                                onChange={(e) => setCustomMessage(e.target.value)}
-                            />
-                            <div style={styles.msgActions}>
-                                <button style={styles.msgCancel} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
-                                    Cancelar
-                                </button>
-                                <button style={styles.msgSend} onClick={handleSendEmail} disabled={sending || !selectedIds?.length}>
-                                    {sending ? "Enviando..." : `Enviar a ${selectedIds?.length ?? 0}`}
-                                </button>
+                                    <span style={styles.selectedCount}>{selectedIds?.length ?? 0} seleccionados</span>
+                                </div>
+
+                                <div style={styles.operatorList}>
+                                    {operators.length === 0 && (
+                                        <p style={{ color: "#94a3b8", fontSize: "0.85rem", margin: 0 }}>No hay operadores activos.</p>
+                                    )}
+                                    {operators.map((op) => (
+                                        <label key={op.id} style={{
+                                            ...styles.operatorItem,
+                                            ...(selectedIds?.includes(op.id) ? styles.operatorItemSelected : {})
+                                        }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds?.includes(op.id) ?? false}
+                                                onChange={() => toggleOperator(op.id)}
+                                                style={{ marginRight: "10px", accentColor: "#16a34a" }}
+                                            />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={styles.operatorName}>{op.name}</div>
+                                                <div style={styles.operatorEmail}>{op.email}</div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <label style={styles.msgLabel}>Mensaje adicional (opcional)</label>
+                                <textarea
+                                    style={styles.msgTextarea}
+                                    rows={3}
+                                    placeholder="Ej: Recuerden confirmar asistencia antes del viernes..."
+                                    value={customMessage}
+                                    onChange={(e) => setCustomMessage(e.target.value)}
+                                />
+
+                                <div style={styles.msgActions}>
+                                    <button style={styles.msgCancel} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
+                                        Cancelar
+                                    </button>
+                                    <button style={{ ...styles.msgSend, ...((!selectedIds?.length || sending) ? styles.msgSendDisabled : {}) }} onClick={handleSendEmail} disabled={sending || !selectedIds?.length}>
+                                        {sending ? "Enviando..." : `Enviar a ${selectedIds?.length ?? 0} operador${selectedIds?.length !== 1 ? "es" : ""}`}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -473,48 +500,93 @@ const styles = {
         background: "#94a3b8",
         cursor: "not-allowed",
     },
-    msgForm: {
-        background: "#f8fafc",
-        border: "1px solid #e2e8f0",
-        borderRadius: "10px",
-        padding: "14px 16px",
-        marginBottom: "12px",
+    modalOverlay: {
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+    },
+    modalBox: {
+        background: "#fff",
+        borderRadius: "16px",
+        padding: "28px 28px 24px",
+        width: "100%",
+        maxWidth: "460px",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
+        gap: "14px",
+    },
+    modalTitle: {
+        margin: 0,
+        fontSize: "1.1rem",
+        fontWeight: "800",
+        color: "#0f172a",
+    },
+    modalSub: {
+        margin: 0,
+        fontSize: "0.84rem",
+        color: "#64748b",
+    },
+    selectAllRow: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 2px",
+    },
+    selectAllLabel: {
+        display: "flex",
+        alignItems: "center",
+        fontSize: "0.83rem",
+        fontWeight: "600",
+        color: "#334155",
+        cursor: "pointer",
+    },
+    selectedCount: {
+        fontSize: "0.78rem",
+        color: "#16a34a",
+        fontWeight: "700",
     },
     msgLabel: {
         fontSize: "0.82rem",
         fontWeight: "700",
         color: "#475569",
+        marginTop: "4px",
     },
     operatorList: {
         display: "flex",
         flexDirection: "column",
-        gap: "6px",
-        maxHeight: "200px",
+        gap: "4px",
+        maxHeight: "220px",
         overflowY: "auto",
         border: "1px solid #e2e8f0",
-        borderRadius: "8px",
-        padding: "8px 10px",
-        background: "#fff",
+        borderRadius: "10px",
+        padding: "6px 8px",
+        background: "#f8fafc",
     },
     operatorItem: {
         display: "flex",
         alignItems: "center",
-        gap: "4px",
         cursor: "pointer",
-        padding: "4px 2px",
-        fontSize: "0.85rem",
+        padding: "8px 10px",
+        borderRadius: "8px",
+        transition: "background 0.1s",
+    },
+    operatorItemSelected: {
+        background: "#dcfce7",
     },
     operatorName: {
         fontWeight: "600",
         color: "#0f172a",
-        marginRight: "6px",
+        fontSize: "0.88rem",
     },
     operatorEmail: {
         color: "#94a3b8",
-        fontSize: "0.78rem",
+        fontSize: "0.76rem",
+        marginTop: "1px",
     },
     msgTextarea: {
         width: "100%",
@@ -546,11 +618,15 @@ const styles = {
         background: "#16a34a",
         color: "#fff",
         border: "none",
-        padding: "8px 18px",
+        padding: "9px 20px",
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: "700",
-        fontSize: "0.82rem",
+        fontSize: "0.85rem",
+    },
+    msgSendDisabled: {
+        background: "#94a3b8",
+        cursor: "not-allowed",
     },
     captureArea: {
         background: "#ffffff",
