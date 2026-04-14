@@ -410,7 +410,10 @@ function DashboardPage() {
                                             setDesistModal({ assignmentId, shiftId, shiftTitle });
                                             setDesistMode("choose");
                                             setSelectedColleague(null);
-                                            try { setColleagues(await getColleagues(token)); } catch {}
+                                            try {
+                                                const list = await getColleagues(token);
+                                                setColleagues(list);
+                                            } catch (err) { console.error("getColleagues error:", err); }
                                         }}
                                     />
                                 ))}
