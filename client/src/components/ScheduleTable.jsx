@@ -206,11 +206,21 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         try {
             const canvas = await html2canvas(tableRef.current, {
                 backgroundColor: "#ffffff",
-                scale: 2,
+                scale: 3,
                 useCORS: true,
                 logging: false,
+                onclone: (_doc, el) => {
+                    el.style.overflow = "visible";
+                    el.style.width = "900px";
+                    el.style.borderRadius = "0";
+                    const scrollDiv = el.querySelector("div + div");
+                    if (scrollDiv) {
+                        scrollDiv.style.overflowX = "visible";
+                        scrollDiv.style.width = "900px";
+                    }
+                },
             });
-            const imageBase64 = canvas.toDataURL("image/jpeg", 0.9).split(",")[1];
+            const imageBase64 = canvas.toDataURL("image/jpeg", 0.92).split(",")[1];
             const result = await sendScheduleEmail(token, imageBase64, dateRange, customMessage.trim() || null, selectedIds);
             setSendMsg(result.message);
             setCustomMessage("");
