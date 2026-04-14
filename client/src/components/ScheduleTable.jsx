@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
 import { sendScheduleEmail, getOperators } from "../api/index.js";
 
@@ -246,7 +245,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                         {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
                     </div>
 
-                    {showMsgForm && createPortal(
+                    {showMsgForm && (
                         <div style={styles.modalOverlay} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
                             <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                                 <h3 style={styles.modalTitle}>📧 Enviar horario</h3>
@@ -309,8 +308,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                     </button>
                                 </div>
                             </div>
-                        </div>,
-                        document.body
+                        </div>
                     )}
                 </div>
             )}
