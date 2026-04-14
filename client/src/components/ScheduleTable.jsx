@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
-import * as XLSX from "xlsx";
 import { sendScheduleEmail, getOperators } from "../api/index.js";
 
 const DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -162,30 +161,53 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const dateRange = getDateRange(shifts);
 
     function handleExportExcel() {
-        const headerRow = ["Turno / Horario", ...dates.map((d) => `${getDayName(d)} ${formatShortDate(d)}`)];
-        const rows = [headerRow];
+        const thStyle = `background:#1e3a5f;color:#ffffff;font-weight:bold;text-align:center;padding:8px 10px;border:1px solid #334155;font-family:Arial,sans-serif;font-size:12px;`;
+        const tdStyle = `border:1px solid #cbd5e1;padding:6px 8px;vertical-align:top;font-family:Arial,sans-serif;font-size:11px;min-width:110px;`;
+        const timeStyle = `font-weight:700;color:#1e3a5f;font-size:11px;margin-bottom:3px;`;
+        const nameStyle = `color:#0f172a;font-size:11px;padding:1px 0;`;
+        const emptyStyle = `color:#cbd5e1;font-size:11px;`;
 
-        [...dayRanges, ...nightRanges].forEach((tr) => {
-            const label = `${tr.start} - ${tr.end}`;
-            const maxSlots = Math.max(...dates.map((date) => {
+        const headerCells = dates.map((d) =>
+            `<th style="${thStyle}">${getDayName(d)}<br/>${formatShortDate(d)}</th>`
+        ).join("");
+
+        const buildRows = (ranges, bgHeader) => ranges.map((tr) => {
+            const cells = dates.map((date) => {
                 const cell = getCellData(tr.start, tr.end, date);
-                return cell ? cell.totalSlots : 0;
-            }));
-            for (let i = 0; i < maxSlots; i++) {
-                const row = [i === 0 ? label : ""];
-                dates.forEach((date) => {
-                    const cell = getCellData(tr.start, tr.end, date);
-                    row.push(cell ? (cell.approved[i] || "") : "");
-                });
-                rows.push(row);
-            }
-        });
+                if (!cell) return `<td style="${tdStyle}"></td>`;
+                const slots = Array.from({ length: cell.totalSlots }, (_, i) =>
+                    cell.approved[i]
+                        ? `<div style="${nameStyle}">${cell.approved[i]}</div>`
+                        : `<div style="${emptyStyle}">${i + 1}</div>`
+                ).join("");
+                return `<td style="${tdStyle}"><div style="${timeStyle}">${tr.start} – ${tr.end}</div>${slots}</td>`;
+            }).join("");
+            return `<tr>${cells}</tr>`;
+        }).join("");
 
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        ws["!cols"] = [{ wch: 18 }, ...dates.map(() => ({ wch: 22 }))];
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Horario");
-        XLSX.writeFile(wb, `SLC-Horario-${dates[0]}.xlsx`);
+        const separatorRow = dayRanges.length && nightRanges.length
+            ? `<tr><td colspan="${dates.length}" style="background:#f1f5f9;height:6px;border:none;"></td></tr>`
+            : "";
+
+        const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head><meta charset="UTF-8"/></head>
+<body>
+<table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+    <thead><tr>${headerCells}</tr></thead>
+    <tbody>
+        ${buildRows(dayRanges)}
+        ${separatorRow}
+        ${buildRows(nightRanges)}
+    </tbody>
+</table>
+</body></html>`;
+
+        const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `SLC-Horario-${dates[0]}.xls`;
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 
     async function handleExport() {
