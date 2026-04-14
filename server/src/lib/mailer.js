@@ -112,12 +112,14 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
 
     const subject = `📅 Horario de turnos — ${weekLabel}`;
 
+    const defaultMsg = `aquí está el horario de turnos para la semana de ${weekLabel}.`;
+    const bodyMsg = customMessage || defaultMsg;
+
     for (const op of operators) {
         const html = `
-            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
+            <div style="font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
                 <h2 style="color:#0f172a;margin:0 0 8px;">📅 Horario de turnos</h2>
-                <p style="color:#475569;margin:0 0 ${customMessage ? "12px" : "20px"};">Hola <strong>${op.name}</strong>, aquí está el horario de turnos disponibles para <strong>${weekLabel}</strong>.</p>
-                ${customMessage ? `<p style="color:#1e293b;background:#e2e8f0;border-radius:8px;padding:12px 16px;margin:0 0 20px;font-size:0.95rem;">${customMessage}</p>` : ""}
+                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, ${bodyMsg}</p>
                 <img src="data:image/jpeg;base64,${imageBase64}" style="width:100%;border-radius:8px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
                 <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
             </div>

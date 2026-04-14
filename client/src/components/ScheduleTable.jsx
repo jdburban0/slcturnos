@@ -189,6 +189,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             setOperators(ops);
             setSelectedIds(ops.map((o) => o.id));
         } catch { setOperators([]); setSelectedIds([]); }
+        if (!customMessage) setCustomMessage(`aquí está el horario de turnos para la semana de ${dateRange}.`);
         setShowMsgForm((v) => !v);
     }
 
@@ -291,11 +292,10 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                     ))}
                                 </div>
 
-                                <label style={styles.msgLabel}>Mensaje adicional (opcional)</label>
+                                <label style={styles.msgLabel}>Mensaje del correo</label>
                                 <textarea
                                     style={styles.msgTextarea}
                                     rows={3}
-                                    placeholder="Ej: Recuerden confirmar asistencia antes del viernes..."
                                     value={customMessage}
                                     onChange={(e) => setCustomMessage(e.target.value)}
                                 />
