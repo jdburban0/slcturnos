@@ -85,9 +85,9 @@ const s = {
         flexDirection: "column",
         gap: "10px",
         padding: "14px 16px",
-        background: "rgba(255,255,255,0.05)",
+        background: "var(--hover-overlay)",
         borderRadius: "12px",
-        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.07)",
+        border: "1px solid var(--border-color)",
     },
     // Fila 1
     topRow: {
@@ -96,8 +96,8 @@ const s = {
         gap: "10px",
     },
     indexBadge: {
-        background: "rgba(255,255,255,0.08)",
-        color: "#94a3b8",
+        background: "var(--border-color)",
+        color: "var(--text-muted)",
         fontWeight: "800",
         fontSize: "0.78rem",
         padding: "3px 7px",
@@ -112,14 +112,14 @@ const s = {
     },
     operatorName: {
         fontWeight: "700",
-        color: "#f1f5f9",
+        color: "var(--text-main)",
         fontSize: "0.9rem",
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
     },
     operatorEmail: {
-        color: "#64748b",
+        color: "var(--text-muted)",
         fontSize: "0.73rem",
     },
     timer: {
@@ -143,15 +143,15 @@ const s = {
     },
     shiftTitle: {
         fontWeight: "700",
-        color: "#e2e8f0",
+        color: "var(--primary)",
         fontSize: "0.88rem",
     },
     shiftMeta: {
-        color: "#94a3b8",
+        color: "var(--text-muted)",
         fontSize: "0.8rem",
     },
     requestedAt: {
-        color: "#475569",
+        color: "var(--text-muted)",
         fontSize: "0.73rem",
         width: "100%",
     },
@@ -185,8 +185,8 @@ const s = {
         whiteSpace: "nowrap",
     },
     cancelBtn: {
-        background: "rgba(255,255,255,0.08)",
-        color: "#94a3b8",
+        background: "var(--border-color)",
+        color: "var(--text-muted)",
         border: "none",
         padding: "8px 14px",
         borderRadius: "8px",
@@ -196,14 +196,14 @@ const s = {
     },
     notesInput: {
         padding: "7px 10px",
-        border: "1px solid #334155",
+        border: "1px solid var(--border-color)",
         borderRadius: "7px",
         fontSize: "0.82rem",
         outline: "none",
         flex: 1,
         minWidth: "120px",
-        background: "#0f172a",
-        color: "#f1f5f9",
+        background: "var(--input-bg)",
+        color: "var(--text-main)",
     },
 };
 
