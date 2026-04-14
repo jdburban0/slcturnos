@@ -174,8 +174,7 @@ function DashboardPage() {
         try {
             if (desistModal.assignmentId) {
                 await desistManualAssignment(token, desistModal.shiftId, desistModal.assignmentId);
-                showToast("Desististe del turno", "");
-                loadShifts();
+                showToast("Solicitud enviada", "El administrador revisará tu desistimiento.");
             } else {
                 await requestWithdrawal(token, desistModal.requestId);
                 showToast("Solicitud enviada", "El administrador revisará tu desistimiento.");

@@ -459,9 +459,9 @@ router.post("/:id/assign", requireAuth, requireRole("admin", "lead"), async (req
     }
 });
 
-// DELETE operador desiste de una asignación manual propia
-router.delete("/:id/assign/:assignmentId", requireAuth, async (req, res) => {
-    const { assignmentId } = req.params;
+// POST solicitar desistimiento de asignación manual (requiere aprobación del admin)
+router.post("/:id/assign/:assignmentId/withdraw", requireAuth, async (req, res) => {
+    const { id: shiftId, assignmentId } = req.params;
     try {
         const assignment = await prisma.manualAssignment.findUnique({
             where: { id: assignmentId },
@@ -469,25 +469,43 @@ router.delete("/:id/assign/:assignmentId", requireAuth, async (req, res) => {
         });
         if (!assignment) return res.status(404).json({ message: "Asignación no encontrada" });
 
-        const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { email: true } });
+        const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { email: true, name: true } });
         if (assignment.email.toLowerCase() !== user.email.toLowerCase()) {
-            return res.status(403).json({ message: "No puedes eliminar una asignación que no es tuya" });
+            return res.status(403).json({ message: "No puedes desistir de una asignación que no es tuya" });
         }
 
-        await prisma.manualAssignment.delete({ where: { id: assignmentId } });
+        const existing = await prisma.shiftTransfer.findFirst({
+            where: { assignmentId, status: "PENDING" },
+        });
+        if (existing) return res.status(400).json({ message: "Ya tienes una solicitud de desistimiento pendiente para este turno" });
 
-        // Reabrir turno si estaba FULL
-        if (assignment.shift.status === "FULL") {
-            await prisma.shift.update({ where: { id: assignment.shiftId }, data: { status: "OPEN" } });
-        }
+        const transfer = await prisma.shiftTransfer.create({
+            data: { assignmentId, shiftId, fromUserId: req.user.id },
+        });
+
+        const shiftDate = new Date(assignment.shift.date).toLocaleDateString("es-CO", {
+            weekday: "long", year: "numeric", month: "long", day: "numeric",
+        });
+        const admins = await prisma.user.findMany({
+            where: { role: { in: ["admin", "lead"] }, active: true },
+            select: { name: true, email: true },
+        });
+        sendAdminTransferAlertEmail({
+            admins,
+            operatorName: user.name,
+            shiftTitle: assignment.shift.title,
+            shiftDate,
+            type: "desist",
+        });
 
         const io = req.app.get("io");
-        io.emit("shifts:refresh");
+        io.to("admins").emit("transfers:refresh");
+        io.to("admins").emit("notification:new");
 
-        res.json({ message: "Asignación eliminada" });
+        res.status(201).json(transfer);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Error al eliminar asignación" });
+        res.status(500).json({ message: "Error al solicitar desistimiento" });
     }
 });
 

@@ -118,8 +118,8 @@ export async function assignShift(token, shiftId, name, email) {
 
 export async function desistManualAssignment(token, shiftId, assignmentId) {
     return handle(
-        await fetch(`${BASE}/api/shifts/${shiftId}/assign/${assignmentId}`, {
-            method: "DELETE",
+        await fetch(`${BASE}/api/shifts/${shiftId}/assign/${assignmentId}/withdraw`, {
+            method: "POST",
             headers: headers(token),
         })
     );
