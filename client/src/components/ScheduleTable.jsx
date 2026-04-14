@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
+import * as XLSX from "xlsx";
 import { sendScheduleEmail, getOperators } from "../api/index.js";
 
 const DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -160,6 +161,33 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const nightRanges = getTimeRanges(nightShifts);
     const dateRange = getDateRange(shifts);
 
+    function handleExportExcel() {
+        const headerRow = ["Turno / Horario", ...dates.map((d) => `${getDayName(d)} ${formatShortDate(d)}`)];
+        const rows = [headerRow];
+
+        [...dayRanges, ...nightRanges].forEach((tr) => {
+            const label = `${tr.start} - ${tr.end}`;
+            const maxSlots = Math.max(...dates.map((date) => {
+                const cell = getCellData(tr.start, tr.end, date);
+                return cell ? cell.totalSlots : 0;
+            }));
+            for (let i = 0; i < maxSlots; i++) {
+                const row = [i === 0 ? label : ""];
+                dates.forEach((date) => {
+                    const cell = getCellData(tr.start, tr.end, date);
+                    row.push(cell ? (cell.approved[i] || "") : "");
+                });
+                rows.push(row);
+            }
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws["!cols"] = [{ wch: 18 }, ...dates.map(() => ({ wch: 22 }))];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Horario");
+        XLSX.writeFile(wb, `SLC-Horario-${dates[0]}.xlsx`);
+    }
+
     async function handleExport() {
         if (!tableRef.current || exporting) return;
         setExporting(true);
@@ -245,6 +273,12 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                             disabled={exporting}
                         >
                             {exporting ? "Exportando..." : "⬇ Exportar JPG"}
+                        </button>
+                        <button
+                            style={{ ...styles.exportBtn, background: "#0f766e" }}
+                            onClick={handleExportExcel}
+                        >
+                            ⬇ Exportar Excel
                         </button>
                         <button
                             style={{ ...styles.exportBtn, ...(sending ? styles.exportBtnDisabled : {}), background: "#16a34a" }}
