@@ -126,6 +126,9 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
             <div style="font-family:Arial,sans-serif;margin:0;padding:24px 20px;background:#ffffff;">
                 ${paragraphs}
                 <img src="data:image/jpeg;base64,${imageBase64}" width="800" style="width:100%;max-width:800px;height:auto;display:block;margin:8px 0 20px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
+                <p style="margin:0 0 12px;">
+                    <a href="https://slcturnos.online" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:0.9rem;">Ir a SLC Turnos →</a>
+                </p>
                 <p style="color:#94a3b8;font-size:0.78rem;margin:0;">— SLC Turnos</p>
             </div>
         `;
