@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import html2canvas from "html2canvas";
-import { sendScheduleEmail } from "../api/index.js";
+import { sendScheduleEmail, getOperators } from "../api/index.js";
 
 const DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -121,6 +121,8 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const [sendMsg, setSendMsg] = useState("");
     const [showMsgForm, setShowMsgForm] = useState(false);
     const [customMessage, setCustomMessage] = useState("");
+    const [operators, setOperators] = useState([]);
+    const [selectedIds, setSelectedIds] = useState(null); // null = not loaded yet
 
     const dates = [...new Set(shifts.map((s) => s.date.slice(0, 10)))].sort();
     const dayShifts = shifts.filter((s) => s.type === "DAY");
@@ -178,6 +180,23 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         }
     }
 
+    async function handleOpenSendForm() {
+        if (sending) return;
+        try {
+            const all = await getOperators(token);
+            const ops = all.filter((u) => u.role === "operator" && u.active);
+            setOperators(ops);
+            setSelectedIds(ops.map((o) => o.id));
+        } catch { setOperators([]); setSelectedIds([]); }
+        setShowMsgForm((v) => !v);
+    }
+
+    function toggleOperator(id) {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    }
+
     async function handleSendEmail() {
         if (!tableRef.current || sending) return;
         setSending(true);
@@ -191,9 +210,10 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                 logging: false,
             });
             const imageBase64 = canvas.toDataURL("image/jpeg", 0.9).split(",")[1];
-            const result = await sendScheduleEmail(token, imageBase64, dateRange, customMessage.trim() || null);
+            const result = await sendScheduleEmail(token, imageBase64, dateRange, customMessage.trim() || null, selectedIds);
             setSendMsg(result.message);
             setCustomMessage("");
+            setSelectedIds(null);
             setTimeout(() => setSendMsg(""), 4000);
         } catch (err) {
             setSendMsg("Error al enviar");
@@ -217,7 +237,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                         </button>
                         <button
                             style={{ ...styles.exportBtn, ...(sending ? styles.exportBtnDisabled : {}), background: "#16a34a" }}
-                            onClick={() => setShowMsgForm((v) => !v)}
+                            onClick={handleOpenSendForm}
                             disabled={sending}
                         >
                             {sending ? "Enviando..." : "📧 Enviar a operadores"}
@@ -227,7 +247,25 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
 
                     {showMsgForm && (
                         <div style={styles.msgForm}>
-                            <label style={styles.msgLabel}>Mensaje adicional (opcional)</label>
+                            <label style={styles.msgLabel}>Seleccionar destinatarios</label>
+                            <div style={styles.operatorList}>
+                                {operators.length === 0 && (
+                                    <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>No hay operadores activos.</p>
+                                )}
+                                {operators.map((op) => (
+                                    <label key={op.id} style={styles.operatorItem}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds?.includes(op.id) ?? false}
+                                            onChange={() => toggleOperator(op.id)}
+                                            style={{ marginRight: "8px" }}
+                                        />
+                                        <span style={styles.operatorName}>{op.name}</span>
+                                        <span style={styles.operatorEmail}>{op.email}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <label style={{ ...styles.msgLabel, marginTop: "12px" }}>Mensaje adicional (opcional)</label>
                             <textarea
                                 style={styles.msgTextarea}
                                 rows={3}
@@ -236,11 +274,11 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                 onChange={(e) => setCustomMessage(e.target.value)}
                             />
                             <div style={styles.msgActions}>
-                                <button style={styles.msgCancel} onClick={() => { setShowMsgForm(false); setCustomMessage(""); }}>
+                                <button style={styles.msgCancel} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
                                     Cancelar
                                 </button>
-                                <button style={styles.msgSend} onClick={handleSendEmail} disabled={sending}>
-                                    {sending ? "Enviando..." : "Confirmar y enviar"}
+                                <button style={styles.msgSend} onClick={handleSendEmail} disabled={sending || !selectedIds?.length}>
+                                    {sending ? "Enviando..." : `Enviar a ${selectedIds?.length ?? 0}`}
                                 </button>
                             </div>
                         </div>
@@ -449,6 +487,34 @@ const styles = {
         fontSize: "0.82rem",
         fontWeight: "700",
         color: "#475569",
+    },
+    operatorList: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+        maxHeight: "200px",
+        overflowY: "auto",
+        border: "1px solid #e2e8f0",
+        borderRadius: "8px",
+        padding: "8px 10px",
+        background: "#fff",
+    },
+    operatorItem: {
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        cursor: "pointer",
+        padding: "4px 2px",
+        fontSize: "0.85rem",
+    },
+    operatorName: {
+        fontWeight: "600",
+        color: "#0f172a",
+        marginRight: "6px",
+    },
+    operatorEmail: {
+        color: "#94a3b8",
+        fontSize: "0.78rem",
     },
     msgTextarea: {
         width: "100%",

@@ -271,14 +271,18 @@ export async function reviewTransfer(token, transferId, action, notes) {
     );
 }
 
-export async function sendScheduleEmail(token, imageBase64, weekLabel, customMessage) {
+export async function sendScheduleEmail(token, imageBase64, weekLabel, customMessage, recipientIds) {
     return handle(
         await fetch(`${BASE}/api/shifts/send-schedule`, {
             method: "POST",
             headers: headers(token),
-            body: JSON.stringify({ imageBase64, weekLabel, customMessage }),
+            body: JSON.stringify({ imageBase64, weekLabel, customMessage, recipientIds }),
         })
     );
+}
+
+export async function getOperators(token) {
+    return handle(await fetch(`${BASE}/api/users`, { headers: headers(token) }));
 }
 
 export async function forgotPassword(email) {

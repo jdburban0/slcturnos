@@ -573,15 +573,19 @@ router.post("/:id/assign/:assignmentId/transfer", requireAuth, async (req, res) 
 
 // POST enviar horario semanal por email a todos los operadores (admin/lead)
 router.post("/send-schedule", requireAuth, requireRole("admin", "lead"), async (req, res) => {
-    const { imageBase64, weekLabel, customMessage } = req.body;
+    const { imageBase64, weekLabel, customMessage, recipientIds } = req.body;
     if (!imageBase64 || !weekLabel) {
         return res.status(400).json({ message: "imageBase64 y weekLabel son requeridos" });
     }
     try {
-        const operators = await prisma.user.findMany({
-            where: { role: "operator", active: true },
-            select: { name: true, email: true },
-        });
+        const where = { role: "operator", active: true };
+        if (Array.isArray(recipientIds) && recipientIds.length > 0) {
+            where.id = { in: recipientIds };
+        }
+        const operators = await prisma.user.findMany({ where, select: { name: true, email: true } });
+        if (operators.length === 0) {
+            return res.status(400).json({ message: "No hay operadores seleccionados" });
+        }
         await sendWeeklyScheduleEmail({ operators, imageBase64, weekLabel, customMessage });
         res.json({ message: `Horario enviado a ${operators.length} operador${operators.length !== 1 ? "es" : ""}` });
     } catch (err) {
