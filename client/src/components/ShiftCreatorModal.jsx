@@ -43,6 +43,7 @@ function getWeekLabel(mondayIso) {
 
 function todayMondayIso() {
     const today = new Date();
+    today.setDate(today.getDate() + 7);
     return getMondayIso(today.toISOString().slice(0, 10));
 }
 
