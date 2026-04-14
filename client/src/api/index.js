@@ -125,6 +125,16 @@ export async function desistManualAssignment(token, shiftId, assignmentId) {
     );
 }
 
+export async function transferManualAssignment(token, shiftId, assignmentId, toName, toEmail) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/${shiftId}/assign/${assignmentId}/transfer`, {
+            method: "POST",
+            headers: headers(token),
+            body: JSON.stringify({ toName, toEmail }),
+        })
+    );
+}
+
 export async function requestShift(token, shiftId) {
     return handle(
         await fetch(`${BASE}/api/shifts/${shiftId}/request`, {

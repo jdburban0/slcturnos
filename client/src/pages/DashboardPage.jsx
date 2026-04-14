@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
-import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues, desistManualAssignment } from "../api/index.js";
+import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues, desistManualAssignment, transferManualAssignment } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
@@ -172,8 +172,14 @@ function DashboardPage() {
 
     async function handleDesistCancel() {
         try {
-            await requestWithdrawal(token, desistModal.requestId);
-            showToast("Solicitud enviada", "El administrador revisará tu desistimiento.");
+            if (desistModal.assignmentId) {
+                await desistManualAssignment(token, desistModal.shiftId, desistModal.assignmentId);
+                showToast("Desististe del turno", "");
+                loadShifts();
+            } else {
+                await requestWithdrawal(token, desistModal.requestId);
+                showToast("Solicitud enviada", "El administrador revisará tu desistimiento.");
+            }
             setDesistModal(null);
         } catch (err) { showToast("Error", err.message); }
     }
@@ -183,8 +189,13 @@ function DashboardPage() {
         if (!selectedColleague) return;
         setTransferLoading(true);
         try {
-            await requestTransfer(token, desistModal.requestId, selectedColleague.name, selectedColleague.email);
-            showToast("Traspaso enviado", "El administrador revisará la solicitud.");
+            if (desistModal.assignmentId) {
+                await transferManualAssignment(token, desistModal.shiftId, desistModal.assignmentId, selectedColleague.name, selectedColleague.email);
+                showToast("Traspaso enviado", "El administrador revisará la solicitud.");
+            } else {
+                await requestTransfer(token, desistModal.requestId, selectedColleague.name, selectedColleague.email);
+                showToast("Traspaso enviado", "El administrador revisará la solicitud.");
+            }
             setDesistModal(null);
             setSelectedColleague(null);
             loadShifts();
@@ -396,13 +407,9 @@ function DashboardPage() {
                                         onRequest={handleRequest}
                                         onCancelRequest={handleCancelRequest}
                                         onDesist={async (reqId, title) => { setDesistModal({ requestId: reqId, shiftTitle: title }); setDesistMode("choose"); setSelectedColleague(null); try { setColleagues(await getColleagues(token)); } catch {} }}
-                                        onDesistManual={async (assignmentId, shiftId) => {
-                                            if (!confirm("¿Seguro que quieres desistir de este turno?")) return;
-                                            try {
-                                                await desistManualAssignment(token, shiftId, assignmentId);
-                                                showToast("Desististe del turno", "");
-                                                loadShifts();
-                                            } catch (err) { showToast("Error", err.message); }
+                                        onDesistManual={async (assignmentId, shiftId, shiftTitle) => {
+                                            setDesistModal({ assignmentId, shiftId, shiftTitle });
+                                            setDesistMode("choose");
                                         }}
                                     />
                                 ))}

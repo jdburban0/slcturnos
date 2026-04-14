@@ -46,10 +46,16 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
 
         if (action === "approve") {
             await prisma.$transaction(async (tx) => {
-                await tx.shiftRequest.update({
-                    where: { id: transfer.requestId },
-                    data: { status: "CANCELLED" },
-                });
+                if (transfer.assignmentId) {
+                    // Traspaso de asignación manual: eliminar la asignación del operador original
+                    await tx.manualAssignment.delete({ where: { id: transfer.assignmentId } });
+                } else {
+                    // Traspaso de solicitud normal: cancelar la solicitud original
+                    await tx.shiftRequest.update({
+                        where: { id: transfer.requestId },
+                        data: { status: "CANCELLED" },
+                    });
+                }
 
                 if (transfer.shift.status === "FULL") {
                     await tx.shift.update({

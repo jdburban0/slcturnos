@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail } from "../lib/mailer.js";
+import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail, sendAdminTransferAlertEmail } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -488,6 +488,68 @@ router.delete("/:id/assign/:assignmentId", requireAuth, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al eliminar asignación" });
+    }
+});
+
+// POST solicitar traspaso de asignación manual (queda pendiente de aprobación del admin)
+router.post("/:id/assign/:assignmentId/transfer", requireAuth, async (req, res) => {
+    const { id: shiftId, assignmentId } = req.params;
+    const { toName, toEmail } = req.body;
+    if (!toName || !toEmail) return res.status(400).json({ message: "Nombre y correo del compañero son requeridos" });
+
+    try {
+        const assignment = await prisma.manualAssignment.findUnique({
+            where: { id: assignmentId },
+            include: { shift: true },
+        });
+        if (!assignment) return res.status(404).json({ message: "Asignación no encontrada" });
+
+        const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { email: true, name: true } });
+        if (assignment.email.toLowerCase() !== user.email.toLowerCase()) {
+            return res.status(403).json({ message: "No puedes traspasar una asignación que no es tuya" });
+        }
+
+        // Verificar que no haya ya un traspaso pendiente para esta asignación
+        const existing = await prisma.shiftTransfer.findFirst({
+            where: { assignmentId, status: "PENDING" },
+        });
+        if (existing) return res.status(400).json({ message: "Ya tienes una solicitud de traspaso pendiente para este turno" });
+
+        const transfer = await prisma.shiftTransfer.create({
+            data: {
+                assignmentId,
+                shiftId,
+                fromUserId: req.user.id,
+                toName,
+                toEmail,
+            },
+        });
+
+        const shiftDate = new Date(assignment.shift.date).toLocaleDateString("es-CO", {
+            weekday: "long", year: "numeric", month: "long", day: "numeric",
+        });
+
+        const admins = await prisma.user.findMany({
+            where: { role: { in: ["admin", "lead"] }, active: true },
+            select: { name: true, email: true },
+        });
+        sendAdminTransferAlertEmail({
+            admins,
+            operatorName: user.name,
+            shiftTitle: assignment.shift.title,
+            shiftDate,
+            type: "transfer",
+            toName,
+        });
+
+        const io = req.app.get("io");
+        io.to("admins").emit("transfers:refresh");
+        io.to("admins").emit("notification:new");
+
+        res.status(201).json(transfer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al solicitar traspaso" });
     }
 });
 

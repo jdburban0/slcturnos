@@ -92,21 +92,22 @@ model ShiftRequest {
 }
 
 model ShiftTransfer {
-  id         String    @id @default(cuid())
-  requestId  String    @unique
-  shiftId    String
-  fromUserId String
-  toName     String?
-  toEmail    String?
-  status     String    @default("PENDING")
-  reviewedBy String?
-  reviewedAt DateTime?
-  notes      String?
-  createdAt  DateTime  @default(now())
+  id           String    @id @default(cuid())
+  requestId    String?   @unique
+  assignmentId String?
+  shiftId      String
+  fromUserId   String
+  toName       String?
+  toEmail      String?
+  status       String    @default("PENDING")
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
 
-  request  ShiftRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  shift    Shift        @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  fromUser User         @relation(fields: [fromUserId], references: [id])
+  request  ShiftRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  shift    Shift         @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  fromUser User          @relation(fields: [fromUserId], references: [id])
 }
 
 model Notification {
