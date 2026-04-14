@@ -247,7 +247,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                     </div>
 
                     {showMsgForm && createPortal(
-                        <div style={styles.modalOverlay} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
+                        <div data-theme={document.documentElement.getAttribute("data-theme")} style={styles.modalOverlay} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
                             <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                                 <h3 style={styles.modalTitle}>📧 Enviar horario</h3>
 
