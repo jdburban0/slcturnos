@@ -289,6 +289,36 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             }
         }
 
+        // No NIGHT shift if approved for DAY shift of the next day
+        if (shift.type === "NIGHT") {
+            const nextDay = new Date(shift.date);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const nextDayStart = new Date(nextDay); nextDayStart.setHours(0, 0, 0, 0);
+            const nextDayEnd = new Date(nextDay); nextDayEnd.setHours(23, 59, 59, 999);
+
+            const nextDayApproved = await prisma.shiftRequest.findFirst({
+                where: {
+                    userId,
+                    status: "APPROVED",
+                    shift: { type: "DAY", date: { gte: nextDayStart, lte: nextDayEnd } },
+                },
+            });
+            if (nextDayApproved) {
+                return res.status(400).json({ message: "No puedes tomar un turno nocturno si tienes un turno diurno aprobado al día siguiente" });
+            }
+
+            const nightUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+            const nextDayManual = await prisma.manualAssignment.findFirst({
+                where: {
+                    email: nightUser.email,
+                    shift: { type: "DAY", date: { gte: nextDayStart, lte: nextDayEnd } },
+                },
+            });
+            if (nextDayManual) {
+                return res.status(400).json({ message: "No puedes tomar un turno nocturno si tienes un turno diurno aprobado al día siguiente" });
+            }
+        }
+
         const holdExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min hold
         const request = await prisma.shiftRequest.create({
             data: { shiftId: id, userId, holdExpiresAt },
