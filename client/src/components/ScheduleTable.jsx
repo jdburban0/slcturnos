@@ -284,7 +284,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                                 style={{ marginRight: "10px", accentColor: "#16a34a" }}
                                             />
                                             <div style={{ flex: 1 }}>
-                                                <div style={styles.operatorName}>{op.name}</div>
+                                                <div style={{ ...styles.operatorName, color: document.documentElement.getAttribute("data-theme") === "dark" ? "#f8fafc" : "#0f172a" }}>{op.name}</div>
                                                 <div style={styles.operatorEmail}>{op.email}</div>
                                             </div>
                                         </label>
