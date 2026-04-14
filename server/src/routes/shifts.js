@@ -262,7 +262,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             const prevNightApproved = await prisma.shiftRequest.findFirst({
                 where: {
                     userId,
-                    status: "APPROVED",
+                    status: { in: ["PENDING", "APPROVED"] },
                     shift: {
                         type: "NIGHT",
                         date: { gte: prevDayStart, lte: prevDayEnd },
@@ -299,7 +299,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             const nextDayApproved = await prisma.shiftRequest.findFirst({
                 where: {
                     userId,
-                    status: "APPROVED",
+                    status: { in: ["PENDING", "APPROVED"] },
                     shift: { type: "DAY", date: { gte: nextDayStart, lte: nextDayEnd } },
                 },
             });
