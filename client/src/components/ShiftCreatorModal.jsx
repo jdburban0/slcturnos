@@ -76,7 +76,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
     // Modo semana
     const [mondayIso, setMondayIso] = useState(todayMondayIso);
     const [selectedDays, setSelectedDays] = useState([0, 1, 2, 3, 4, 5]);
-    const [dayPreset, setDayPreset] = useState({ enabled: true, start: "07:30", end: "16:30", slots: 3 });
+    const [dayPreset, setDayPreset] = useState({ enabled: true, start: "07:30", end: "16:30", slots: 1 });
     const [nightPreset, setNightPreset] = useState({ enabled: false, start: "23:00", end: "06:00", slots: 3 });
 
     // Modo individual
