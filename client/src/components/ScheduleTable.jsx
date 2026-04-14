@@ -161,36 +161,36 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const dateRange = getDateRange(shifts);
 
     function handleExportExcel() {
-        const thStyle = `background:#1e3a5f;color:#ffffff;font-weight:bold;text-align:center;padding:8px 10px;border:1px solid #334155;font-family:Arial,sans-serif;font-size:12px;`;
-        const tdStyle = `border:1px solid #cbd5e1;padding:6px 8px;vertical-align:top;font-family:Arial,sans-serif;font-size:11px;min-width:110px;`;
-        const timeStyle = `font-weight:700;color:#1e3a5f;font-size:11px;margin-bottom:3px;`;
-        const nameStyle = `color:#0f172a;font-size:11px;padding:1px 0;`;
-        const emptyStyle = `color:#cbd5e1;font-size:11px;`;
+        const thStyle = `background:#1e3a5f;color:#ffffff;font-weight:bold;text-align:center;vertical-align:middle;padding:10px 10px;border:1px solid #334155;font-family:Arial,sans-serif;font-size:12px;`;
+        const tdStyle = `border:1px solid #cbd5e1;padding:8px 10px;vertical-align:top;font-family:Arial,sans-serif;font-size:11px;min-width:120px;text-align:center;`;
+        const tdEmptyStyle = `border:1px solid #e2e8f0;padding:8px 10px;vertical-align:top;font-family:Arial,sans-serif;font-size:11px;min-width:120px;text-align:center;background:#fafafa;`;
 
         const headerCells = dates.map((d) =>
-            `<th style="${thStyle}">${getDayName(d)}<br/>${formatShortDate(d)}</th>`
+            `<th style="${thStyle}"><b>${getDayName(d)}</b><br/><span style="font-weight:normal;">${formatShortDate(d)}</span></th>`
         ).join("");
 
-        const buildRows = (ranges, bgHeader) => ranges.map((tr) => {
+        const buildRows = (ranges) => ranges.map((tr) => {
             const cells = dates.map((date) => {
                 const cell = getCellData(tr.start, tr.end, date);
-                if (!cell) return `<td style="${tdStyle}"></td>`;
-                const slots = Array.from({ length: cell.totalSlots }, (_, i) =>
+                if (!cell) return `<td style="${tdEmptyStyle}"></td>`;
+                const slotLines = Array.from({ length: cell.totalSlots }, (_, i) =>
                     cell.approved[i]
-                        ? `<div style="${nameStyle}">${cell.approved[i]}</div>`
-                        : `<div style="${emptyStyle}">${i + 1}</div>`
-                ).join("");
-                return `<td style="${tdStyle}"><div style="${timeStyle}">${tr.start} – ${tr.end}</div>${slots}</td>`;
+                        ? `<span style="color:#0f172a;">${cell.approved[i]}</span>`
+                        : `<span style="color:#94a3b8;">${i + 1}</span>`
+                ).join("<br/>");
+                return `<td style="${tdStyle}"><b style="color:#1e3a5f;">${tr.start} – ${tr.end}</b><br/>${slotLines}</td>`;
             }).join("");
             return `<tr>${cells}</tr>`;
         }).join("");
 
         const separatorRow = dayRanges.length && nightRanges.length
-            ? `<tr><td colspan="${dates.length}" style="background:#f1f5f9;height:6px;border:none;"></td></tr>`
+            ? `<tr><td colspan="${dates.length}" style="background:#f1f5f9;height:8px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-top:none;border-bottom:none;"></td></tr>`
             : "";
 
         const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-<head><meta charset="UTF-8"/></head>
+<head><meta charset="UTF-8"/>
+<xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Horario</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml>
+</head>
 <body>
 <table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
     <thead><tr>${headerCells}</tr></thead>
@@ -202,7 +202,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
 </table>
 </body></html>`;
 
-        const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
+        const blob = new Blob(["\uFEFF" + html], { type: "application/vnd.ms-excel;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `SLC-Horario-${dates[0]}.xls`;
