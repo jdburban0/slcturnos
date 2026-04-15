@@ -54,7 +54,7 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
     }
 
     return (
-        <div style={{
+        <div className="card-lift" style={{
             ...styles.row,
             ...(isPending ? styles.rowPending : (isApproved || isManualAssigned) ? styles.rowApproved : {}),
         }}>
@@ -156,6 +156,7 @@ const styles = {
         cursor: "pointer",
         fontWeight: "700",
         fontSize: "0.82rem",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     cancelBtn: {
         background: "transparent",
@@ -166,6 +167,7 @@ const styles = {
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "0.82rem",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     desistBtn: {
         background: "transparent",
@@ -176,6 +178,7 @@ const styles = {
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "0.82rem",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     desistBtnDisabled: {
         border: "1px solid #475569",

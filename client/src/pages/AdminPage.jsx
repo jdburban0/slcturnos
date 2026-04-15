@@ -353,8 +353,8 @@ function AdminPage() {
             )}
 
             {assignModal && (
-                <div style={styles.modalOverlay} onClick={() => setAssignModal(null)}>
-                    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setAssignModal(null)}>
+                    <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                         <h3 style={styles.modalTitle}>Asignar operador fulltime</h3>
                         <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{assignModal.shiftTitle}</p>
                         <form onSubmit={handleAssign} style={styles.modalForm}>
@@ -386,8 +386,8 @@ function AdminPage() {
             )}
 
             {showChangePwd && (
-                <div style={styles.modalOverlay} onClick={() => setShowChangePwd(false)}>
-                    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setShowChangePwd(false)}>
+                    <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                         <h3 style={styles.modalTitle}>Cambiar contraseña</h3>
                         <form onSubmit={handleChangePwd} style={styles.modalForm}>
                             <input style={styles.modalInput} type="password" placeholder="Contraseña actual"
@@ -795,6 +795,7 @@ const styles = {
     tab: {
         padding: "10px 18px", borderRadius: "10px", border: "1.5px solid transparent",
         background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer", fontWeight: "600", fontSize: "0.9rem",
+        transition: "all 0.18s ease",
     },
     tabActive: {
         background: "var(--primary)", border: "1.5px solid var(--primary)", color: "#ffffff",
@@ -814,6 +815,7 @@ const styles = {
     createButton: {
         background: "var(--primary)", color: "#fff", border: "none",
         padding: "10px 16px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold", fontSize: "0.9rem",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     form: {
         background: "var(--card-bg)", border: "1px solid var(--border-color)",
@@ -961,10 +963,12 @@ const styles = {
     modalCancel: {
         background: "var(--card-bg)", color: "var(--text-muted)", border: "1px solid var(--border-color)",
         padding: "9px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     modalSave: {
         background: "var(--primary)", color: "#fff", border: "none",
         padding: "9px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
 };
 

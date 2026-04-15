@@ -52,7 +52,7 @@ function NotificationBell({ token, refreshSignal }) {
             </button>
 
             {open && (
-                <div style={styles.dropdown} className="notif-dropdown">
+                <div style={styles.dropdown} className="dropdown-anim">
                     <div style={styles.dropHeader}>
                         <span style={styles.dropTitle}>Notificaciones</span>
                         {unread > 0 && (
@@ -95,12 +95,13 @@ const styles = {
     wrapper: { position: "relative" },
     bellBtn: {
         position: "relative",
-        background: "rgba(255,255,255,0.1)",
-        border: "1px solid rgba(255,255,255,0.2)",
+        background: "var(--card-bg)",
+        border: "1px solid var(--border-color)",
         borderRadius: "10px",
         padding: "8px 12px",
         cursor: "pointer",
         fontSize: "1.2rem",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     badge: {
         position: "absolute",
@@ -150,6 +151,7 @@ const styles = {
         padding: "12px 16px",
         borderBottom: "1px solid var(--border-color)",
         cursor: "default",
+        transition: "background 0.15s ease",
     },
     itemUnread: {
         background: "var(--primary-light)",

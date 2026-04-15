@@ -240,8 +240,8 @@ function DashboardPage() {
             )}
 
             {desistModal && (
-                <div style={styles.modalOverlay} onClick={() => setDesistModal(null)}>
-                    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setDesistModal(null)}>
+                    <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                         <h3 style={styles.modalTitle}>Desistir del turno</h3>
                         <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{desistModal.shiftTitle}</p>
 
@@ -292,8 +292,8 @@ function DashboardPage() {
             )}
 
             {showChangePwd && (
-                <div style={styles.modalOverlay} onClick={() => setShowChangePwd(false)}>
-                    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setShowChangePwd(false)}>
+                    <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                         <h3 style={styles.modalTitle}>Cambiar contraseña</h3>
                         <form onSubmit={handleChangePwd} style={styles.modalForm}>
                             <input
@@ -582,10 +582,12 @@ const styles = {
     modalCancel: {
         background: "var(--card-bg)", color: "var(--text-muted)", border: "1px solid var(--border-color)",
         padding: "9px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     modalSave: {
         background: "var(--primary)", color: "#fff", border: "none",
         padding: "9px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
 };
 

@@ -17,7 +17,7 @@ function PendingRequestCard({ request, onApprove, onReject, index }) {
         : null;
 
     return (
-        <div style={s.card}>
+        <div className="card-lift" style={s.card}>
             {/* Fila 1: badge + operador + timer */}
             <div style={s.topRow}>
                 <div style={s.indexBadge}>#{index + 1}</div>
@@ -172,6 +172,7 @@ const s = {
         fontWeight: "700",
         fontSize: "0.85rem",
         whiteSpace: "nowrap",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     rejectBtn: {
         background: "#dc2626",
@@ -183,6 +184,7 @@ const s = {
         fontWeight: "700",
         fontSize: "0.85rem",
         whiteSpace: "nowrap",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     cancelBtn: {
         background: "var(--border-color)",
@@ -193,6 +195,7 @@ const s = {
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "0.85rem",
+        transition: "transform 0.15s ease, filter 0.15s ease",
     },
     notesInput: {
         padding: "7px 10px",
