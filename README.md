@@ -1,63 +1,56 @@
 # SLC Turnos
 
-Sistema web para la gestión de turnos del equipo operativo de SLC Enterprise. Desarrollado por **Juan David Burbano** como proyecto para la materia **Gestión de la Innovación** de la Universidad Autónoma de Occidente — 2026.
+Plataforma web para la gestión de turnos del equipo SLC. Permite a los operadores solicitar turnos y a los administradores aprobar, rechazar, asignar y hacer seguimiento en tiempo real.
+
+**URL:** [slcturnos.online](https://slcturnos.online)
 
 ---
 
-## Descripción
+## Stack
 
-SLC Turnos permite a los operadores consultar los turnos disponibles, solicitar cupos y recibir notificaciones sobre el estado de sus solicitudes. Los administradores y supervisores pueden crear turnos, revisar solicitudes, enviar el horario semanal por correo y gestionar los usuarios del equipo.
-
----
-
-## Tecnologías utilizadas
-
-**Frontend**
-- React 18 + Vite
-- React Router v6
-- Socket.IO client (actualizaciones en tiempo real)
-
-**Backend**
-- Node.js + Express
-- Prisma ORM
-- PostgreSQL (Neon)
-- Socket.IO
-- JSON Web Tokens (JWT)
-- bcryptjs
-- Resend (envío de correos)
-
-**Despliegue**
-- Frontend: Vercel — [slcturnos.online](https://slcturnos.online)
-- Backend: Render
-- Base de datos: Neon (PostgreSQL serverless)
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | React + Vite |
+| Backend | Node.js + Express |
+| Base de datos | PostgreSQL + Prisma ORM |
+| Tiempo real | Socket.IO |
+| Correo | Resend |
+| Auth | JWT (8h) |
 
 ---
 
-## Funcionalidades principales
+## Roles
+
+| Rol | Descripción |
+|-----|-------------|
+| `operator` | Solicita turnos, puede desistir o traspasar |
+| `lead` | Aprueba solicitudes, gestiona turnos (no puede cambiar ajustes) |
+| `admin` | Acceso completo incluyendo ajustes del sistema |
+
+---
+
+## Funcionalidades
 
 ### Operadores
-- Registro con código de acceso, nombre, correo @sig.systems y grupo (E1 / E2)
-- Inicio de sesión y cierre de sesión
-- Ver turnos disponibles por día con filtro de semana
-- Solicitar y cancelar turnos
-- Ver estado de solicitudes (pendiente / aprobado / rechazado)
-- Notificaciones en tiempo real dentro de la app y por correo electrónico
-- Cambio de contraseña desde el panel
+- Ver turnos disponibles agrupados por día
+- Solicitar, cancelar, desistir o traspasar turnos aprobados
+- No pueden traspasar a compañeros ya asignados al mismo turno
+- Reciben notificaciones por correo al ser aprobados, rechazados o asignados
+- Recuperación de contraseña por código al correo
 
-### Reglas de negocio
-- Operadores **E1** no pueden solicitar turnos diurnos los días **lunes** ni **sábado**
-- No se puede tener una solicitud activa de turno diurno y nocturno para el mismo día
-- No se puede solicitar un turno diurno si hay un turno nocturno aprobado el día anterior
-- Al llenarse un turno, las solicitudes pendientes restantes se rechazan automáticamente con el motivo *Turno no disponible*
-
-### Administrador / Supervisor
-- Crear turnos individuales o para una semana completa
-- Aprobar o rechazar solicitudes con notas opcionales
-- Ver y gestionar operadores (activar, banear, eliminar)
-- Enviar el horario semanal por correo a todos los operadores con un mensaje personalizado opcional
+### Administradores / Leads
+- Crear turnos individuales o por semana completa (diurnos y nocturnos)
 - Archivar semanas cerradas
-- Actualizar el código de acceso para nuevos registros
-- Cambio de contraseña desde el panel
+- Aprobar o rechazar solicitudes de turno, desistimientos y traspasos
+- Asignar operadores manualmente a un turno
+- Enviar el horario semanal por correo con mensaje personalizado
+- Exportar el horario como JPG o Excel
+- Banear / desbanear / eliminar operadores
+- Notificación automática a todos los operadores al abrir nuevos cupos
+
+### Solo Admin
+- Cambiar el código de acceso de operadores
+- Cambiar el código de acceso de administradores
 
 ---
 
@@ -65,62 +58,63 @@ SLC Turnos permite a los operadores consultar los turnos disponibles, solicitar 
 
 ```
 slc-turnos/
-├── client/          # Aplicación React (frontend)
+├── client/          # React + Vite (frontend)
 │   └── src/
-│       ├── pages/   # LoginPage, DashboardPage, AdminPage
-│       ├── components/
-│       ├── context/
-│       ├── hooks/
-│       └── api/
-└── server/          # API REST + WebSockets (backend)
+│       ├── pages/       # LoginPage, DashboardPage, AdminPage
+│       ├── components/  # ShiftCard, ScheduleTable, NotificationBell...
+│       ├── context/     # AuthContext, ThemeContext
+│       ├── hooks/       # useSocket
+│       └── api/         # Funciones fetch al backend
+│
+└── server/          # Express (backend)
     └── src/
-        ├── routes/  # auth, shifts, requests, users, notifications
-        ├── lib/     # prisma, mailer
-        └── middleware/
+        ├── routes/      # auth, shifts, requests, transfers, users, notifications
+        ├── lib/         # prisma.js, mailer.js
+        ├── middleware/  # auth.js
+        └── index.js
 ```
 
 ---
 
 ## Variables de entorno
 
-### Backend (`server/.env`)
+### Server (`server/.env`)
 ```
 DATABASE_URL=
 JWT_SECRET=
-CLIENT_URL=
 RESEND_API_KEY=
-REGISTER_CODE=
 ```
 
-### Frontend (`client/.env`)
+### Client (`client/.env`)
 ```
 VITE_API_URL=
 ```
 
 ---
 
-## Instalación local
+## Correr en local
 
 ```bash
-# Instalar dependencias
-cd server && npm install
-cd ../client && npm install
-
-# Generar cliente Prisma y sincronizar schema
-cd ../server && npx prisma generate && npx prisma db push
-
-# Iniciar backend
+# Backend
+cd server
+npm install
+npx prisma migrate dev
 npm run dev
 
-# Iniciar frontend (en otra terminal)
-cd ../client && npm run dev
+# Frontend
+cd client
+npm install
+npm run dev
 ```
 
 ---
 
-## Autor
+## Deploy con cambios en base de datos
 
-**Juan David Burbano**  
-Universidad Autónoma de Occidente  
-Materia: Gestión de la Innovación — 2026  
-Proyecto desarrollado para SLC Enterprise
+Si se modifica el schema de Prisma, ejecutar en producción:
+
+```bash
+npx prisma migrate deploy
+```
+
+Sin este paso el servidor puede crashear al no encontrar las columnas o tablas nuevas.
