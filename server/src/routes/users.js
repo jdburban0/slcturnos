@@ -46,7 +46,8 @@ router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
     }
 
     try {
-        const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+        const cleanEmail = email.toLowerCase().trim();
+        const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
         if (existing) {
             return res.status(400).json({ message: "Ya existe un usuario con ese correo" });
         }
@@ -54,8 +55,8 @@ router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
         const passwordHash = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
             data: {
-                name,
-                email: email.toLowerCase(),
+                name: name.trim(),
+                email: cleanEmail,
                 passwordHash,
                 role: assignedRole,
                 ...(assignedRole === "operator" && { group }),
