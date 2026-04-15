@@ -104,8 +104,9 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
             const added = newSlots - before.totalSlots;
             prisma.user.findMany({
                 where: { role: "operator", active: true },
-                select: { name: true, email: true },
+                select: { id: true, name: true, email: true },
             }).then((operators) => {
+                console.log(`[Mailer] Notificando nuevo cupo a ${operators.length} operadores: ${operators.map((o) => o.email).join(", ")}`);
                 sendNewShiftEmail({
                     operators,
                     shiftTitle: shift.title,
