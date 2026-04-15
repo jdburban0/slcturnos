@@ -355,7 +355,7 @@ function AdminPage() {
             {assignModal && (
                 <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setAssignModal(null)}>
                     <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-                        <h3 style={styles.modalTitle}>Asignar operador fulltime</h3>
+                        <h3 style={styles.modalTitle}>Asignar operador</h3>
                         <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{assignModal.shiftTitle}</p>
                         <form onSubmit={handleAssign} style={styles.modalForm}>
                             <input
