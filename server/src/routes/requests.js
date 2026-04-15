@@ -276,6 +276,19 @@ router.post("/:id/transfer", requireAuth, async (req, res) => {
         if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes traspasar turnos aprobados" });
         if (request.transfer) return res.status(400).json({ message: "Ya tienes una solicitud pendiente para este turno" });
 
+        const cleanToEmail = toEmail.toLowerCase().trim();
+        const [alreadyRequest, alreadyManual] = await Promise.all([
+            prisma.shiftRequest.findFirst({
+                where: { shiftId: request.shiftId, status: "APPROVED", user: { email: cleanToEmail } },
+            }),
+            prisma.manualAssignment.findFirst({
+                where: { shiftId: request.shiftId, email: cleanToEmail },
+            }),
+        ]);
+        if (alreadyRequest || alreadyManual) {
+            return res.status(400).json({ message: "Ese compañero ya está asignado a este turno" });
+        }
+
         const transfer = await prisma.shiftTransfer.create({
             data: { requestId: id, shiftId: request.shiftId, fromUserId: req.user.id, toName: toName.trim(), toEmail: toEmail.trim() },
         });

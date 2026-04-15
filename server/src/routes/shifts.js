@@ -534,13 +534,26 @@ router.post("/:id/assign/:assignmentId/transfer", requireAuth, async (req, res) 
         });
         if (existing) return res.status(400).json({ message: "Ya tienes una solicitud de traspaso pendiente para este turno" });
 
+        const cleanToEmail = toEmail.toLowerCase().trim();
+        const [alreadyRequest, alreadyManual] = await Promise.all([
+            prisma.shiftRequest.findFirst({
+                where: { shiftId, status: "APPROVED", user: { email: cleanToEmail } },
+            }),
+            prisma.manualAssignment.findFirst({
+                where: { shiftId, email: cleanToEmail },
+            }),
+        ]);
+        if (alreadyRequest || alreadyManual) {
+            return res.status(400).json({ message: "Ese compañero ya está asignado a este turno" });
+        }
+
         const transfer = await prisma.shiftTransfer.create({
             data: {
                 assignmentId,
                 shiftId,
                 fromUserId: req.user.id,
                 toName,
-                toEmail,
+                toEmail: cleanToEmail,
             },
         });
 

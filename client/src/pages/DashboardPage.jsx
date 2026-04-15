@@ -405,14 +405,32 @@ function DashboardPage() {
                                         userEmail={user?.email}
                                         onRequest={handleRequest}
                                         onCancelRequest={handleCancelRequest}
-                                        onDesist={async (reqId, title) => { setDesistModal({ requestId: reqId, shiftTitle: title }); setDesistMode("choose"); setSelectedColleague(null); try { setColleagues(await getColleagues(token)); } catch {} }}
+                                        onDesist={async (reqId, title) => {
+                                            setDesistModal({ requestId: reqId, shiftTitle: title });
+                                            setDesistMode("choose");
+                                            setSelectedColleague(null);
+                                            try {
+                                                const list = await getColleagues(token);
+                                                const targetShift = upcomingShifts.find((s) => s.requests?.some((r) => r.id === reqId));
+                                                const assignedEmails = new Set([
+                                                    ...(targetShift?.requests?.filter((r) => r.status === "APPROVED").map((r) => r.user?.email?.toLowerCase()) ?? []),
+                                                    ...(targetShift?.manualAssignments?.map((a) => a.email?.toLowerCase()) ?? []),
+                                                ]);
+                                                setColleagues(list.filter((c) => !assignedEmails.has(c.email?.toLowerCase())));
+                                            } catch {}
+                                        }}
                                         onDesistManual={async (assignmentId, shiftId, shiftTitle) => {
                                             setDesistModal({ assignmentId, shiftId, shiftTitle });
                                             setDesistMode("choose");
                                             setSelectedColleague(null);
                                             try {
                                                 const list = await getColleagues(token);
-                                                setColleagues(list);
+                                                const targetShift = upcomingShifts.find((s) => s.id === shiftId);
+                                                const assignedEmails = new Set([
+                                                    ...(targetShift?.requests?.filter((r) => r.status === "APPROVED").map((r) => r.user?.email?.toLowerCase()) ?? []),
+                                                    ...(targetShift?.manualAssignments?.map((a) => a.email?.toLowerCase()) ?? []),
+                                                ]);
+                                                setColleagues(list.filter((c) => !assignedEmails.has(c.email?.toLowerCase())));
                                             } catch (err) { console.error("getColleagues error:", err); }
                                         }}
                                     />
