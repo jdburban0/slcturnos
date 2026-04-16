@@ -47,4 +47,17 @@ router.patch("/:id/read", requireAuth, async (req, res) => {
     }
 });
 
+// DELETE clear all notifications
+router.delete("/", requireAuth, async (req, res) => {
+    try {
+        await prisma.notification.deleteMany({
+            where: { userId: req.user.id },
+        });
+        res.json({ message: "Notificaciones eliminadas" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al limpiar notificaciones" });
+    }
+});
+
 export default router;

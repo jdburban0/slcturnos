@@ -191,6 +191,15 @@ export async function markAllNotificationsRead(token) {
     );
 }
 
+export async function clearNotifications(token) {
+    return handle(
+        await fetch(`${BASE}/api/notifications`, {
+            method: "DELETE",
+            headers: headers(token),
+        })
+    );
+}
+
 // Users
 export async function getUsers(token) {
     return handle(await fetch(`${BASE}/api/users`, { headers: headers(token) }));

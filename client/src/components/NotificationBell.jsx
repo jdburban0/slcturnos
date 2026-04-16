@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getNotifications, markAllNotificationsRead, markNotificationRead } from "../api/index.js";
+import { getNotifications, markAllNotificationsRead, markNotificationRead, clearNotifications } from "../api/index.js";
 
 function NotificationBell({ token, refreshSignal }) {
     const [notifications, setNotifications] = useState([]);
@@ -35,6 +35,13 @@ function NotificationBell({ token, refreshSignal }) {
         } catch {}
     }
 
+    async function handleClear() {
+        try {
+            await clearNotifications(token);
+            setNotifications([]);
+        } catch {}
+    }
+
     async function handleMarkOne(id) {
         try {
             await markNotificationRead(token, id);
@@ -55,11 +62,18 @@ function NotificationBell({ token, refreshSignal }) {
                 <div style={styles.dropdown} className="dropdown-anim">
                     <div style={styles.dropHeader}>
                         <span style={styles.dropTitle}>Notificaciones</span>
-                        {unread > 0 && (
-                            <button style={styles.markAllBtn} onClick={handleMarkAll}>
-                                Marcar todas
-                            </button>
-                        )}
+                        <div style={styles.headerActions}>
+                            {unread > 0 && (
+                                <button style={styles.markAllBtn} onClick={handleMarkAll}>
+                                    Marcar todas
+                                </button>
+                            )}
+                            {notifications.length > 0 && (
+                                <button style={styles.clearBtn} onClick={handleClear}>
+                                    Limpiar
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div style={styles.list}>
@@ -137,6 +151,11 @@ const styles = {
         borderBottom: "1px solid var(--border-color)",
     },
     dropTitle: { fontWeight: "700", color: "var(--text-main)", fontSize: "0.95rem" },
+    headerActions: {
+        display: "flex",
+        gap: "12px",
+        alignItems: "center",
+    },
     markAllBtn: {
         background: "none",
         border: "none",
@@ -144,6 +163,15 @@ const styles = {
         cursor: "pointer",
         fontSize: "0.82rem",
         fontWeight: "600",
+    },
+    clearBtn: {
+        background: "none",
+        border: "none",
+        color: "var(--text-muted)",
+        cursor: "pointer",
+        fontSize: "0.82rem",
+        fontWeight: "600",
+        transition: "color 0.15s ease",
     },
     list: { maxHeight: "360px", overflowY: "auto" },
     empty: { padding: "20px 16px", color: "var(--text-muted)", textAlign: "center", margin: 0 },
