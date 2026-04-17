@@ -61,7 +61,7 @@ async function expireOldRequests() {
     }
 }
 
-setInterval(expireOldRequests, 5 * 60 * 1000);
+setInterval(expireOldRequests, 30 * 60 * 1000);
 
 // Warm up DB connection and ensure default settings exist
 prisma.$queryRaw`SELECT 1`
