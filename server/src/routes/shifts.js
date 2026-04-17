@@ -320,9 +320,8 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             }
         }
 
-        const holdExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min hold
         const request = await prisma.shiftRequest.create({
-            data: { shiftId: id, userId, holdExpiresAt },
+            data: { shiftId: id, userId },
             include: {
                 user: { select: { id: true, name: true } },
                 shift: true,

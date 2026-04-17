@@ -41,27 +41,6 @@ io.on("connection", (socket) => {
     });
 });
 
-// Auto-expire PENDING requests past holdExpiresAt every 5 minutes
-async function expireOldRequests() {
-    try {
-        const expired = await prisma.shiftRequest.updateMany({
-            where: {
-                status: "PENDING",
-                holdExpiresAt: { lt: new Date() },
-            },
-            data: { status: "EXPIRED" },
-        });
-        if (expired.count > 0) {
-            console.log(`[CRON] ${expired.count} solicitudes expiradas`);
-            io.emit("shifts:refresh");
-            io.to("admins").emit("requests:refresh");
-        }
-    } catch (err) {
-        console.error("[CRON] Error expirando solicitudes:", err.message);
-    }
-}
-
-setInterval(expireOldRequests, 30 * 60 * 1000);
 
 // Warm up DB connection and ensure default settings exist
 prisma.$queryRaw`SELECT 1`
@@ -75,8 +54,6 @@ prisma.$queryRaw`SELECT 1`
     })
     .catch((err) => console.error("[DB] Error warmup:", err.message));
 
-
-expireOldRequests();
 
 httpServer.listen(PORT, () => {
     console.log(`Servidor SLC Turnos corriendo en http://localhost:${PORT}`);

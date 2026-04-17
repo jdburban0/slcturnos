@@ -12,24 +12,15 @@ function PendingRequestCard({ request, onApprove, onReject, index }) {
         month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
     });
 
-    const timeLeft = request.holdExpiresAt
-        ? Math.max(0, Math.round((new Date(request.holdExpiresAt) - Date.now()) / 60000))
-        : null;
-
     return (
         <div className="card-lift" style={s.card}>
-            {/* Fila 1: badge + operador + timer */}
+            {/* Fila 1: badge + operador */}
             <div style={s.topRow}>
                 <div style={s.indexBadge}>#{index + 1}</div>
                 <div style={s.operatorInfo}>
                     <span style={s.operatorName}>{request.user.name}</span>
                     <span style={s.operatorEmail}>{request.user.email}</span>
                 </div>
-                {timeLeft !== null && (
-                    <span style={{ ...s.timer, ...(timeLeft < 5 ? s.timerUrgent : {}) }}>
-                        ⏱ {timeLeft}m
-                    </span>
-                )}
             </div>
 
             {/* Fila 2: turno + fecha */}
