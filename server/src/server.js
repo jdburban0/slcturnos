@@ -75,8 +75,6 @@ prisma.$queryRaw`SELECT 1`
     })
     .catch((err) => console.error("[DB] Error warmup:", err.message));
 
-// Keep DB alive every 4 minutes
-setInterval(() => prisma.$queryRaw`SELECT 1`.catch(() => {}), 4 * 60 * 1000);
 
 expireOldRequests();
 
