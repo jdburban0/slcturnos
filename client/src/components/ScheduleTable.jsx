@@ -215,7 +215,8 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         setExporting(true);
         try {
             const el = tableRef.current;
-            const scrollEl = el.querySelector("div"); // scrollWrapper
+            const titleEl = el.children[0];  // tableTitle div
+            const scrollEl = el.children[1]; // scrollWrapper div
             const tableEl = el.querySelector("table");
 
             // Expand everything to natural width before capture
@@ -231,8 +232,9 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             scrollEl.style.width = "max-content";
             tableEl.style.width = "max-content";
 
-            // Measure natural table width after expansion
+            // Measure natural table width and stretch title to match
             const captureWidth = tableEl.scrollWidth + 2;
+            titleEl.style.minWidth = captureWidth + "px";
 
             const canvas = await html2canvas(el, {
                 backgroundColor: "#ffffff",
@@ -249,6 +251,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             scrollEl.style.overflowX = prevScrollOverflow;
             scrollEl.style.width = prevScrollWidth;
             tableEl.style.width = prevTableWidth;
+            titleEl.style.minWidth = "";
 
             const link = document.createElement("a");
             link.download = `SLC-Schedule-${dates[0]}.jpg`;
