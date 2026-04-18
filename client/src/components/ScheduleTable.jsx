@@ -214,12 +214,32 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         if (!tableRef.current || exporting) return;
         setExporting(true);
         try {
-            const canvas = await html2canvas(tableRef.current, {
+            const el = tableRef.current;
+            const scrollEl = el.querySelector("div"); // scrollWrapper
+            const tableEl = el.querySelector("table");
+
+            // Expand to full width before capture
+            const prevElOverflow = el.style.overflow;
+            const prevScrollOverflow = scrollEl.style.overflowX;
+            const prevTableWidth = tableEl.style.width;
+            el.style.overflow = "visible";
+            scrollEl.style.overflowX = "visible";
+            tableEl.style.width = "max-content";
+
+            const canvas = await html2canvas(el, {
                 backgroundColor: "#ffffff",
                 scale: 2,
                 useCORS: true,
                 logging: false,
+                width: el.scrollWidth,
+                windowWidth: el.scrollWidth,
             });
+
+            // Restore original styles
+            el.style.overflow = prevElOverflow;
+            scrollEl.style.overflowX = prevScrollOverflow;
+            tableEl.style.width = prevTableWidth;
+
             const link = document.createElement("a");
             link.download = `SLC-Schedule-${dates[0]}.jpg`;
             link.href = canvas.toDataURL("image/jpeg", 0.95);
