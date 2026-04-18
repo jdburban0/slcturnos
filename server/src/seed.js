@@ -6,7 +6,7 @@ async function main() {
     const hash = await bcrypt.hash("slc2025", 10);
 
     const users = [
-        { name: "Christian Perlaza", email: "christian.perlaza@sig.systems", role: "admin" },
+        { name: "Administrador SLC", email: "admin@slc.com", role: "admin" },
         { name: "Lead Supervisor", email: "lead@slc.com", role: "lead" },
     ];
 
@@ -33,7 +33,7 @@ async function main() {
     console.log("✓ Código admins: SLCADMIN2025");
 
     console.log("\n✅ Seed completado. Contraseña: slc2025");
-    console.log("   Admin: christian.perlaza@sig.systems");
+    console.log("   Admin: admin@slc.com");
     console.log("   Lead:  lead@slc.com");
     console.log("   Código operadores: SLC2025");
     console.log("   Código admins:     SLCADMIN2025");
