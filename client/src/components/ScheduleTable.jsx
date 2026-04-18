@@ -226,13 +226,16 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             scrollEl.style.overflowX = "visible";
             tableEl.style.width = "max-content";
 
+            // Measure natural table width after expansion
+            const captureWidth = tableEl.offsetWidth + 2;
+
             const canvas = await html2canvas(el, {
                 backgroundColor: "#ffffff",
                 scale: 2,
                 useCORS: true,
                 logging: false,
-                width: el.scrollWidth,
-                windowWidth: el.scrollWidth,
+                width: captureWidth,
+                windowWidth: captureWidth,
             });
 
             // Restore original styles
