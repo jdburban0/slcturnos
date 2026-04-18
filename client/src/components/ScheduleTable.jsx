@@ -218,16 +218,21 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             const scrollEl = el.querySelector("div"); // scrollWrapper
             const tableEl = el.querySelector("table");
 
-            // Expand to full width before capture
+            // Expand everything to natural width before capture
             const prevElOverflow = el.style.overflow;
+            const prevElWidth = el.style.width;
             const prevScrollOverflow = scrollEl.style.overflowX;
+            const prevScrollWidth = scrollEl.style.width;
             const prevTableWidth = tableEl.style.width;
+
             el.style.overflow = "visible";
+            el.style.width = "max-content";
             scrollEl.style.overflowX = "visible";
+            scrollEl.style.width = "max-content";
             tableEl.style.width = "max-content";
 
             // Measure natural table width after expansion
-            const captureWidth = tableEl.offsetWidth + 2;
+            const captureWidth = tableEl.scrollWidth + 2;
 
             const canvas = await html2canvas(el, {
                 backgroundColor: "#ffffff",
@@ -240,7 +245,9 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
 
             // Restore original styles
             el.style.overflow = prevElOverflow;
+            el.style.width = prevElWidth;
             scrollEl.style.overflowX = prevScrollOverflow;
+            scrollEl.style.width = prevScrollWidth;
             tableEl.style.width = prevTableWidth;
 
             const link = document.createElement("a");
