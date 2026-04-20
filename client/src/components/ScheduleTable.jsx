@@ -129,6 +129,16 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const dayShifts = shifts.filter((s) => s.type === "DAY");
     const nightShifts = shifts.filter((s) => s.type === "NIGHT");
 
+    function parseTimeToMinutes(t) {
+        const match = t.match(/(\d+):(\d+)(am|pm)/i);
+        if (!match) return 0;
+        let [, h, m, period] = match;
+        h = parseInt(h); m = parseInt(m);
+        if (period.toLowerCase() === "pm" && h !== 12) h += 12;
+        if (period.toLowerCase() === "am" && h === 12) h = 0;
+        return h * 60 + m;
+    }
+
     function getTimeRanges(group) {
         return [
             ...new Map(
@@ -137,7 +147,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                     { start: s.startTime, end: s.endTime },
                 ])
             ).values(),
-        ];
+        ].sort((a, b) => parseTimeToMinutes(a.start) - parseTimeToMinutes(b.start));
     }
 
     function getCellData(timeStart, timeEnd, date) {
