@@ -197,13 +197,18 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             ? `<tr><td colspan="${dates.length}" style="background:#f1f5f9;height:8px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-top:none;border-bottom:none;"></td></tr>`
             : "";
 
+        const titleRow = `<tr><td colspan="${dates.length}" style="font-family:Arial,sans-serif;font-size:13px;font-weight:bold;text-align:center;padding:10px;background:#ffffff;color:#0f172a;border:none;">Early &amp; Late Shifts — ${dateRange}</td></tr>`;
+
         const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
 <head><meta charset="UTF-8"/>
 <xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Horario</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml>
 </head>
 <body>
 <table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
-    <thead><tr>${headerCells}</tr></thead>
+    <thead>
+        ${titleRow}
+        <tr>${headerCells}</tr>
+    </thead>
     <tbody>
         ${buildRows(dayRanges)}
         ${separatorRow}
