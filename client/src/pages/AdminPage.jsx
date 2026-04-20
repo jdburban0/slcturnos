@@ -46,8 +46,33 @@ const STATUS_STYLE = {
     CLOSED: { background: "var(--border-color)", color: "var(--text-muted)" },
 };
 
+function parseTimeToMinutes(t) {
+    const match = t.match(/(\d+):(\d+)(am|pm)/i);
+    if (!match) return 0;
+    let [, h, m, period] = match;
+    h = parseInt(h); m = parseInt(m);
+    if (period.toLowerCase() === "pm" && h !== 12) h += 12;
+    if (period.toLowerCase() === "am" && h === 12) h = 0;
+    return h * 60 + m;
+}
+
 function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId, startEditSlots, handleSaveSlots, handleDeleteShift, onAssign, userRole, emptyText, styles, muted }) {
-    const cols = ["Turno", "Fecha", "Horario", "Tipo", "Cupos", "Aprobados", "Pendientes", "Estado", "Acciones"];
+    const cols = ["Fecha", "Horario", "Cupos", "Aprobados", "Pendientes", "Estado", "Acciones"];
+
+    const grouped = Object.entries(
+        shifts.reduce((acc, shift) => {
+            const date = shift.date.slice(0, 10);
+            if (!acc[date]) acc[date] = [];
+            acc[date].push(shift);
+            return acc;
+        }, {})
+    )
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, group]) => [
+        date,
+        group.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime)),
+    ]);
+
     return (
         <div style={styles.tableWrapper}>
             <table style={{ ...styles.table, opacity: muted ? 0.65 : 1 }}>
@@ -55,63 +80,65 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                     <tr>{cols.map((h) => <th key={h} style={styles.th}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
-                    {shifts.map((shift) => {
-                        const approved = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0) + (shift.manualAssignments?.length ?? 0);
-                        const pending = shift.requests?.filter((r) => r.status === "PENDING").length ?? 0;
-                        return (
-                            <tr key={shift.id} style={styles.tr}>
-                                <td style={styles.td}>{shift.title}</td>
-                                <td style={styles.td}>
-                                    {new Date(shift.date).toLocaleDateString("es-CO", {
-                                        weekday: "short", month: "short", day: "numeric",
-                                    })}
-                                </td>
-                                <td style={styles.td}>{shift.startTime} – {shift.endTime}</td>
-                                <td style={styles.td}>{shift.type === "DAY" ? "Diurno" : "Nocturno"}</td>
-                                <td style={styles.td}>{shift.totalSlots}</td>
-                                <td style={{ ...styles.td, color: "var(--success)", fontWeight: "bold" }}>{approved}</td>
-                                <td style={{ ...styles.td, color: "var(--warning)" }}>{pending}</td>
-                                <td style={styles.td}>
-                                    <span style={{ ...styles.badge, ...STATUS_STYLE[shift.status] }}>
-                                        {STATUS_LABEL[shift.status]}
-                                    </span>
-                                </td>
-                                <td style={styles.td}>
-                                    {editingShiftId === shift.id ? (
-                                        <div style={styles.slotsEditor}>
-                                            <button style={styles.slotBtn} onClick={() => setEditSlots((v) => Math.max(1, v - 1))}>−</button>
-                                            <span style={styles.slotsNum}>{editSlots}</span>
-                                            <button style={styles.slotBtn} onClick={() => setEditSlots((v) => v + 1)}>+</button>
-                                            <button style={styles.saveBtn} onClick={() => handleSaveSlots(shift)}>✓</button>
-                                            <button style={styles.cancelBtn} onClick={() => setEditingShiftId(null)}>✕</button>
-                                        </div>
-                                    ) : (
-                                        <div style={styles.actionBtns}>
-                                            <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
-                                            {shift.status !== "CLOSED" && onAssign && (
-                                                <button
-                                                    style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
-                                                    onClick={() => onAssign(shift.id, shift.title)}
-                                                    disabled={shift.status === "FULL"}
-                                                >
-                                                    Asignar
-                                                </button>
-                                            )}
-                                            {userRole === "admin" && (
-                                                <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
-                                            )}
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                    {shifts.length === 0 && (
+                    {grouped.length === 0 && (
                         <tr>
-                            <td colSpan={9} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
+                            <td colSpan={7} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
                                 {emptyText}
                             </td>
                         </tr>
+                    )}
+                    {grouped.map(([, group]) =>
+                        group.map((shift, i) => {
+                            const approved = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0) + (shift.manualAssignments?.length ?? 0);
+                            const pending = shift.requests?.filter((r) => r.status === "PENDING").length ?? 0;
+                            return (
+                                <tr key={shift.id} style={styles.tr}>
+                                    {i === 0 && (
+                                        <td rowSpan={group.length} style={{ ...styles.td, fontWeight: "700", color: "var(--text-main)", verticalAlign: "middle", borderRight: "2px solid var(--border-color)" }}>
+                                            {new Date(shift.date + "T00:00:00").toLocaleDateString("es-CO", {
+                                                weekday: "short", month: "short", day: "numeric",
+                                            })}
+                                        </td>
+                                    )}
+                                    <td style={styles.td}>{shift.startTime} – {shift.endTime}</td>
+                                    <td style={styles.td}>{shift.totalSlots}</td>
+                                    <td style={{ ...styles.td, color: "var(--success)", fontWeight: "bold" }}>{approved}</td>
+                                    <td style={{ ...styles.td, color: "var(--warning)" }}>{pending}</td>
+                                    <td style={styles.td}>
+                                        <span style={{ ...styles.badge, ...STATUS_STYLE[shift.status] }}>
+                                            {STATUS_LABEL[shift.status]}
+                                        </span>
+                                    </td>
+                                    <td style={styles.td}>
+                                        {editingShiftId === shift.id ? (
+                                            <div style={styles.slotsEditor}>
+                                                <button style={styles.slotBtn} onClick={() => setEditSlots((v) => Math.max(1, v - 1))}>−</button>
+                                                <span style={styles.slotsNum}>{editSlots}</span>
+                                                <button style={styles.slotBtn} onClick={() => setEditSlots((v) => v + 1)}>+</button>
+                                                <button style={styles.saveBtn} onClick={() => handleSaveSlots(shift)}>✓</button>
+                                                <button style={styles.cancelBtn} onClick={() => setEditingShiftId(null)}>✕</button>
+                                            </div>
+                                        ) : (
+                                            <div style={styles.actionBtns}>
+                                                <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
+                                                {shift.status !== "CLOSED" && onAssign && (
+                                                    <button
+                                                        style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
+                                                        onClick={() => onAssign(shift.id, shift.title)}
+                                                        disabled={shift.status === "FULL"}
+                                                    >
+                                                        Asignar
+                                                    </button>
+                                                )}
+                                                {userRole === "admin" && (
+                                                    <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })
                     )}
                 </tbody>
             </table>
