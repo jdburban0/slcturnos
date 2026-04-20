@@ -95,7 +95,7 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                                 <tr key={shift.id} style={styles.tr}>
                                     {i === 0 && (
                                         <td rowSpan={group.length} style={{ ...styles.td, fontWeight: "700", color: "var(--text-main)", verticalAlign: "middle", borderRight: "2px solid var(--border-color)" }}>
-                                            {new Date(shift.date + "T00:00:00").toLocaleDateString("es-CO", {
+                                            {new Date(shift.date.slice(0, 10) + "T00:00:00").toLocaleDateString("es-CO", {
                                                 weekday: "short", month: "short", day: "numeric",
                                             })}
                                         </td>
