@@ -20,7 +20,7 @@ function LoginPage() {
     const [leaving, setLeaving] = useState(false);
     const [fieldKey, setFieldKey] = useState(0);
     const [formAnim, setFormAnim] = useState("form-enter");
-    const [serverReady, setServerReady] = useState(false);
+    const [serverReady, setServerReady] = useState(true);
     const [resetEmail, setResetEmail] = useState("");
     const [resetCode, setResetCode] = useState("");
     const [resetPwd, setResetPwd] = useState("");
@@ -328,14 +328,7 @@ function LoginPage() {
                             </p>
                         )}
 
-                        {!serverReady && (
-                            <div style={styles.serverWaiting}>
-                                <span style={styles.dot} />
-                                Iniciando servidor…
-                            </div>
-                        )}
-
-                        {!resetSuccess && (
+{!resetSuccess && (
                             <button
                                 type="submit"
                                 className="btn btn-primary"
