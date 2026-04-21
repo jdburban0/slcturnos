@@ -56,8 +56,34 @@ function parseTimeToMinutes(t) {
     return h * 60 + m;
 }
 
-function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId, startEditSlots, handleSaveSlots, handleDeleteShift, onAssign, userRole, emptyText, styles, muted }) {
-    const cols = ["Fecha", "Horario", "Cupos", "Aprobados", "Pendientes", "Estado", "Acciones"];
+function getWeekMonday(dateStr) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    const day = (date.getDay() + 6) % 7;
+    date.setDate(date.getDate() - day);
+    return date.toISOString().slice(0, 10);
+}
+
+function weekRangeLabel(mondayStr) {
+    const mon = new Date(mondayStr + "T12:00:00");
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    const fmt = (d) => d.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+    return `Semana ${fmt(mon)} – ${fmt(sun)}`;
+}
+
+function ShiftsTable({
+    shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId,
+    startEditSlots, handleSaveSlots, handleDeleteShift, onAssign,
+    userRole, emptyText, styles, muted,
+    hideStatus, hidePending, allowAssignClosed, weekSeparators,
+}) {
+    const cols = [
+        "Fecha", "Horario", "Cupos", "Aprobados",
+        ...(!hidePending ? ["Pendientes"] : []),
+        ...(!hideStatus ? ["Estado"] : []),
+        "Acciones",
+    ];
+    const colSpan = cols.length;
 
     const grouped = Object.entries(
         shifts.reduce((acc, shift) => {
@@ -67,11 +93,25 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
             return acc;
         }, {})
     )
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, group]) => [
-        date,
-        group.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime)),
-    ]);
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, group]) => [
+            date,
+            group.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime)),
+        ]);
+
+    // Build flat row list with optional week separator rows
+    const rows = [];
+    let lastWeek = null;
+    for (const [date, group] of grouped) {
+        if (weekSeparators) {
+            const wk = getWeekMonday(date);
+            if (wk !== lastWeek) {
+                rows.push({ type: "week", key: wk, label: weekRangeLabel(wk) });
+                lastWeek = wk;
+            }
+        }
+        rows.push({ type: "group", date, group });
+    }
 
     return (
         <div style={styles.tableWrapper}>
@@ -82,15 +122,35 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                 <tbody>
                     {grouped.length === 0 && (
                         <tr>
-                            <td colSpan={7} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
+                            <td colSpan={colSpan} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
                                 {emptyText}
                             </td>
                         </tr>
                     )}
-                    {grouped.map(([, group]) =>
-                        group.map((shift, i) => {
+                    {rows.map((row) => {
+                        if (row.type === "week") {
+                            return (
+                                <tr key={row.key}>
+                                    <td colSpan={colSpan} style={{
+                                        padding: "6px 12px",
+                                        fontSize: "0.72rem",
+                                        fontWeight: "700",
+                                        color: "var(--text-muted)",
+                                        background: "var(--bg-color)",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.06em",
+                                        borderTop: "2px solid var(--border-color)",
+                                    }}>
+                                        {row.label}
+                                    </td>
+                                </tr>
+                            );
+                        }
+                        const { group } = row;
+                        return group.map((shift, i) => {
                             const approved = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0) + (shift.manualAssignments?.length ?? 0);
                             const pending = shift.requests?.filter((r) => r.status === "PENDING").length ?? 0;
+                            const canAssign = onAssign && (shift.status !== "CLOSED" || allowAssignClosed);
                             return (
                                 <tr key={shift.id} style={styles.tr}>
                                     {i === 0 && (
@@ -102,13 +162,15 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                                     )}
                                     <td style={styles.td}>{shift.startTime} – {shift.endTime}</td>
                                     <td style={styles.td}>{shift.totalSlots}</td>
-                                    <td style={{ ...styles.td, color: "var(--success)", fontWeight: "bold" }}>{approved}</td>
-                                    <td style={{ ...styles.td, color: "var(--warning)" }}>{pending}</td>
-                                    <td style={styles.td}>
-                                        <span style={{ ...styles.badge, ...STATUS_STYLE[shift.status] }}>
-                                            {STATUS_LABEL[shift.status]}
-                                        </span>
-                                    </td>
+                                    <td style={{ ...styles.td, color: approved > 0 ? "var(--success)" : "var(--text-muted)", fontWeight: "bold" }}>{approved}</td>
+                                    {!hidePending && <td style={{ ...styles.td, color: pending > 0 ? "var(--warning)" : "var(--text-muted)" }}>{pending}</td>}
+                                    {!hideStatus && (
+                                        <td style={styles.td}>
+                                            <span style={{ ...styles.badge, ...STATUS_STYLE[shift.status] }}>
+                                                {STATUS_LABEL[shift.status]}
+                                            </span>
+                                        </td>
+                                    )}
                                     <td style={styles.td}>
                                         {editingShiftId === shift.id ? (
                                             <div style={styles.slotsEditor}>
@@ -121,7 +183,7 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                                         ) : (
                                             <div style={styles.actionBtns}>
                                                 <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
-                                                {shift.status !== "CLOSED" && onAssign && (
+                                                {canAssign && (
                                                     <button
                                                         style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
                                                         onClick={() => onAssign(shift.id, shift.title)}
@@ -138,8 +200,8 @@ function ShiftsTable({ shifts, editingShiftId, editSlots, setEditSlots, setEditi
                                     </td>
                                 </tr>
                             );
-                        })
-                    )}
+                        });
+                    })}
                 </tbody>
             </table>
         </div>
@@ -578,11 +640,28 @@ function AdminPage() {
                             </button>
                         </div>
 
+                        {/* Horario visual exportable */}
                         <ScheduleTable
-                            shifts={showHistory ? shifts : shifts.filter((s) => s.status !== "CLOSED")}
+                            shifts={shifts.filter((s) => s.status !== "CLOSED")}
                             updatedAt={shiftsUpdatedAt}
                             canExport
                             token={token}
+                        />
+
+                        {/* Tabla de turnos activos (OPEN / FULL) */}
+                        <ShiftsTable
+                            shifts={shifts.filter((s) => s.status !== "CLOSED")}
+                            editingShiftId={editingShiftId}
+                            editSlots={editSlots}
+                            setEditSlots={setEditSlots}
+                            setEditingShiftId={setEditingShiftId}
+                            startEditSlots={startEditSlots}
+                            handleSaveSlots={handleSaveSlots}
+                            handleDeleteShift={handleDeleteShift}
+                            onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
+                            userRole={user?.role}
+                            emptyText="No hay turnos activos"
+                            styles={styles}
                         />
 
                         {/* Control de archivar semana */}
@@ -604,29 +683,12 @@ function AdminPage() {
                             </div>
                         )}
 
-                        {/* Botón de historial */}
-                        <div style={styles.historyToggleRow}>
-                            <button
-                                style={{ ...styles.historyToggle, ...(showHistory ? styles.historyToggleActive : {}) }}
-                                onClick={() => setShowHistory((v) => !v)}
-                            >
-                                {showHistory ? "🗂 Ocultando historial" : "🗂 Ver historial"}
-                            </button>
-                        </div>
-
-                        {/* Semana actual — turnos cerrados de esta semana */}
+                        {/* Semana actual — turnos cerrados de esta semana (sin Estado ni Pendientes, con Asignar) */}
                         {(() => {
-                            const now = new Date(); now.setHours(0,0,0,0);
-                            const dow = now.getDay();
-                            const mon = new Date(now); mon.setDate(now.getDate() + (dow === 0 ? -6 : 1 - dow));
-                            const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-                            const cwShifts = shifts.filter((s) => {
-                                const d = new Date(s.date.slice(0,10) + "T12:00:00");
-                                return s.status === "CLOSED" && d >= mon && d <= sun;
-                            });
+                            const cwShifts = shifts.filter((s) => isCurrentWeekDate(s.date) && s.status === "CLOSED");
                             if (cwShifts.length === 0) return null;
                             return (
-                                <div style={{ marginBottom: "28px" }}>
+                                <div style={{ marginTop: "28px" }}>
                                     <p style={styles.historySectionLabel}>Semana actual — en curso</p>
                                     <ShiftsTable
                                         shifts={cwShifts}
@@ -641,33 +703,30 @@ function AdminPage() {
                                         userRole={user?.role}
                                         emptyText=""
                                         styles={styles}
+                                        hideStatus
+                                        hidePending
+                                        allowAssignClosed
                                     />
                                 </div>
                             );
                         })()}
 
-                        {/* Tabla de turnos activos */}
-                        <ShiftsTable
-                            shifts={shifts.filter((s) => s.status !== "CLOSED")}
-                            editingShiftId={editingShiftId}
-                            editSlots={editSlots}
-                            setEditSlots={setEditSlots}
-                            setEditingShiftId={setEditingShiftId}
-                            startEditSlots={startEditSlots}
-                            handleSaveSlots={handleSaveSlots}
-                            handleDeleteShift={handleDeleteShift}
-                            onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
-                            userRole={user?.role}
-                            emptyText="No hay turnos activos"
-                            styles={styles}
-                        />
+                        {/* Botón de historial */}
+                        <div style={styles.historyToggleRow}>
+                            <button
+                                style={{ ...styles.historyToggle, ...(showHistory ? styles.historyToggleActive : {}) }}
+                                onClick={() => setShowHistory((v) => !v)}
+                            >
+                                {showHistory ? "🗂 Ocultando historial" : "🗂 Ver historial"}
+                            </button>
+                        </div>
 
-                        {/* Historial de turnos cerrados */}
+                        {/* Historial — turnos cerrados de semanas anteriores (sin duplicar semana actual) */}
                         {showHistory && (
-                            <div style={{ marginTop: "28px" }}>
-                                <p style={styles.historySectionLabel}>Historial — turnos cerrados</p>
+                            <div>
+                                <p style={styles.historySectionLabel}>Historial — semanas cerradas</p>
                                 <ShiftsTable
-                                    shifts={shifts.filter((s) => s.status === "CLOSED")}
+                                    shifts={shifts.filter((s) => s.status === "CLOSED" && !isCurrentWeekDate(s.date))}
                                     editingShiftId={editingShiftId}
                                     editSlots={editSlots}
                                     setEditSlots={setEditSlots}
@@ -676,9 +735,12 @@ function AdminPage() {
                                     handleSaveSlots={handleSaveSlots}
                                     handleDeleteShift={handleDeleteShift}
                                     userRole={user?.role}
-                                    emptyText="No hay turnos cerrados"
+                                    emptyText="No hay semanas cerradas aún"
                                     styles={styles}
                                     muted
+                                    hideStatus
+                                    hidePending
+                                    weekSeparators
                                 />
                             </div>
                         )}
