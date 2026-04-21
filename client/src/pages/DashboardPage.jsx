@@ -378,8 +378,11 @@ function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Horario */}
-                <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
+                {/* Horario — sincronizado con el tab activo */}
+                <ScheduleTable
+                    shifts={dashTab === "current" ? currentWeekShifts : upcomingShifts}
+                    updatedAt={shiftsUpdatedAt}
+                />
 
                 {/* Tabs semana actual / próxima */}
                 <div style={{ display: "flex", gap: "8px", marginBottom: "16px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
