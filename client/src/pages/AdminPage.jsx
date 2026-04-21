@@ -819,11 +819,11 @@ const styles = {
     },
     statNum: { fontSize: "1.5rem", fontWeight: "800", color: "var(--text-main)" },
     statLabel: { fontSize: "0.68rem", color: "var(--text-muted)", textAlign: "center", lineHeight: "1.2" },
-    tabs: { display: "flex", gap: "6px", marginBottom: "20px" },
+    tabs: { display: "flex", gap: "6px", marginBottom: "20px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" },
     tab: {
         padding: "10px 18px", borderRadius: "10px", border: "1.5px solid transparent",
         background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer", fontWeight: "600", fontSize: "0.9rem",
-        transition: "all 0.18s ease",
+        transition: "all 0.18s ease", flexShrink: 0,
     },
     tabActive: {
         background: "var(--primary)", border: "1.5px solid var(--primary)", color: "#ffffff",
