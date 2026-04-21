@@ -374,8 +374,10 @@ function DashboardPage() {
                         <span style={styles.statLabel}>Pendientes</span>
                     </div>
                     <div style={styles.statCard}>
-                        <span style={{ ...styles.statValue, color: "var(--primary)" }}>{openShiftsCount}</span>
-                        <span style={styles.statLabel}>Disponibles</span>
+                        <span style={{ ...styles.statValue, color: "var(--primary)" }}>
+                            {dashTab === "current" ? currentWeekShifts.length : openShiftsCount}
+                        </span>
+                        <span style={styles.statLabel}>{dashTab === "current" ? "En curso" : "Disponibles"}</span>
                     </div>
                 </div>
 
