@@ -156,6 +156,7 @@ function AdminPage() {
     const [users, setUsers] = useState([]);
     const [transfers, setTransfers] = useState([]);
     const [activeTab, setActiveTab] = useState("requests");
+    const [reqTab, setReqTab] = useState("next"); // "next" | "current"
     const [registerCode, setRegisterCode] = useState("");
     const [newCode, setNewCode] = useState("");
     const [codeVisible, setCodeVisible] = useState(false);
@@ -370,6 +371,16 @@ function AdminPage() {
 
     const approvedRequests = shifts.filter((s) => s.status !== "CLOSED").flatMap((s) => (s.requests ?? []).filter((r) => r.status === "APPROVED"));
 
+    // Current week range for request/transfer filtering
+    const _now = new Date(); _now.setHours(0, 0, 0, 0);
+    const _dow = _now.getDay();
+    const _mon = new Date(_now); _mon.setDate(_now.getDate() + (_dow === 0 ? -6 : 1 - _dow));
+    const _sun = new Date(_mon); _sun.setDate(_mon.getDate() + 6);
+    const isCurrentWeekDate = (dateStr) => { const d = new Date((dateStr || "").slice(0, 10) + "T12:00:00"); return d >= _mon && d <= _sun; };
+    const filteredRequests = requests.filter((r) => reqTab === "current" ? isCurrentWeekDate(r.shift?.date) : !isCurrentWeekDate(r.shift?.date));
+    const filteredTransfers = transfers.filter((t) => reqTab === "current" ? isCurrentWeekDate(t.shift?.date) : !isCurrentWeekDate(t.shift?.date));
+    const hasCurrentWeekItems = requests.some((r) => isCurrentWeekDate(r.shift?.date)) || transfers.some((t) => isCurrentWeekDate(t.shift?.date));
+
     return (
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
             {toast && (
@@ -492,12 +503,25 @@ function AdminPage() {
 
                 {activeTab === "requests" && (
                     <section style={styles.section}>
-                        {transfers.length > 0 && (
+                        {/* Tab toggle semana actual / próxima — solo si hay items de la semana actual */}
+                        {hasCurrentWeekItems && (
+                            <div style={{ display: "flex", gap: "8px", marginBottom: "20px", overflowX: "auto", scrollbarWidth: "none" }}>
+                                <button style={{ ...styles.tab, flexShrink: 0, ...(reqTab === "next" ? styles.tabActive : {}) }} onClick={() => setReqTab("next")}>
+                                    Próxima semana{requests.filter((r) => !isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => !isCurrentWeekDate(t.shift?.date)).length > 0 ? ` (${requests.filter((r) => !isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => !isCurrentWeekDate(t.shift?.date)).length})` : ""}
+                                </button>
+                                <button style={{ ...styles.tab, flexShrink: 0, ...(reqTab === "current" ? styles.tabActive : {}) }} onClick={() => setReqTab("current")}>
+                                    Semana actual{requests.filter((r) => isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => isCurrentWeekDate(t.shift?.date)).length > 0 ? ` (${requests.filter((r) => isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => isCurrentWeekDate(t.shift?.date)).length})` : ""}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Traspasos filtrados */}
+                        {filteredTransfers.length > 0 && (
                             <div style={{ marginBottom: "24px" }}>
                                 <p style={{ ...styles.requestListHint, marginBottom: "10px", color: "var(--primary)", fontWeight: "700" }}>
-                                    Traspasos pendientes · {transfers.length}
+                                    Traspasos pendientes · {filteredTransfers.length}
                                 </p>
-                                {transfers.map((t) => (
+                                {filteredTransfers.map((t) => (
                                     <div key={t.id} style={styles.transferCard}>
                                         <div style={{ flex: 1 }}>
                                             <p style={styles.transferTitle}>{t.shift?.title}</p>
@@ -521,16 +545,17 @@ function AdminPage() {
                             </div>
                         )}
 
-                        {requests.length === 0 && transfers.length === 0 ? (
-                            <p style={styles.empty}>No hay solicitudes pendientes.</p>
-                        ) : requests.length > 0 && (
+                        {/* Solicitudes filtradas */}
+                        {filteredRequests.length === 0 && filteredTransfers.length === 0 ? (
+                            <p style={styles.empty}>No hay solicitudes pendientes{hasCurrentWeekItems ? ` para la ${reqTab === "current" ? "semana actual" : "próxima semana"}` : ""}.</p>
+                        ) : filteredRequests.length > 0 && (
                             <div style={styles.requestList}>
                                 <div style={styles.requestListHeader}>
                                     <span style={styles.requestListHint}>
-                                        Ordenadas de más antigua a más reciente · {requests.length} pendiente{requests.length !== 1 ? "s" : ""}
+                                        Ordenadas de más antigua a más reciente · {filteredRequests.length} pendiente{filteredRequests.length !== 1 ? "s" : ""}
                                     </span>
                                 </div>
-                                {requests.map((req, idx) => (
+                                {filteredRequests.map((req, idx) => (
                                     <PendingRequestCard
                                         key={req.id}
                                         request={req}
