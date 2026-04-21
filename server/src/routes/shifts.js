@@ -184,8 +184,19 @@ router.post("/:id/request", requireAuth, async (req, res) => {
         });
 
         if (!shift) return res.status(404).json({ message: "Turno no encontrado" });
+
+        // Allow requests on CLOSED shifts only if they belong to the current week
         if (shift.status !== "OPEN") {
-            return res.status(400).json({ message: "Este turno ya no está disponible" });
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const monday = new Date(today); monday.setDate(today.getDate() + diff); monday.setHours(0, 0, 0, 0);
+            const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23, 59, 59, 999);
+            const shiftDate = new Date(shift.date);
+            const isCurrentWeekClosed = shift.status === "CLOSED" && shiftDate >= monday && shiftDate <= sunday;
+            if (!isCurrentWeekClosed) {
+                return res.status(400).json({ message: "Este turno ya no está disponible" });
+            }
         }
 
         const approvedCount = shift.requests.filter((r) => r.status === "APPROVED").length + shift.manualAssignments.length;
@@ -427,7 +438,6 @@ router.post("/:id/assign", requireAuth, requireRole("admin", "lead"), async (req
         });
 
         if (!shift) return res.status(404).json({ message: "Turno no encontrado" });
-        if (shift.status === "CLOSED") return res.status(400).json({ message: "El turno está cerrado" });
 
         const occupiedSlots = shift.requests.length + shift.manualAssignments.length;
         if (occupiedSlots >= shift.totalSlots) {

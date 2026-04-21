@@ -112,6 +112,7 @@ function DashboardPage() {
     const [colleagues, setColleagues] = useState([]);
     const [selectedColleague, setSelectedColleague] = useState(null);
     const [transferLoading, setTransferLoading] = useState(false);
+    const [dashTab, setDashTab] = useState("upcoming");
 
     const loadShifts = useCallback(async () => {
         try {
@@ -217,6 +218,16 @@ function DashboardPage() {
 
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const upcomingShifts = shifts.filter((s) => s.status !== "CLOSED" && new Date(s.date.slice(0,10)+"T12:00:00") >= today);
+
+    // Current week (Mon-Sun) CLOSED shifts
+    const dayOfWeek = today.getDay();
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const currentWeekMonday = new Date(today); currentWeekMonday.setDate(today.getDate() + diffToMonday);
+    const currentWeekSunday = new Date(currentWeekMonday); currentWeekSunday.setDate(currentWeekMonday.getDate() + 6);
+    const currentWeekShifts = shifts.filter((s) => {
+        const d = new Date(s.date.slice(0, 10) + "T12:00:00");
+        return s.status === "CLOSED" && d >= currentWeekMonday && d <= currentWeekSunday;
+    });
     const myApprovedShifts = upcomingShifts.filter((s) =>
         s.requests?.some((r) => r.user?.id === user?.id && r.status === "APPROVED")
     );
@@ -370,18 +381,38 @@ function DashboardPage() {
                 {/* Horario */}
                 <ScheduleTable shifts={shifts.filter((s) => s.status !== "CLOSED")} updatedAt={shiftsUpdatedAt} />
 
+                {/* Tabs semana actual / próxima */}
+                <div style={{ display: "flex", gap: "8px", marginBottom: "16px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+                    <button
+                        style={{ ...styles.dashTabBtn, ...(dashTab === "upcoming" ? styles.dashTabBtnActive : {}) }}
+                        onClick={() => { setDashTab("upcoming"); setSelectedDay(null); }}
+                    >
+                        Próxima semana
+                    </button>
+                    {currentWeekShifts.length > 0 && (
+                        <button
+                            style={{ ...styles.dashTabBtn, ...(dashTab === "current" ? styles.dashTabBtnActive : {}) }}
+                            onClick={() => { setDashTab("current"); setSelectedDay(null); }}
+                        >
+                            Semana actual
+                        </button>
+                    )}
+                </div>
+
                 {/* Filtro por día */}
-                <WeekStrip
-                    shifts={upcomingShifts}
-                    selectedDay={selectedDay}
-                    onSelectDay={setSelectedDay}
-                />
+                {dashTab === "upcoming" && (
+                    <WeekStrip
+                        shifts={upcomingShifts}
+                        selectedDay={selectedDay}
+                        onSelectDay={setSelectedDay}
+                    />
+                )}
 
                 {/* Turnos */}
                 {loading && <p style={styles.info}>Cargando turnos...</p>}
                 {error && <p style={styles.errorMsg}>{error}</p>}
 
-                {!loading && upcomingShifts.length === 0 && (
+                {dashTab === "upcoming" && !loading && upcomingShifts.length === 0 && (
                     <div style={styles.emptyState}>
                         <p style={styles.emptyIcon}>📋</p>
                         <p style={styles.emptyText}>No hay turnos disponibles esta semana.</p>
@@ -389,6 +420,67 @@ function DashboardPage() {
                     </div>
                 )}
 
+                {dashTab === "current" && !loading && currentWeekShifts.length === 0 && (
+                    <div style={styles.emptyState}>
+                        <p style={styles.emptyIcon}>📋</p>
+                        <p style={styles.emptyText}>No hay turnos de la semana actual.</p>
+                    </div>
+                )}
+
+                {dashTab === "current" && (
+                    <div style={styles.cardsGrid}>
+                        {groupByDay(currentWeekShifts).map(([date, dayShifts]) => (
+                            <div key={date} style={styles.dayGroup}>
+                                <div style={styles.dayHeader}>
+                                    <span style={styles.dayLabel}>{dayLabel(date)}</span>
+                                    <span style={styles.dayCount}>{dayShifts.length} turno{dayShifts.length !== 1 ? "s" : ""}</span>
+                                </div>
+                                <div style={styles.list}>
+                                    {dayShifts.map((shift) => (
+                                        <ShiftCard
+                                            key={shift.id}
+                                            shift={shift}
+                                            myRequest={getMyRequest(shift)}
+                                            userEmail={user?.email}
+                                            onRequest={handleRequest}
+                                            onCancelRequest={handleCancelRequest}
+                                            onDesist={async (reqId, title) => {
+                                                setDesistModal({ requestId: reqId, shiftTitle: title });
+                                                setDesistMode("choose");
+                                                setSelectedColleague(null);
+                                                try {
+                                                    const list = await getColleagues(token);
+                                                    const targetShift = currentWeekShifts.find((s) => s.requests?.some((r) => r.id === reqId));
+                                                    const assignedEmails = new Set([
+                                                        ...(targetShift?.requests?.filter((r) => r.status === "APPROVED").map((r) => r.user?.email?.toLowerCase()) ?? []),
+                                                        ...(targetShift?.manualAssignments?.map((a) => a.email?.toLowerCase()) ?? []),
+                                                    ]);
+                                                    setColleagues(list.filter((c) => !assignedEmails.has(c.email?.toLowerCase())));
+                                                } catch {}
+                                            }}
+                                            onDesistManual={async (assignmentId, shiftId, shiftTitle) => {
+                                                setDesistModal({ assignmentId, shiftId, shiftTitle });
+                                                setDesistMode("choose");
+                                                setSelectedColleague(null);
+                                                try {
+                                                    const list = await getColleagues(token);
+                                                    const targetShift = currentWeekShifts.find((s) => s.id === shiftId);
+                                                    const assignedEmails = new Set([
+                                                        ...(targetShift?.requests?.filter((r) => r.status === "APPROVED").map((r) => r.user?.email?.toLowerCase()) ?? []),
+                                                        ...(targetShift?.manualAssignments?.map((a) => a.email?.toLowerCase()) ?? []),
+                                                    ]);
+                                                    setColleagues(list.filter((c) => !assignedEmails.has(c.email?.toLowerCase())));
+                                                } catch {}
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div style={{ display: dashTab === "upcoming" ? undefined : "none" }}>
                 <div style={styles.cardsGrid}>
                     {visibleGroups.map(([date, dayShifts]) => (
                         <div key={date} id={`day-${date}`} style={styles.dayGroup}>
@@ -439,6 +531,8 @@ function DashboardPage() {
                         </div>
                     ))}
                 </div>
+                </div>
+
             </div>
         </div>
     );
@@ -530,6 +624,14 @@ const styles = {
     dayCount: { color: "var(--text-muted)", fontSize: "0.78rem" },
     list: { display: "flex", flexDirection: "column", gap: "8px" },
     info: { color: "var(--text-muted)", textAlign: "center", padding: "40px 0" },
+    dashTabBtn: {
+        padding: "9px 18px", borderRadius: "10px", border: "1.5px solid var(--border-color)",
+        background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer",
+        fontWeight: "600", fontSize: "0.88rem", flexShrink: 0, transition: "all 0.18s ease",
+    },
+    dashTabBtnActive: {
+        background: "var(--primary)", border: "1.5px solid var(--primary)", color: "#ffffff",
+    },
     errorMsg: {
         background: "var(--danger-bg)",
         color: "var(--danger)",

@@ -589,6 +589,38 @@ function AdminPage() {
                             </button>
                         </div>
 
+                        {/* Semana actual — turnos cerrados de esta semana */}
+                        {(() => {
+                            const now = new Date(); now.setHours(0,0,0,0);
+                            const dow = now.getDay();
+                            const mon = new Date(now); mon.setDate(now.getDate() + (dow === 0 ? -6 : 1 - dow));
+                            const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                            const cwShifts = shifts.filter((s) => {
+                                const d = new Date(s.date.slice(0,10) + "T12:00:00");
+                                return s.status === "CLOSED" && d >= mon && d <= sun;
+                            });
+                            if (cwShifts.length === 0) return null;
+                            return (
+                                <div style={{ marginBottom: "28px" }}>
+                                    <p style={styles.historySectionLabel}>Semana actual — en curso</p>
+                                    <ShiftsTable
+                                        shifts={cwShifts}
+                                        editingShiftId={editingShiftId}
+                                        editSlots={editSlots}
+                                        setEditSlots={setEditSlots}
+                                        setEditingShiftId={setEditingShiftId}
+                                        startEditSlots={startEditSlots}
+                                        handleSaveSlots={handleSaveSlots}
+                                        handleDeleteShift={handleDeleteShift}
+                                        onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
+                                        userRole={user?.role}
+                                        emptyText=""
+                                        styles={styles}
+                                    />
+                                </div>
+                            );
+                        })()}
+
                         {/* Tabla de turnos activos */}
                         <ShiftsTable
                             shifts={shifts.filter((s) => s.status !== "CLOSED")}
