@@ -683,25 +683,6 @@ function AdminPage() {
                             </div>
                         )}
 
-                        {/* Tabla sincronizada con el horario visible */}
-                        <ShiftsTable
-                            shifts={visibleScheduleShifts}
-                            editingShiftId={editingShiftId}
-                            editSlots={editSlots}
-                            setEditSlots={setEditSlots}
-                            setEditingShiftId={setEditingShiftId}
-                            startEditSlots={startEditSlots}
-                            handleSaveSlots={handleSaveSlots}
-                            handleDeleteShift={handleDeleteShift}
-                            onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
-                            userRole={user?.role}
-                            emptyText="No hay turnos"
-                            styles={styles}
-                            hideStatus={effectiveView === "current"}
-                            hidePending={effectiveView === "current"}
-                            allowAssignClosed={effectiveView === "current"}
-                        />
-
                         {/* Control de archivar semana */}
                         {getWeeksFromShifts(shifts).length > 0 && (
                             <div style={styles.weekActions}>
@@ -720,6 +701,25 @@ function AdminPage() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Tabla sincronizada con el horario visible */}
+                        <ShiftsTable
+                            shifts={visibleScheduleShifts}
+                            editingShiftId={editingShiftId}
+                            editSlots={editSlots}
+                            setEditSlots={setEditSlots}
+                            setEditingShiftId={setEditingShiftId}
+                            startEditSlots={startEditSlots}
+                            handleSaveSlots={handleSaveSlots}
+                            handleDeleteShift={handleDeleteShift}
+                            onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
+                            userRole={user?.role}
+                            emptyText="No hay turnos"
+                            styles={styles}
+                            hideStatus={effectiveView === "current"}
+                            hidePending={effectiveView === "current"}
+                            allowAssignClosed={effectiveView === "current"}
+                        />
 
                     </section>
                 )}
