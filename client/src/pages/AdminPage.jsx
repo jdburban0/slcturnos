@@ -75,13 +75,13 @@ function ShiftsTable({
     shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId,
     startEditSlots, handleSaveSlots, handleDeleteShift, onAssign,
     userRole, emptyText, styles, muted,
-    hideStatus, hidePending, allowAssignClosed, weekSeparators,
+    hideStatus, hidePending, allowAssignClosed, weekSeparators, readOnly,
 }) {
     const cols = [
         "Fecha", "Horario", "Cupos", "Aprobados",
         ...(!hidePending ? ["Pendientes"] : []),
         ...(!hideStatus ? ["Estado"] : []),
-        "Acciones",
+        ...(!readOnly ? ["Acciones"] : []),
     ];
     const colSpan = cols.length;
 
@@ -171,33 +171,35 @@ function ShiftsTable({
                                             </span>
                                         </td>
                                     )}
-                                    <td style={styles.td}>
-                                        {editingShiftId === shift.id ? (
-                                            <div style={styles.slotsEditor}>
-                                                <button style={styles.slotBtn} onClick={() => setEditSlots((v) => Math.max(1, v - 1))}>−</button>
-                                                <span style={styles.slotsNum}>{editSlots}</span>
-                                                <button style={styles.slotBtn} onClick={() => setEditSlots((v) => v + 1)}>+</button>
-                                                <button style={styles.saveBtn} onClick={() => handleSaveSlots(shift)}>✓</button>
-                                                <button style={styles.cancelBtn} onClick={() => setEditingShiftId(null)}>✕</button>
-                                            </div>
-                                        ) : (
-                                            <div style={styles.actionBtns}>
-                                                <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
-                                                {canAssign && (
-                                                    <button
-                                                        style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
-                                                        onClick={() => onAssign(shift.id, shift.title)}
-                                                        disabled={shift.status === "FULL"}
-                                                    >
-                                                        Asignar
-                                                    </button>
-                                                )}
-                                                {userRole === "admin" && (
-                                                    <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
-                                                )}
-                                            </div>
-                                        )}
-                                    </td>
+                                    {!readOnly && (
+                                        <td style={styles.td}>
+                                            {editingShiftId === shift.id ? (
+                                                <div style={styles.slotsEditor}>
+                                                    <button style={styles.slotBtn} onClick={() => setEditSlots((v) => Math.max(1, v - 1))}>−</button>
+                                                    <span style={styles.slotsNum}>{editSlots}</span>
+                                                    <button style={styles.slotBtn} onClick={() => setEditSlots((v) => v + 1)}>+</button>
+                                                    <button style={styles.saveBtn} onClick={() => handleSaveSlots(shift)}>✓</button>
+                                                    <button style={styles.cancelBtn} onClick={() => setEditingShiftId(null)}>✕</button>
+                                                </div>
+                                            ) : (
+                                                <div style={styles.actionBtns}>
+                                                    <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
+                                                    {canAssign && (
+                                                        <button
+                                                            style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
+                                                            onClick={() => onAssign(shift.id, shift.title)}
+                                                            disabled={shift.status === "FULL"}
+                                                        >
+                                                            Asignar
+                                                        </button>
+                                                    )}
+                                                    {userRole === "admin" && (
+                                                        <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
                             );
                         });
@@ -719,39 +721,6 @@ function AdminPage() {
                             </div>
                         )}
 
-                        {/* Botón de historial */}
-                        <div style={styles.historyToggleRow}>
-                            <button
-                                style={{ ...styles.historyToggle, ...(showHistory ? styles.historyToggleActive : {}) }}
-                                onClick={() => setShowHistory((v) => !v)}
-                            >
-                                {showHistory ? "🗂 Ocultando historial" : "🗂 Ver historial"}
-                            </button>
-                        </div>
-
-                        {/* Historial — turnos cerrados de semanas anteriores (sin duplicar semana actual) */}
-                        {showHistory && (
-                            <div>
-                                <p style={styles.historySectionLabel}>Historial — semanas cerradas</p>
-                                <ShiftsTable
-                                    shifts={shifts.filter((s) => s.status === "CLOSED" && !isCurrentWeekDate(s.date))}
-                                    editingShiftId={editingShiftId}
-                                    editSlots={editSlots}
-                                    setEditSlots={setEditSlots}
-                                    setEditingShiftId={setEditingShiftId}
-                                    startEditSlots={startEditSlots}
-                                    handleSaveSlots={handleSaveSlots}
-                                    handleDeleteShift={handleDeleteShift}
-                                    userRole={user?.role}
-                                    emptyText="No hay semanas cerradas aún"
-                                    styles={styles}
-                                    muted
-                                    hideStatus
-                                    hidePending
-                                    weekSeparators
-                                />
-                            </div>
-                        )}
                     </section>
                 )}
 
@@ -858,6 +827,7 @@ function AdminPage() {
 
                         <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
                             <h3 style={styles.settingsLabel}>Código de acceso — administradores</h3>
+
                             <p style={styles.settingsHint}>
                                 Los administradores usan este código al registrarse. No es necesario seleccionar grupo con este código.
                             </p>
@@ -891,6 +861,33 @@ function AdminPage() {
                                     {adminCodeLoading ? "Guardando..." : "Guardar nuevo código"}
                                 </button>
                             </form>
+                        </div>
+
+                        {/* Historial de turnos */}
+                        <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                                <div>
+                                    <h3 style={styles.settingsLabel}>Historial de turnos</h3>
+                                    <p style={styles.settingsHint}>Semanas cerradas — solo lectura.</p>
+                                </div>
+                                <button
+                                    style={{ ...styles.historyToggle, ...(showHistory ? styles.historyToggleActive : {}) }}
+                                    onClick={() => setShowHistory((v) => !v)}
+                                >
+                                    {showHistory ? "Ocultar" : "Ver historial"}
+                                </button>
+                            </div>
+                            {showHistory && (
+                                <ShiftsTable
+                                    shifts={shifts.filter((s) => s.status === "CLOSED" && !isCurrentWeekDate(s.date))}
+                                    emptyText="No hay semanas cerradas aún."
+                                    styles={styles}
+                                    hideStatus
+                                    hidePending
+                                    weekSeparators
+                                    readOnly
+                                />
+                            )}
                         </div>
 
                     </section>
