@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
 import {
-    getShifts, getRequests, deleteShift, updateShift, closeWeek, reviewRequest,
+    getShifts, getRequests, deleteShift, deleteWeek, updateShift, closeWeek, reviewRequest,
     getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode,
     getAdminRegisterCode, updateAdminRegisterCode, changePassword, assignShift,
     getTransfers, reviewTransfer,
@@ -75,7 +75,7 @@ function ShiftsTable({
     shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId,
     startEditSlots, handleSaveSlots, handleDeleteShift, onAssign,
     userRole, emptyText, styles, muted,
-    hideStatus, hidePending, allowAssignClosed, weekSeparators, readOnly,
+    hideStatus, hidePending, allowAssignClosed, weekSeparators, readOnly, onDeleteWeek,
 }) {
     const cols = [
         "Fecha", "Horario", "Cupos", "Aprobados",
@@ -141,7 +141,22 @@ function ShiftsTable({
                                         letterSpacing: "0.06em",
                                         borderTop: "2px solid var(--border-color)",
                                     }}>
-                                        {row.label}
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                            <span>{row.label}</span>
+                                            {onDeleteWeek && (
+                                                <button
+                                                    onClick={() => onDeleteWeek(row.key, row.label)}
+                                                    style={{
+                                                        background: "transparent", color: "var(--danger)",
+                                                        border: "1px solid var(--danger)", borderRadius: "6px",
+                                                        padding: "2px 8px", cursor: "pointer",
+                                                        fontSize: "0.7rem", fontWeight: "700", textTransform: "none",
+                                                    }}
+                                                >
+                                                    Eliminar semana
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             );
@@ -354,6 +369,15 @@ function AdminPage() {
         try {
             await deleteShift(token, id);
             showToast("Turno eliminado");
+            loadShifts();
+        } catch (err) { showToast("Error", err.message); }
+    }
+
+    async function handleDeleteWeek(monday, label) {
+        if (!confirm(`¿Eliminar permanentemente todos los turnos de la semana ${label}?\n\nEsta acción no se puede deshacer.`)) return;
+        try {
+            const { count } = await deleteWeek(token, monday);
+            showToast("Semana eliminada", `${count} turno(s) eliminados.`);
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
     }
@@ -886,6 +910,7 @@ function AdminPage() {
                                     hidePending
                                     weekSeparators
                                     readOnly
+                                    onDeleteWeek={handleDeleteWeek}
                                 />
                             )}
                         </div>

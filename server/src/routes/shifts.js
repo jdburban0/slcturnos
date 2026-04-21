@@ -127,6 +127,33 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
 });
 
 // DELETE shift (admin only) — cancels pending requests and notifies users
+// DELETE all CLOSED shifts for a given week (admin only)
+router.delete("/week/:monday", requireAuth, requireRole("admin"), async (req, res) => {
+    const { monday } = req.params;
+    const monDate = new Date(monday + "T00:00:00");
+    const sunDate = new Date(monday + "T00:00:00");
+    sunDate.setDate(sunDate.getDate() + 6);
+    sunDate.setHours(23, 59, 59, 999);
+
+    try {
+        const shifts = await prisma.shift.findMany({
+            where: { status: "CLOSED", date: { gte: monDate, lte: sunDate } },
+            select: { id: true },
+        });
+        const ids = shifts.map((s) => s.id);
+        if (ids.length === 0) return res.json({ count: 0 });
+
+        await prisma.shiftRequest.deleteMany({ where: { shiftId: { in: ids } } });
+        await prisma.shiftTransfer.deleteMany({ where: { shiftId: { in: ids } } });
+        const { count } = await prisma.shift.deleteMany({ where: { id: { in: ids } } });
+
+        res.json({ count });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al eliminar semana" });
+    }
+});
+
 router.delete("/:id", requireAuth, requireRole("admin"), async (req, res) => {
     const { id } = req.params;
     try {

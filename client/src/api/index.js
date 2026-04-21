@@ -106,6 +106,15 @@ export async function deleteShift(token, id) {
     );
 }
 
+export async function deleteWeek(token, monday) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/week/${monday}`, {
+            method: "DELETE",
+            headers: headers(token),
+        })
+    );
+}
+
 export async function assignShift(token, shiftId, name, email) {
     return handle(
         await fetch(`${BASE}/api/shifts/${shiftId}/assign`, {
