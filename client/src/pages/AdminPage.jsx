@@ -471,13 +471,15 @@ function AdminPage() {
     const hasCurrentWeekItems = requests.some((r) => isCurrentWeekDate(r.shift?.date)) || transfers.some((t) => isCurrentWeekDate(t.shift?.date));
 
     // Schedule/table view sync
-    const hasCwShifts = shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date));
-    const hasActiveShifts = shifts.some((s) => s.status !== "CLOSED");
+    // "Semana actual" = cualquier turno cuya fecha cae en esta semana (OPEN o CLOSED)
+    // "Próxima semana" = turnos no cerrados cuyas fechas NO son de esta semana
+    const hasCwShifts = shifts.some((s) => isCurrentWeekDate(s.date));
+    const hasActiveShifts = shifts.some((s) => s.status !== "CLOSED" && !isCurrentWeekDate(s.date));
     const bothSchedulesExist = hasCwShifts && hasActiveShifts;
     const effectiveView = bothSchedulesExist ? scheduleView : (hasCwShifts ? "current" : "next");
     const visibleScheduleShifts = effectiveView === "current"
-        ? shifts.filter((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date))
-        : shifts.filter((s) => s.status !== "CLOSED");
+        ? shifts.filter((s) => isCurrentWeekDate(s.date))
+        : shifts.filter((s) => s.status !== "CLOSED" && !isCurrentWeekDate(s.date));
 
     return (
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
@@ -754,8 +756,6 @@ function AdminPage() {
                             userRole={user?.role}
                             emptyText="No hay turnos"
                             styles={styles}
-                            hideStatus={effectiveView === "current"}
-                            hidePending={effectiveView === "current"}
                             allowAssignClosed={effectiveView === "current"}
                         />
 
