@@ -683,8 +683,8 @@ function AdminPage() {
                             </div>
                         )}
 
-                        {/* Control de archivar semana */}
-                        {getWeeksFromShifts(shifts).length > 0 && (
+                        {/* Control de archivar semana — solo en vista de próxima semana */}
+                        {effectiveView === "next" && getWeeksFromShifts(shifts).length > 0 && (
                             <div style={styles.weekActions}>
                                 <span style={styles.weekActionsLabel}>Archivar semana:</span>
                                 <div style={styles.weekBtns}>
