@@ -444,6 +444,15 @@ function AdminPage() {
     const filteredTransfers = transfers.filter((t) => reqTab === "current" ? isCurrentWeekDate(t.shift?.date) : !isCurrentWeekDate(t.shift?.date));
     const hasCurrentWeekItems = requests.some((r) => isCurrentWeekDate(r.shift?.date)) || transfers.some((t) => isCurrentWeekDate(t.shift?.date));
 
+    // Schedule/table view sync
+    const hasCwShifts = shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date));
+    const hasActiveShifts = shifts.some((s) => s.status !== "CLOSED");
+    const bothSchedulesExist = hasCwShifts && hasActiveShifts;
+    const effectiveView = bothSchedulesExist ? scheduleView : (hasCwShifts ? "current" : "next");
+    const visibleScheduleShifts = effectiveView === "current"
+        ? shifts.filter((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date))
+        : shifts.filter((s) => s.status !== "CLOSED");
+
     return (
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
             {toast && (
@@ -641,54 +650,40 @@ function AdminPage() {
                             </button>
                         </div>
 
-                        {/* Horario visual con navegación entre semanas */}
-                        {(() => {
-                            const hasCurrent = shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date));
-                            const hasNext = shifts.some((s) => s.status !== "CLOSED");
-                            const bothExist = hasCurrent && hasNext;
-                            const view = bothExist ? scheduleView : (hasCurrent ? "current" : "next");
-                            const visibleShifts = view === "current"
-                                ? shifts.filter((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date))
-                                : shifts.filter((s) => s.status !== "CLOSED");
-                            if (!hasCurrent && !hasNext) return null;
-                            return (
-                                <div style={{ marginBottom: "8px" }}>
-                                    {bothExist && (
-                                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                                            <button
-                                                style={{ ...styles.scheduleNavBtn, ...(view === "current" ? {} : { opacity: 0.4, cursor: "not-allowed" }) }}
-                                                onClick={() => view === "current" && setScheduleView("next")}
-                                                disabled={view === "next"}
-                                                title="Próxima semana"
-                                            >
-                                                ←
-                                            </button>
-                                            <span style={styles.historySectionLabel}>
-                                                {view === "current" ? "Semana actual — en curso" : "Próxima semana — turnos abiertos"}
-                                            </span>
-                                            <button
-                                                style={{ ...styles.scheduleNavBtn, ...(view === "next" ? {} : { opacity: 0.4, cursor: "not-allowed" }) }}
-                                                onClick={() => view === "next" && setScheduleView("current")}
-                                                disabled={view === "current"}
-                                                title="Semana actual"
-                                            >
-                                                →
-                                            </button>
-                                        </div>
-                                    )}
-                                    <ScheduleTable
-                                        shifts={visibleShifts}
-                                        updatedAt={shiftsUpdatedAt}
-                                        canExport
-                                        token={token}
-                                    />
-                                </div>
-                            );
-                        })()}
+                        {/* Navegación entre semanas + horario visual */}
+                        {(hasCwShifts || hasActiveShifts) && (
+                            <div style={{ marginBottom: "8px" }}>
+                                {bothSchedulesExist && (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                                        <button
+                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "next" ? { opacity: 0.35, cursor: "not-allowed" } : {}) }}
+                                            onClick={() => setScheduleView("next")}
+                                            disabled={effectiveView === "next"}
+                                            title="Próxima semana"
+                                        >←</button>
+                                        <span style={styles.historySectionLabel}>
+                                            {effectiveView === "current" ? "Semana actual — en curso" : "Próxima semana — turnos abiertos"}
+                                        </span>
+                                        <button
+                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "current" ? { opacity: 0.35, cursor: "not-allowed" } : {}) }}
+                                            onClick={() => setScheduleView("current")}
+                                            disabled={effectiveView === "current"}
+                                            title="Semana actual"
+                                        >→</button>
+                                    </div>
+                                )}
+                                <ScheduleTable
+                                    shifts={visibleScheduleShifts}
+                                    updatedAt={shiftsUpdatedAt}
+                                    canExport
+                                    token={token}
+                                />
+                            </div>
+                        )}
 
-                        {/* Tabla de turnos activos (OPEN / FULL) */}
+                        {/* Tabla sincronizada con el horario visible */}
                         <ShiftsTable
-                            shifts={shifts.filter((s) => s.status !== "CLOSED")}
+                            shifts={visibleScheduleShifts}
                             editingShiftId={editingShiftId}
                             editSlots={editSlots}
                             setEditSlots={setEditSlots}
@@ -698,8 +693,11 @@ function AdminPage() {
                             handleDeleteShift={handleDeleteShift}
                             onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
                             userRole={user?.role}
-                            emptyText="No hay turnos activos"
+                            emptyText="No hay turnos"
                             styles={styles}
+                            hideStatus={effectiveView === "current"}
+                            hidePending={effectiveView === "current"}
+                            allowAssignClosed={effectiveView === "current"}
                         />
 
                         {/* Control de archivar semana */}
@@ -720,34 +718,6 @@ function AdminPage() {
                                 </div>
                             </div>
                         )}
-
-                        {/* Semana actual — turnos cerrados de esta semana (sin Estado ni Pendientes, con Asignar) */}
-                        {(() => {
-                            const cwShifts = shifts.filter((s) => isCurrentWeekDate(s.date) && s.status === "CLOSED");
-                            if (cwShifts.length === 0) return null;
-                            return (
-                                <div style={{ marginTop: "28px" }}>
-                                    <p style={styles.historySectionLabel}>Semana actual — en curso</p>
-                                    <ShiftsTable
-                                        shifts={cwShifts}
-                                        editingShiftId={editingShiftId}
-                                        editSlots={editSlots}
-                                        setEditSlots={setEditSlots}
-                                        setEditingShiftId={setEditingShiftId}
-                                        startEditSlots={startEditSlots}
-                                        handleSaveSlots={handleSaveSlots}
-                                        handleDeleteShift={handleDeleteShift}
-                                        onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
-                                        userRole={user?.role}
-                                        emptyText=""
-                                        styles={styles}
-                                        hideStatus
-                                        hidePending
-                                        allowAssignClosed
-                                    />
-                                </div>
-                            );
-                        })()}
 
                         {/* Botón de historial */}
                         <div style={styles.historyToggleRow}>
