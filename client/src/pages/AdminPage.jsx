@@ -636,7 +636,7 @@ function AdminPage() {
                             <table style={styles.table}>
                                 <thead>
                                     <tr>
-                                        {["Nombre", "Correo", "Estado", "Acciones"].map((h) => (
+                                        {["Nombre", "Correo", "Grupo", "Estado", "Acciones"].map((h) => (
                                             <th key={h} style={styles.th}>{h}</th>
                                         ))}
                                     </tr>
@@ -646,6 +646,7 @@ function AdminPage() {
                                         <tr key={u.id} style={styles.tr}>
                                             <td style={styles.td}>{u.name}</td>
                                             <td style={styles.td}>{u.email}</td>
+                                            <td style={styles.td}>{u.group ?? <span style={{ color: "var(--text-muted)" }}>—</span>}</td>
                                             <td style={styles.td}>
                                                 <span style={{
                                                     ...styles.badge,
@@ -676,7 +677,7 @@ function AdminPage() {
                                     ))}
                                     {users.filter((u) => u.role === "operator").length === 0 && (
                                         <tr>
-                                            <td colSpan={4} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
+                                            <td colSpan={5} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
                                                 No hay operadores registrados
                                             </td>
                                         </tr>
