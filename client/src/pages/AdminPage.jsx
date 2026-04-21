@@ -703,6 +703,7 @@ function AdminPage() {
                                     updatedAt={shiftsUpdatedAt}
                                     canExport
                                     token={token}
+                                    showAll={effectiveView === "current"}
                                 />
                             </div>
                         )}

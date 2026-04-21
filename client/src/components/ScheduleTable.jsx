@@ -42,7 +42,7 @@ function getWeekKey(isoString) {
     return monday.toISOString().slice(0, 10);
 }
 
-export default function ScheduleTable({ shifts, updatedAt, canExport, token }) {
+export default function ScheduleTable({ shifts, updatedAt, canExport, token, showAll }) {
     const [flash, setFlash] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [weekIndex, setWeekIndex] = useState(0);
@@ -58,7 +58,7 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token }) {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const upcoming = shifts.filter((s) => parseLocalDate(s.date) >= today);
+    const upcoming = showAll ? shifts : shifts.filter((s) => parseLocalDate(s.date) >= today);
 
     if (!upcoming.length) return null;
 

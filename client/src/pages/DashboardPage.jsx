@@ -400,6 +400,7 @@ function DashboardPage() {
                 <ScheduleTable
                     shifts={dashTab === "current" ? currentWeekShifts : upcomingShifts}
                     updatedAt={shiftsUpdatedAt}
+                    showAll={dashTab === "current"}
                 />
 
                 {/* Filtro por día */}
