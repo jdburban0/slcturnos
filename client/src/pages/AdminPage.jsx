@@ -676,6 +676,19 @@ function AdminPage() {
                             </button>
                         </div>
 
+                        {/* Aviso: semana actual archivada, sin próxima semana creada */}
+                        {hasCwShifts && !hasActiveShifts && (
+                            <div style={styles.nextWeekNotice}>
+                                <span style={{ fontSize: "1.1rem" }}>📅</span>
+                                <div>
+                                    <strong>La semana actual ya está archivada.</strong>
+                                    <p style={{ margin: "2px 0 0", fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                                        Crea los turnos de la próxima semana para que los operadores puedan solicitar cupos.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Navegación entre semanas + horario visual */}
                         {(hasCwShifts || hasActiveShifts) && (
                             <div style={{ marginBottom: "8px" }}>
@@ -1110,6 +1123,12 @@ const styles = {
         padding: "0 16px", borderRadius: "10px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem",
     },
     codeCurrentHint: { margin: 0, color: "var(--text-muted)", fontSize: "0.85rem", },
+    nextWeekNotice: {
+        display: "flex", alignItems: "flex-start", gap: "12px",
+        background: "var(--primary-light)", border: "1.5px solid var(--primary)",
+        borderRadius: "12px", padding: "14px 16px", marginBottom: "20px",
+        color: "var(--primary)",
+    },
     historySectionLabel: {
         color: "var(--text-muted)", fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase",
         letterSpacing: "0.05em", margin: 0, paddingBottom: "8px",
