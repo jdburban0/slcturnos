@@ -640,13 +640,33 @@ function AdminPage() {
                             </button>
                         </div>
 
-                        {/* Horario visual exportable — activos + semana actual en curso */}
-                        <ScheduleTable
-                            shifts={shifts.filter((s) => s.status !== "CLOSED" || isCurrentWeekDate(s.date))}
-                            updatedAt={shiftsUpdatedAt}
-                            canExport
-                            token={token}
-                        />
+                        {/* Horario visual — semana actual en curso (CLOSED) */}
+                        {shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date)) && (
+                            <div style={{ marginBottom: "24px" }}>
+                                <p style={styles.historySectionLabel}>Semana actual — en curso</p>
+                                <ScheduleTable
+                                    shifts={shifts.filter((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date))}
+                                    updatedAt={shiftsUpdatedAt}
+                                    canExport
+                                    token={token}
+                                />
+                            </div>
+                        )}
+
+                        {/* Horario visual — turnos activos (próxima semana) */}
+                        {shifts.some((s) => s.status !== "CLOSED") && (
+                            <div style={{ marginBottom: "8px" }}>
+                                {shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date)) && (
+                                    <p style={styles.historySectionLabel}>Próxima semana — turnos abiertos</p>
+                                )}
+                                <ScheduleTable
+                                    shifts={shifts.filter((s) => s.status !== "CLOSED")}
+                                    updatedAt={shiftsUpdatedAt}
+                                    canExport
+                                    token={token}
+                                />
+                            </div>
+                        )}
 
                         {/* Tabla de turnos activos (OPEN / FULL) */}
                         <ShiftsTable
