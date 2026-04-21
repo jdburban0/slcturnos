@@ -24,7 +24,7 @@ router.get("/colleagues", requireAuth, async (req, res) => {
 router.get("/", requireAuth, requireRole("admin", "lead"), async (req, res) => {
     try {
         const users = await prisma.user.findMany({
-            select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+            select: { id: true, name: true, email: true, role: true, active: true, group: true, createdAt: true },
             orderBy: { name: "asc" },
         });
         res.json(users);
