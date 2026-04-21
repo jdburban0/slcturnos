@@ -217,17 +217,18 @@ function DashboardPage() {
     }
 
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const upcomingShifts = shifts.filter((s) => s.status !== "CLOSED" && new Date(s.date.slice(0,10)+"T12:00:00") >= today);
 
-    // Current week (Mon-Sun) CLOSED shifts
+    // Current week (Mon-Sun)
     const dayOfWeek = today.getDay();
     const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const currentWeekMonday = new Date(today); currentWeekMonday.setDate(today.getDate() + diffToMonday);
     const currentWeekSunday = new Date(currentWeekMonday); currentWeekSunday.setDate(currentWeekMonday.getDate() + 6);
-    const currentWeekShifts = shifts.filter((s) => {
-        const d = new Date(s.date.slice(0, 10) + "T12:00:00");
-        return s.status === "CLOSED" && d >= currentWeekMonday && d <= currentWeekSunday;
-    });
+    const isCurrentWeek = (dateStr) => { const d = new Date(dateStr.slice(0,10) + "T12:00:00"); return d >= currentWeekMonday && d <= currentWeekSunday; };
+
+    // Semana actual = todos los turnos de esta semana (OPEN o CLOSED)
+    // Próxima semana = turnos no cerrados fuera de esta semana
+    const currentWeekShifts = shifts.filter((s) => isCurrentWeek(s.date));
+    const upcomingShifts = shifts.filter((s) => s.status !== "CLOSED" && !isCurrentWeek(s.date));
     const activeShifts = dashTab === "current" ? currentWeekShifts : upcomingShifts;
     const myApprovedShifts = activeShifts.filter((s) =>
         s.requests?.some((r) => r.user?.id === user?.id && r.status === "APPROVED")
