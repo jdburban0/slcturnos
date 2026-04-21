@@ -83,7 +83,7 @@ export async function sendAssignmentEmail({ name, email, shiftTitle, shiftDate, 
 
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#eef4ff;border-radius:12px;">
-            <h2 style="color:#0f172a;margin:0 0 8px;">📋 Asignación de turno diurno</h2>
+            <h2 style="color:#0f172a;margin:0 0 8px;">📋 Asignación de turno</h2>
             <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, has sido asignado al siguiente turno:</p>
             <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #bfdbfe;margin-bottom:20px;">
                 <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
