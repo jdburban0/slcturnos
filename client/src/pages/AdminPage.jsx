@@ -640,9 +640,9 @@ function AdminPage() {
                             </button>
                         </div>
 
-                        {/* Horario visual exportable */}
+                        {/* Horario visual exportable — activos + semana actual en curso */}
                         <ScheduleTable
-                            shifts={shifts.filter((s) => s.status !== "CLOSED")}
+                            shifts={shifts.filter((s) => s.status !== "CLOSED" || isCurrentWeekDate(s.date))}
                             updatedAt={shiftsUpdatedAt}
                             canExport
                             token={token}
