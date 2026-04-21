@@ -234,6 +234,7 @@ function AdminPage() {
     const [editingShiftId, setEditingShiftId] = useState(null);
     const [editSlots, setEditSlots] = useState(1);
     const [showHistory, setShowHistory] = useState(false);
+    const [scheduleView, setScheduleView] = useState("next"); // "next" | "current"
     const [closingWeek, setClosingWeek] = useState(false);
     const [showChangePwd, setShowChangePwd] = useState(false);
     const [pwdForm, setPwdForm] = useState({ current: "", next: "", confirm: "" });
@@ -640,33 +641,50 @@ function AdminPage() {
                             </button>
                         </div>
 
-                        {/* Horario visual — semana actual en curso (CLOSED) */}
-                        {shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date)) && (
-                            <div style={{ marginBottom: "24px" }}>
-                                <p style={styles.historySectionLabel}>Semana actual — en curso</p>
-                                <ScheduleTable
-                                    shifts={shifts.filter((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date))}
-                                    updatedAt={shiftsUpdatedAt}
-                                    canExport
-                                    token={token}
-                                />
-                            </div>
-                        )}
-
-                        {/* Horario visual — turnos activos (próxima semana) */}
-                        {shifts.some((s) => s.status !== "CLOSED") && (
-                            <div style={{ marginBottom: "8px" }}>
-                                {shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date)) && (
-                                    <p style={styles.historySectionLabel}>Próxima semana — turnos abiertos</p>
-                                )}
-                                <ScheduleTable
-                                    shifts={shifts.filter((s) => s.status !== "CLOSED")}
-                                    updatedAt={shiftsUpdatedAt}
-                                    canExport
-                                    token={token}
-                                />
-                            </div>
-                        )}
+                        {/* Horario visual con navegación entre semanas */}
+                        {(() => {
+                            const hasCurrent = shifts.some((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date));
+                            const hasNext = shifts.some((s) => s.status !== "CLOSED");
+                            const bothExist = hasCurrent && hasNext;
+                            const view = bothExist ? scheduleView : (hasCurrent ? "current" : "next");
+                            const visibleShifts = view === "current"
+                                ? shifts.filter((s) => s.status === "CLOSED" && isCurrentWeekDate(s.date))
+                                : shifts.filter((s) => s.status !== "CLOSED");
+                            if (!hasCurrent && !hasNext) return null;
+                            return (
+                                <div style={{ marginBottom: "8px" }}>
+                                    {bothExist && (
+                                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                                            <button
+                                                style={{ ...styles.scheduleNavBtn, ...(view === "current" ? {} : { opacity: 0.4, cursor: "not-allowed" }) }}
+                                                onClick={() => view === "current" && setScheduleView("next")}
+                                                disabled={view === "next"}
+                                                title="Próxima semana"
+                                            >
+                                                ←
+                                            </button>
+                                            <span style={styles.historySectionLabel}>
+                                                {view === "current" ? "Semana actual — en curso" : "Próxima semana — turnos abiertos"}
+                                            </span>
+                                            <button
+                                                style={{ ...styles.scheduleNavBtn, ...(view === "next" ? {} : { opacity: 0.4, cursor: "not-allowed" }) }}
+                                                onClick={() => view === "next" && setScheduleView("current")}
+                                                disabled={view === "current"}
+                                                title="Semana actual"
+                                            >
+                                                →
+                                            </button>
+                                        </div>
+                                    )}
+                                    <ScheduleTable
+                                        shifts={visibleShifts}
+                                        updatedAt={shiftsUpdatedAt}
+                                        canExport
+                                        token={token}
+                                    />
+                                </div>
+                            );
+                        })()}
 
                         {/* Tabla de turnos activos (OPEN / FULL) */}
                         <ShiftsTable
@@ -1101,7 +1119,13 @@ const styles = {
     codeCurrentHint: { margin: 0, color: "var(--text-muted)", fontSize: "0.85rem", },
     historySectionLabel: {
         color: "var(--text-muted)", fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase",
-        letterSpacing: "0.05em", marginBottom: "10px", paddingBottom: "8px", borderBottom: "1px solid var(--border-color)",
+        letterSpacing: "0.05em", margin: 0, paddingBottom: "8px",
+    },
+    scheduleNavBtn: {
+        background: "var(--card-bg)", border: "1.5px solid var(--border-color)", color: "var(--text-main)",
+        width: "30px", height: "30px", borderRadius: "8px", cursor: "pointer",
+        fontWeight: "700", fontSize: "1rem", lineHeight: 1, flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
     },
     empty: { textAlign: "center", color: "var(--text-muted)", padding: "40px 0" },
     toast: {
