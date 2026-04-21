@@ -228,13 +228,14 @@ function DashboardPage() {
         const d = new Date(s.date.slice(0, 10) + "T12:00:00");
         return s.status === "CLOSED" && d >= currentWeekMonday && d <= currentWeekSunday;
     });
-    const myApprovedShifts = upcomingShifts.filter((s) =>
+    const activeShifts = dashTab === "current" ? currentWeekShifts : upcomingShifts;
+    const myApprovedShifts = activeShifts.filter((s) =>
         s.requests?.some((r) => r.user?.id === user?.id && r.status === "APPROVED")
     );
-    const myPendingCount = upcomingShifts.filter((s) =>
+    const myPendingCount = activeShifts.filter((s) =>
         s.requests?.some((r) => r.user?.id === user?.id && r.status === "PENDING")
     ).length;
-    const openShiftsCount = upcomingShifts.filter((s) => s.status === "OPEN").length;
+    const openShiftsCount = activeShifts.filter((s) => s.status === "OPEN").length;
 
     const grouped = groupByDay(upcomingShifts);
     const visibleGroups = selectedDay
