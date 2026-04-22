@@ -229,6 +229,15 @@ function DashboardPage() {
     // Próxima semana = turnos no cerrados fuera de esta semana
     const currentWeekShifts = shifts.filter((s) => isCurrentWeek(s.date));
     const upcomingShifts = shifts.filter((s) => s.status !== "CLOSED" && !isCurrentWeek(s.date));
+
+    // Si no hay turnos en la semana actual (ej. admin no creó ninguno), volver a "upcoming"
+    useEffect(() => {
+        if (dashTab === "current" && currentWeekShifts.length === 0) {
+            setDashTab("upcoming");
+            setSelectedDay(null);
+        }
+    }, [currentWeekShifts.length, dashTab]);
+
     const activeShifts = dashTab === "current" ? currentWeekShifts : upcomingShifts;
     const myApprovedShifts = activeShifts.filter((s) =>
         s.requests?.some((r) => r.user?.id === user?.id && r.status === "APPROVED")
