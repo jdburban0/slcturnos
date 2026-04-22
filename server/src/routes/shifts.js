@@ -36,6 +36,33 @@ router.post("/", requireAuth, requireRole("admin", "lead"), async (req, res) => 
     }
 
     try {
+        // Calcular semana actual (lun–dom) en el servidor
+        const today = new Date();
+        const dow = today.getDay(); // 0=dom … 6=sáb
+        const daysFromMon = dow === 0 ? 6 : dow - 1;
+        const cwMonday = new Date(today);
+        cwMonday.setDate(today.getDate() - daysFromMon);
+        cwMonday.setHours(0, 0, 0, 0);
+        const cwSunday = new Date(cwMonday);
+        cwSunday.setDate(cwMonday.getDate() + 6);
+        cwSunday.setHours(23, 59, 59, 999);
+
+        const shiftDate = new Date(date + "T12:00:00");
+        const isCurrentWeek = shiftDate >= cwMonday && shiftDate <= cwSunday;
+
+        // Si el turno es de una semana distinta a la actual, verificar que la
+        // semana actual ya esté archivada (sin turnos OPEN)
+        if (!isCurrentWeek) {
+            const openNow = await prisma.shift.count({
+                where: { status: "OPEN", date: { gte: cwMonday, lte: cwSunday } },
+            });
+            if (openNow > 0) {
+                return res.status(409).json({
+                    message: "Debes archivar la semana actual antes de crear turnos para una semana nueva.",
+                });
+            }
+        }
+
         const shift = await prisma.shift.create({
             data: {
                 title,
