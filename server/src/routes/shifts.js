@@ -397,11 +397,15 @@ router.post("/:id/request", requireAuth, async (req, res) => {
         io.to("admins").emit("requests:refresh");
         io.emit("shifts:refresh");
 
-        // Notificar admins por correo (async, no bloquea la respuesta)
-        prisma.user.findMany({
-            where: { role: { in: ["admin", "lead"] }, active: true },
-            select: { name: true, email: true },
-        }).then((admins) => queueAdminPendingNotification(admins)).catch(() => {});
+        // Notificar admins por correo solo si ninguno está conectado en este momento
+        const adminRoom = io.sockets.adapter.rooms.get("admins");
+        const adminsOnline = adminRoom ? adminRoom.size > 0 : false;
+        if (!adminsOnline) {
+            prisma.user.findMany({
+                where: { role: { in: ["admin", "lead"] }, active: true },
+                select: { name: true, email: true },
+            }).then((admins) => queueAdminPendingNotification(admins)).catch(() => {});
+        }
 
         res.status(201).json(request);
     } catch (err) {
