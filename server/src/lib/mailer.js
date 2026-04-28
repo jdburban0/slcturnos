@@ -222,6 +222,74 @@ export async function sendPasswordResetEmail({ email, name, code }) {
     }
 }
 
+// ─── Admin pending-requests digest ────────────────────────────────────────────
+// Debounce: waits 3 min after last request before sending.
+// Cooldown: once sent, won't send again for 1 hour even if more requests arrive.
+const ADMIN_NOTIF_DEBOUNCE_MS  = 3 * 60 * 1000;   // 3 minutes
+const ADMIN_NOTIF_COOLDOWN_MS  = 60 * 60 * 1000;  // 1 hour
+
+const _adminNotif = { timer: null, count: 0, lastSent: 0, admins: [] };
+
+export function queueAdminPendingNotification(admins) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    _adminNotif.count++;
+    _adminNotif.admins = admins; // keep fresh in case admin list changed
+
+    // Still within cooldown — don't schedule another send
+    if (Date.now() - _adminNotif.lastSent < ADMIN_NOTIF_COOLDOWN_MS) return;
+
+    // Reset debounce timer
+    if (_adminNotif.timer) clearTimeout(_adminNotif.timer);
+    _adminNotif.timer = setTimeout(async () => {
+        const count  = _adminNotif.count;
+        const admins = _adminNotif.admins;
+        _adminNotif.count    = 0;
+        _adminNotif.timer    = null;
+        _adminNotif.lastSent = Date.now();
+        await _flushAdminPendingDigest(count, admins);
+    }, ADMIN_NOTIF_DEBOUNCE_MS);
+}
+
+async function _flushAdminPendingDigest(count, admins) {
+    if (!admins.length) return;
+
+    const subject = `📋 ${count} solicitud${count !== 1 ? "es" : ""} pendiente${count !== 1 ? "s" : ""} — SLC Turnos`;
+
+    const emails = admins.map((admin) => ({
+        from: FROM,
+        to: admin.email,
+        subject,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
+                <h2 style="color:#0f172a;margin:0 0 8px;">📋 Solicitudes pendientes</h2>
+                <p style="color:#475569;margin:0 0 20px;">
+                    Hola <strong>${admin.name}</strong>, hay
+                    <strong style="color:#2563eb;">${count} solicitud${count !== 1 ? "es" : ""} de turno</strong>
+                    pendiente${count !== 1 ? "s" : ""} de revisión en SLC Turnos.
+                </p>
+                <p style="margin:0 0 20px;">
+                    <a href="https://slcturnos.online/admin"
+                       style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;
+                              padding:11px 24px;border-radius:8px;font-weight:700;font-size:0.9rem;">
+                        Ver solicitudes →
+                    </a>
+                </p>
+                <p style="color:#94a3b8;font-size:0.75rem;margin:0;">
+                    Este recordatorio se envía máximo una vez por hora. — SLC Turnos
+                </p>
+            </div>
+        `,
+    }));
+
+    try {
+        await getResend().batch.send(emails);
+        console.log(`[Mailer] Digest de ${count} solicitudes enviado a ${admins.length} admin(s)`);
+    } catch (err) {
+        console.error("[Mailer] Error enviando digest admin:", err.message);
+    }
+}
+
 export async function sendAdminTransferAlertEmail({ admins, operatorName, shiftTitle, shiftDate, type, toName }) {
     if (!process.env.RESEND_API_KEY || !admins.length) return;
 

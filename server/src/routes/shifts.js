@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail, sendAdminTransferAlertEmail } from "../lib/mailer.js";
+import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail, sendAdminTransferAlertEmail, queueAdminPendingNotification } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -396,6 +396,12 @@ router.post("/:id/request", requireAuth, async (req, res) => {
         const io = req.app.get("io");
         io.to("admins").emit("requests:refresh");
         io.emit("shifts:refresh");
+
+        // Notificar admins por correo (async, no bloquea la respuesta)
+        prisma.user.findMany({
+            where: { role: { in: ["admin", "lead"] }, active: true },
+            select: { name: true, email: true },
+        }).then((admins) => queueAdminPendingNotification(admins)).catch(() => {});
 
         res.status(201).json(request);
     } catch (err) {
