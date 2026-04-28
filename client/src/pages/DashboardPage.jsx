@@ -253,9 +253,9 @@ function DashboardPage() {
         : grouped;
 
     return (
-        <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
+        <div className={`${leaving ? "anim-fade-out" : "anim-fade-in"} dash-page`} style={styles.page}>
             {toast && (
-                <div className="anim-slide-right" style={styles.toast}>
+                <div className="anim-slide-right dash-toast" style={styles.toast}>
                     <strong>{toast.title}</strong>
                     {toast.message && <p style={styles.toastMsg}>{toast.message}</p>}
                 </div>
@@ -263,7 +263,7 @@ function DashboardPage() {
 
             {desistModal && (
                 <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setDesistModal(null)}>
-                    <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-box-anim dash-modal-box" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                         <h3 style={styles.modalTitle}>Desistir del turno</h3>
                         <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{desistModal.shiftTitle}</p>
 
@@ -315,7 +315,7 @@ function DashboardPage() {
 
             {showChangePwd && (
                 <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setShowChangePwd(false)}>
-                    <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-box-anim dash-modal-box" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                         <h3 style={styles.modalTitle}>Cambiar contraseña</h3>
                         <form onSubmit={handleChangePwd} style={styles.modalForm}>
                             <input
@@ -354,40 +354,40 @@ function DashboardPage() {
             )}
 
             <div style={styles.container}>
-                <header style={styles.header}>
+                <header className="dash-header" style={styles.header}>
                     <div>
                         <h1 style={styles.title}>SLC Turnos</h1>
                         <p style={styles.subtitle}>Bienvenido, {user?.name}</p>
                     </div>
-                    <div style={styles.headerActions}>
-                        <button style={styles.pwdButton} onClick={() => { setShowChangePwd(true); setPwdError(""); setPwdSuccess(""); }}>
-                            🔒 Contraseña
+                    <div className="dash-actions" style={styles.headerActions}>
+                        <button className="pwd-btn" style={styles.pwdButton} onClick={() => { setShowChangePwd(true); setPwdError(""); setPwdSuccess(""); }}>
+                            🔒<span className="btn-label"> Contraseña</span>
                         </button>
                         <button onClick={toggleTheme} className="theme-toggle" title="Alternar tema">
                             {theme === 'dark' ? '☀️' : '🌙'}
                         </button>
-                        <button style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
-                            Cerrar sesión
+                        <button className="logout-btn" style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
+                            🚪<span className="btn-label"> Cerrar sesión</span>
                         </button>
                         <NotificationBell token={token} refreshSignal={notifSignal} />
                     </div>
                 </header>
 
                 {/* Stats */}
-                <div style={styles.statsRow}>
-                    <div style={styles.statCard}>
-                        <span style={{ ...styles.statValue, color: "var(--success)" }}>{myApprovedShifts.length}</span>
-                        <span style={styles.statLabel}>Aprobados</span>
+                <div className="dash-stats" style={styles.statsRow}>
+                    <div className="dash-stat-card" style={styles.statCard}>
+                        <span className="stat-val" style={{ ...styles.statValue, color: "var(--success)" }}>{myApprovedShifts.length}</span>
+                        <span className="stat-lbl" style={styles.statLabel}>Aprobados</span>
                     </div>
-                    <div style={styles.statCard}>
-                        <span style={{ ...styles.statValue, color: "var(--warning)" }}>{myPendingCount}</span>
-                        <span style={styles.statLabel}>Pendientes</span>
+                    <div className="dash-stat-card" style={styles.statCard}>
+                        <span className="stat-val" style={{ ...styles.statValue, color: "var(--warning)" }}>{myPendingCount}</span>
+                        <span className="stat-lbl" style={styles.statLabel}>Pendientes</span>
                     </div>
-                    <div style={styles.statCard}>
-                        <span style={{ ...styles.statValue, color: "var(--primary)" }}>
+                    <div className="dash-stat-card" style={styles.statCard}>
+                        <span className="stat-val" style={{ ...styles.statValue, color: "var(--primary)" }}>
                             {dashTab === "current" ? currentWeekShifts.length : openShiftsCount}
                         </span>
-                        <span style={styles.statLabel}>{dashTab === "current" ? "En curso" : "Disponibles"}</span>
+                        <span className="stat-lbl" style={styles.statLabel}>{dashTab === "current" ? "En curso" : "Disponibles"}</span>
                     </div>
                 </div>
 

@@ -54,7 +54,7 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
     }
 
     return (
-        <div className="card-lift" style={{
+        <div className="card-lift shift-row" style={{
             ...styles.row,
             ...(isPending ? styles.rowPending : (isApproved || isManualAssigned) ? styles.rowApproved : {}),
         }}>
@@ -65,7 +65,7 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
 
             {/* Información principal */}
             <div style={styles.main}>
-                <span style={styles.shiftName}>{shift.title}</span>
+                <span className="shift-name" style={styles.shiftName}>{shift.title}</span>
                 <div style={styles.meta}>
                     <span style={styles.metaItem}>📅 {dateFormatted}</span>
                     <span style={styles.metaDot}>·</span>
@@ -74,7 +74,7 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
             </div>
 
             {/* Estado + Acción (agrupados a la derecha) */}
-            <div style={styles.rightSide}>
+            <div className="shift-right" style={styles.rightSide}>
                 <span style={{ ...styles.pill, background: statusBg, color: statusColor }}>
                     {statusText}
                 </span>

@@ -281,7 +281,7 @@ html, body, #root {
   .schedule-wrapper { padding: 14px !important; border-radius: 12px !important; }
   .week-nav { gap: 8px !important; flex-wrap: wrap !important; }
 
-  /* Modal móvil */
+  /* Modal móvil (admin) */
   .modal-header  { padding: 16px 16px 0 !important; }
   .modal-tabs    { padding: 12px 16px 0 !important; gap: 6px !important; }
   .modal-error   { margin: 10px 16px 0 !important; }
@@ -293,4 +293,69 @@ html, body, #root {
     gap: 8px !important;
   }
   .modal-footer button { width: 100% !important; }
+}
+
+/* ─── Mobile: Dashboard & ShiftCard ──────────────────── */
+@media (max-width: 480px) {
+
+  /* Página general */
+  .dash-page { padding: 14px 12px !important; }
+
+  /* Header */
+  .dash-header { gap: 10px !important; margin-bottom: 14px !important; }
+  .dash-header h1 { font-size: 1.3rem !important; }
+  .dash-header p  { font-size: 0.82rem !important; }
+
+  /* Botones del header — ocultar texto, dejar sólo icono/emoji */
+  .btn-label { display: none; }
+  .pwd-btn   { padding: 8px 10px !important; font-size: 1rem !important; }
+  .logout-btn{ padding: 8px 10px !important; font-size: 1rem !important; }
+  .dash-actions { gap: 6px !important; }
+
+  /* Stats */
+  .dash-stats { gap: 8px !important; }
+  .dash-stat-card { padding: 12px 10px !important; }
+  .dash-stat-card .stat-val  { font-size: 1.25rem !important; }
+  .dash-stat-card .stat-lbl  { font-size: 0.6rem !important; }
+
+  /* Toast — centrado en la parte inferior */
+  .dash-toast {
+    right: 12px !important;
+    left: 12px !important;
+    bottom: 12px !important;
+    max-width: none !important;
+  }
+
+  /* Modal del dashboard (cambio contraseña, desistir) */
+  .dash-modal-box {
+    padding: 20px 16px !important;
+    margin: 0 12px !important;
+    max-width: calc(100% - 24px) !important;
+    border-radius: 14px !important;
+  }
+
+  /* Inputs — font-size 16px evita el zoom automático en iOS */
+  .dash-modal-box input,
+  .dash-modal-box select,
+  .dash-modal-box textarea {
+    font-size: 16px !important;
+  }
+
+  /* ShiftCard — reorganizar layout en móvil */
+  .shift-row {
+    flex-wrap: wrap !important;
+    gap: 8px 10px !important;
+    padding: 12px 12px !important;
+  }
+  /* El bloque derecho (pill + botón) pasa a ser una fila
+     que ocupa todo el ancho, bajo el contenido principal */
+  .shift-right {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding-left: 20px !important; /* alinea con el texto (dot 10px + gap 10px) */
+  }
+  /* El nombre del turno puede ocupar 2 líneas en móvil */
+  .shift-name { white-space: normal !important; }
 }
