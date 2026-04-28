@@ -111,10 +111,10 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
     if (!process.env.RESEND_API_KEY || !operators.length) return;
 
     const subject = `📅 Horario de turnos — ${weekLabel}`;
-
     const bodyMsg = customMessage || `aquí está el horario de turnos para la semana de ${weekLabel}.`;
 
-    for (const op of operators) {
+    // Construir todos los emails primero
+    const emails = operators.map((op) => {
         const paragraphs = bodyMsg
             .replace(/\[nombre\]/gi, op.name)
             .split(/\n+/)
@@ -122,27 +122,33 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
             .map((p) => `<p style="margin:0 0 16px;font-size:1rem;color:#0f172a;line-height:1.6;">${p}</p>`)
             .join("");
 
-        const html = `
-            <div style="font-family:Arial,sans-serif;margin:0;padding:24px 20px;background:#ffffff;">
-                ${paragraphs}
-                <img src="data:image/jpeg;base64,${imageBase64}" width="800" style="width:100%;max-width:800px;height:auto;display:block;margin:8px 0 20px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
-                <p style="margin:0 0 12px;">
-                    <a href="https://slcturnos.online" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:0.9rem;">Ir a SLC Turnos →</a>
-                </p>
-                <p style="color:#94a3b8;font-size:0.78rem;margin:0;">— SLC Turnos</p>
-            </div>
-        `;
+        return {
+            from: FROM,
+            to: op.email,
+            subject,
+            html: `
+                <div style="font-family:Arial,sans-serif;margin:0;padding:24px 20px;background:#ffffff;">
+                    ${paragraphs}
+                    <img src="data:image/jpeg;base64,${imageBase64}" width="800" style="width:100%;max-width:800px;height:auto;display:block;margin:8px 0 20px;border:1px solid #e2e8f0;" alt="Horario de turnos" />
+                    <p style="margin:0 0 12px;">
+                        <a href="https://slcturnos.online" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:0.9rem;">Ir a SLC Turnos →</a>
+                    </p>
+                    <p style="color:#94a3b8;font-size:0.78rem;margin:0;">— SLC Turnos</p>
+                </div>
+            `,
+        };
+    });
 
+    // Enviar en lotes de 100 (límite de Resend batch API)
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+        const batch = emails.slice(i, i + BATCH_SIZE);
         try {
-            await getResend().emails.send({
-                from: FROM,
-                to: op.email,
-                subject,
-                html,
-            });
-            console.log(`[Mailer] Horario enviado a ${op.email}`);
+            const result = await getResend().batch.send(batch);
+            const sent = result?.data?.length ?? batch.length;
+            console.log(`[Mailer] Horario enviado a ${sent}/${batch.length} operadores (lote ${Math.floor(i / BATCH_SIZE) + 1})`);
         } catch (err) {
-            console.error(`[Mailer] Error enviando horario a ${op.email}:`, err.message);
+            console.error(`[Mailer] Error en batch horario (lote ${Math.floor(i / BATCH_SIZE) + 1}):`, err.message);
         }
     }
 }
@@ -155,28 +161,34 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
 
     const subject = `🆕 Nuevo cupo disponible — ${shiftTitle}`;
 
-    for (const op of operators) {
-        const html = `
+    const emails = operators.map((op) => ({
+        from: FROM,
+        to: op.email,
+        subject,
+        html: `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
                 <h2 style="color:#0f172a;margin:0 0 8px;">🆕 Nuevo cupo disponible</h2>
                 <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, hay un cupo disponible para solicitar.</p>
-
                 <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
                     <p style="margin:0 0 4px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
                     <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">📅 ${shiftDate}</p>
                     <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">🕐 ${startTime} – ${endTime}</p>
                     <p style="margin:0;color:#475569;font-size:0.9rem;">👥 ${extraMsg || `${totalSlots} cupo${totalSlots !== 1 ? "s" : ""} disponible${totalSlots !== 1 ? "s" : ""}`}</p>
                 </div>
-
                 <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
             </div>
-        `;
+        `,
+    }));
 
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+        const batch = emails.slice(i, i + BATCH_SIZE);
         try {
-            await getResend().emails.send({ from: FROM, to: op.email, subject, html });
-            console.log(`[Mailer] Nuevo cupo notificado a ${op.email}`);
+            const result = await getResend().batch.send(batch);
+            const sent = result?.data?.length ?? batch.length;
+            console.log(`[Mailer] Nuevo cupo notificado a ${sent}/${batch.length} operadores`);
         } catch (err) {
-            console.error(`[Mailer] Error al notificar a ${op.email}:`, err.message);
+            console.error(`[Mailer] Error en batch nuevo cupo:`, err.message);
         }
     }
 }
