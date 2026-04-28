@@ -16,12 +16,28 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
         weekday: "short", month: "short", day: "numeric",
     });
 
+    // Posición en la cola: índice entre las solicitudes PENDING ordenadas por createdAt
+    const pendingRequests = (shift.requests ?? []).filter((r) => r.status === "PENDING");
+    const queuePos = isPending
+        ? pendingRequests.findIndex((r) => r.id === myRequest?.id) + 1
+        : 0;
+
+    function ordinal(n) {
+        if (n === 1) return "1°";
+        if (n === 2) return "2°";
+        if (n === 3) return "3°";
+        return `${n}°`;
+    }
+
     let statusBg = "var(--border-color)";
     let statusColor = "var(--text-muted)";
     let statusText = `${availableSlots} cupo${availableSlots !== 1 ? "s" : ""} libre${availableSlots !== 1 ? "s" : ""}`;
 
     if (isApproved || isManualAssigned) { statusBg = "#dcfce7"; statusColor = "#15803d"; statusText = "Aprobado ✓"; }
-    else if (isPending) { statusBg = "#fef9c3"; statusColor = "#92400e"; statusText = "En revisión…"; }
+    else if (isPending) {
+        statusBg = "#fef9c3"; statusColor = "#92400e";
+        statusText = queuePos > 0 ? `${ordinal(queuePos)} en la fila` : "En revisión…";
+    }
     else if (isFull) { statusBg = "#fee2e2"; statusColor = "#b91c1c"; statusText = "Sin cupos"; }
 
     function getAction() {
