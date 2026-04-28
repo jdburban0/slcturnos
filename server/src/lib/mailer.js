@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { prisma } from "./prisma.js";
 
 const FROM = "SLC Turnos <noreply@slcturnos.online>";
 
@@ -242,17 +243,21 @@ export function queueAdminPendingNotification(admins) {
     // Reset debounce timer
     if (_adminNotif.timer) clearTimeout(_adminNotif.timer);
     _adminNotif.timer = setTimeout(async () => {
-        const count  = _adminNotif.count;
         const admins = _adminNotif.admins;
         _adminNotif.count    = 0;
         _adminNotif.timer    = null;
         _adminNotif.lastSent = Date.now();
-        await _flushAdminPendingDigest(count, admins);
+        await _flushAdminPendingDigest(admins);
     }, ADMIN_NOTIF_DEBOUNCE_MS);
 }
 
-async function _flushAdminPendingDigest(count, admins) {
+async function _flushAdminPendingDigest(admins) {
     if (!admins.length) return;
+
+    // Consultar el conteo real al momento de enviar — puede que todas
+    // las solicitudes hayan sido canceladas durante el debounce
+    const count = await prisma.shiftRequest.count({ where: { status: "PENDING" } });
+    if (count === 0) return;
 
     const subject = `📋 ${count} solicitud${count !== 1 ? "es" : ""} pendiente${count !== 1 ? "s" : ""} — SLC Turnos`;
 
