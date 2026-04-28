@@ -361,13 +361,14 @@ function DashboardPage() {
                     </div>
                     <div className="dash-actions" style={styles.headerActions}>
                         <button className="pwd-btn" style={styles.pwdButton} onClick={() => { setShowChangePwd(true); setPwdError(""); setPwdSuccess(""); }}>
-                            🔒<span className="btn-label"> Contraseña</span>
+                            🔒<span className="btn-label-full"> Contraseña</span>
                         </button>
                         <button onClick={toggleTheme} className="theme-toggle" title="Alternar tema">
                             {theme === 'dark' ? '☀️' : '🌙'}
                         </button>
                         <button className="logout-btn" style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
-                            🚪<span className="btn-label"> Cerrar sesión</span>
+                            <span className="btn-label-full">Cerrar sesión</span>
+                            <span className="btn-label-short">Salir</span>
                         </button>
                         <NotificationBell token={token} refreshSignal={notifSignal} />
                     </div>
@@ -607,7 +608,8 @@ const styles = {
         flexDirection: "column",
         alignItems: "center",
         gap: "4px",
-        border: "1px solid var(--border-color)",
+        border: "1px solid var(--card-border)",
+        boxShadow: "var(--card-shadow)",
         flex: 1,
         backdropFilter: "blur(16px)",
     },

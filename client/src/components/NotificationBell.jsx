@@ -59,7 +59,7 @@ function NotificationBell({ token, refreshSignal }) {
             </button>
 
             {open && (
-                <div style={styles.dropdown} className="dropdown-anim">
+                <div style={styles.dropdown} className="dropdown-anim notif-dropdown">
                     <div style={styles.dropHeader}>
                         <span style={styles.dropTitle}>Notificaciones</span>
                         <div style={styles.headerActions}>
