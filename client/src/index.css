@@ -311,6 +311,9 @@ body {
   .modal-footer button { width: 100% !important; }
 }
 
+/* Texto corto (móvil): oculto por defecto, se activa solo en móvil */
+.btn-label-short { display: none; }
+
 /* ─── Mobile: Dashboard & ShiftCard ──────────────────── */
 @media (max-width: 480px) {
 
@@ -338,8 +341,8 @@ body {
   }
 
   /* Botones del header — texto completo oculto, texto corto visible */
-  .btn-label-full  { display: none; }
-  .btn-label-short { display: inline; }
+  .btn-label-full  { display: none !important; }
+  .btn-label-short { display: inline !important; }
   .pwd-btn    { padding: 8px 10px !important; font-size: 1rem !important; }
   .logout-btn { padding: 8px 12px !important; font-size: 0.82rem !important; }
   .dash-actions { gap: 6px !important; }

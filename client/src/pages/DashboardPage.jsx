@@ -368,7 +368,7 @@ function DashboardPage() {
                         </button>
                         <button className="logout-btn" style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
                             <span className="btn-label-full">Cerrar sesión</span>
-                            <span className="btn-label-short">Salir</span>
+                            <span className="btn-label-short">Cerrar sesión</span>
                         </button>
                         <NotificationBell token={token} refreshSignal={notifSignal} />
                     </div>
