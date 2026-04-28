@@ -251,6 +251,18 @@ export function queueAdminPendingNotification(admins) {
     }, ADMIN_NOTIF_DEBOUNCE_MS);
 }
 
+// Llamar cuando el admin procesa solicitudes. Si ya no quedan pendientes,
+// se resetea el cooldown para que el próximo ciclo de solicitudes
+// pueda volver a disparar una notificación.
+export async function resetAdminNotifCooldown() {
+    const pending = await prisma.shiftRequest.count({ where: { status: "PENDING" } });
+    if (pending === 0) {
+        _adminNotif.lastSent = 0;
+        _adminNotif.count    = 0;
+        if (_adminNotif.timer) { clearTimeout(_adminNotif.timer); _adminNotif.timer = null; }
+    }
+}
+
 async function _flushAdminPendingDigest(admins) {
     if (!admins.length) return;
 

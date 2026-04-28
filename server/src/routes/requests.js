@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { queueShiftResultEmail, sendAdminTransferAlertEmail } from "../lib/mailer.js";
+import { queueShiftResultEmail, sendAdminTransferAlertEmail, resetAdminNotifCooldown } from "../lib/mailer.js";
 
 const router = Router();
 
@@ -153,6 +153,9 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         io.to("admins").emit("requests:refresh");
         io.emit("shifts:refresh");
         io.to(`user:${request.userId}`).emit("notification:new", notification);
+
+        // Si ya no quedan pendientes, habilitar nueva notificación al próximo ciclo
+        resetAdminNotifCooldown().catch(() => {});
 
         queueShiftResultEmail({
             userId: request.userId,
