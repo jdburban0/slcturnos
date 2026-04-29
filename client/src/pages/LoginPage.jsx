@@ -26,6 +26,7 @@ function LoginPage() {
     const [resetPwd, setResetPwd] = useState("");
     const [resetConfirm, setResetConfirm] = useState("");
     const [resetSuccess, setResetSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         const base = import.meta.env.VITE_API_URL || "";
@@ -200,25 +201,37 @@ function LoginPage() {
                                 </div>
                                 <div key={`reset-pwd-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "40ms" }}>
                                     <label style={styles.label}>Nueva contraseña</label>
-                                    <input
-                                        type="password"
-                                        placeholder="••••••••"
-                                        className="input-field"
-                                        value={resetPwd}
-                                        onChange={(e) => setResetPwd(e.target.value)}
-                                        required
-                                    />
+                                    <div style={styles.pwdWrapper}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••"
+                                            className="input-field"
+                                            style={{ paddingRight: "42px" }}
+                                            value={resetPwd}
+                                            onChange={(e) => setResetPwd(e.target.value)}
+                                            required
+                                        />
+                                        <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                                            {showPassword ? "🙈" : "👁️"}
+                                        </button>
+                                    </div>
                                 </div>
                                 <div key={`reset-confirm-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "80ms" }}>
                                     <label style={styles.label}>Confirmar contraseña</label>
-                                    <input
-                                        type="password"
-                                        placeholder="••••••••"
-                                        className="input-field"
-                                        value={resetConfirm}
-                                        onChange={(e) => setResetConfirm(e.target.value)}
-                                        required
-                                    />
+                                    <div style={styles.pwdWrapper}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••"
+                                            className="input-field"
+                                            style={{ paddingRight: "42px" }}
+                                            value={resetConfirm}
+                                            onChange={(e) => setResetConfirm(e.target.value)}
+                                            required
+                                        />
+                                        <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                                            {showPassword ? "🙈" : "👁️"}
+                                        </button>
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -254,14 +267,20 @@ function LoginPage() {
 
                                 <div key={`pass-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: isLogin ? "40ms" : "80ms" }}>
                                     <label style={styles.label}>Contraseña</label>
-                                    <input
-                                        type="password"
-                                        placeholder="••••••••"
-                                        className="input-field"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
+                                    <div style={styles.pwdWrapper}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••"
+                                            className="input-field"
+                                            style={{ paddingRight: "42px" }}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                        />
+                                        <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                                            {showPassword ? "🙈" : "👁️"}
+                                        </button>
+                                    </div>
                                     {isLogin && (
                                         <span
                                             style={styles.forgotLink}
@@ -275,14 +294,20 @@ function LoginPage() {
                                 {!isLogin && (
                                     <div key={`confirm-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "80ms" }}>
                                         <label style={styles.label}>Confirmar contraseña</label>
-                                        <input
-                                            type="password"
-                                            placeholder="••••••••"
-                                            className="input-field"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            required
-                                        />
+                                        <div style={styles.pwdWrapper}>
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                placeholder="••••••••"
+                                                className="input-field"
+                                                style={{ paddingRight: "42px" }}
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                required
+                                            />
+                                            <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
+                                                {showPassword ? "🙈" : "👁️"}
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
@@ -480,6 +505,22 @@ const styles = {
         borderRadius: "50%",
         background: "var(--warning)",
         animation: "pulse 1.2s ease-in-out infinite",
+    },
+    pwdWrapper: {
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+    },
+    eyeBtn: {
+        position: "absolute",
+        right: "12px",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        fontSize: "1rem",
+        padding: "0",
+        lineHeight: 1,
+        opacity: 0.6,
     },
     forgotLink: {
         display: "inline-block",
