@@ -1,10 +1,19 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../lib/prisma.js";
 import { sendPasswordResetEmail } from "../lib/mailer.js";
 
 const router = Router();
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { message: "Demasiados intentos, espera 15 minutos" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 const SECRET = process.env.JWT_SECRET;
 if (!SECRET) throw new Error("JWT_SECRET no está definido en las variables de entorno");
 
@@ -16,7 +25,7 @@ function signToken(user) {
     );
 }
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
         return res.status(400).json({ message: "Correo y contraseña requeridos" });
