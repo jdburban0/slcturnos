@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET || "slc_dev_secret_change_in_prod";
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) throw new Error("JWT_SECRET no está definido en las variables de entorno");
 
 export function verifySocketToken(token) {
     return jwt.verify(token, SECRET);

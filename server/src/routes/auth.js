@@ -5,7 +5,8 @@ import { prisma } from "../lib/prisma.js";
 import { sendPasswordResetEmail } from "../lib/mailer.js";
 
 const router = Router();
-const SECRET = process.env.JWT_SECRET || "slc_dev_secret_change_in_prod";
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) throw new Error("JWT_SECRET no está definido en las variables de entorno");
 
 function signToken(user) {
     return jwt.sign(
