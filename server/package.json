@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "dev:local": "nodemon --env-file=.env.dev src/server.js",
     "start": "node src/server.js",
-    "seed": "node src/seed.js"
+    "seed": "node src/seed.js",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
