@@ -22,6 +22,9 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
         ? pendingRequests.findIndex((r) => r.id === myRequest?.id) + 1
         : 0;
 
+    // Si queda 1 solo cupo disponible y ya hay una solicitud pendiente de otro operador, bloquear solicitud
+    const otherPendingExists = availableSlots === 1 && pendingRequests.length > 0 && !isPending && !isApproved && !isManualAssigned;
+
     function ordinal(n) {
         if (n === 1) return "1°";
         if (n === 2) return "2°";
@@ -62,6 +65,15 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
             </button>
         );
         if (isFull) return null;
+        if (otherPendingExists) return (
+            <button
+                style={{ ...styles.requestBtn, ...styles.requestBtnDisabled }}
+                disabled
+                title="Ya hay una solicitud pendiente de otro operador"
+            >
+                Solicitado por otro
+            </button>
+        );
         return (
             <button
                 style={{ ...styles.requestBtn, ...(isRequesting ? styles.requestBtnDisabled : {}) }}

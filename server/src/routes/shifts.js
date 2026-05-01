@@ -362,7 +362,8 @@ router.post("/:id/request", requireAuth, async (req, res) => {
                 },
             });
             if (prevNightApproved) {
-                return res.status(400).json({ message: "No puedes tomar un turno diurno si tienes un turno nocturno aprobado el día anterior" });
+                const estado = prevNightApproved.status === "APPROVED" ? "aprobado" : "pendiente";
+                return res.status(400).json({ message: `Tienes un turno nocturno ${estado} el día anterior` });
             }
 
             // También verificar asignaciones manuales de turno nocturno el día anterior
@@ -377,7 +378,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
                 },
             });
             if (prevNightManual) {
-                return res.status(400).json({ message: "No puedes tomar un turno diurno si tienes un turno nocturno aprobado el día anterior" });
+                return res.status(400).json({ message: "Tienes una asignación de turno nocturno el día anterior" });
             }
         }
 
@@ -396,7 +397,8 @@ router.post("/:id/request", requireAuth, async (req, res) => {
                 },
             });
             if (nextDayApproved) {
-                return res.status(400).json({ message: "No puedes tomar un turno nocturno si tienes un turno diurno aprobado al día siguiente" });
+                const estado = nextDayApproved.status === "APPROVED" ? "aprobado" : "pendiente";
+                return res.status(400).json({ message: `Tienes un turno diurno ${estado} al día siguiente` });
             }
 
             const nightUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
@@ -407,16 +409,37 @@ router.post("/:id/request", requireAuth, async (req, res) => {
                 },
             });
             if (nextDayManual) {
-                return res.status(400).json({ message: "No puedes tomar un turno nocturno si tienes un turno diurno aprobado al día siguiente" });
+                return res.status(400).json({ message: "Tienes una asignación de turno diurno al día siguiente" });
             }
         }
 
-        const request = await prisma.shiftRequest.create({
-            data: { shiftId: id, userId },
-            include: {
-                user: { select: { id: true, name: true } },
-                shift: true,
-            },
+        // Crear la solicitud dentro de una transacción con bloqueo para evitar race conditions
+        const request = await prisma.$transaction(async (tx) => {
+            // SELECT FOR UPDATE bloquea la fila del turno hasta que termine la transacción
+            await tx.$executeRaw`SELECT id FROM "Shift" WHERE id = ${id} FOR UPDATE`;
+
+            // Re-verificar dentro de la transacción si queda 1 solo cupo y ya hay pendiente de otro
+            const freshShift = await tx.shift.findUnique({
+                where: { id },
+                include: {
+                    requests: { where: { status: { in: ["PENDING", "APPROVED"] } } },
+                    manualAssignments: { select: { id: true } },
+                },
+            });
+            const freshApproved = freshShift.requests.filter((r) => r.status === "APPROVED").length + freshShift.manualAssignments.length;
+            const freshAvailable = freshShift.totalSlots - freshApproved;
+            if (freshAvailable === 1) {
+                const otherPending = freshShift.requests.find((r) => r.status === "PENDING" && r.userId !== userId);
+                if (otherPending) throw Object.assign(new Error("Ya hay una solicitud pendiente para este turno"), { status: 409 });
+            }
+
+            return tx.shiftRequest.create({
+                data: { shiftId: id, userId },
+                include: {
+                    user: { select: { id: true, name: true } },
+                    shift: true,
+                },
+            });
         });
 
         const io = req.app.get("io");
@@ -435,6 +458,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
 
         res.status(201).json(request);
     } catch (err) {
+        if (err.status === 409) return res.status(409).json({ message: err.message });
         console.error(err);
         res.status(500).json({ message: "Error al solicitar turno" });
     }
