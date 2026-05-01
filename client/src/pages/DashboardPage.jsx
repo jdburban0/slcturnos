@@ -113,6 +113,7 @@ function DashboardPage() {
     const [selectedColleague, setSelectedColleague] = useState(null);
     const [transferLoading, setTransferLoading] = useState(false);
     const [dashTab, setDashTab] = useState("upcoming");
+    const [requestingShiftId, setRequestingShiftId] = useState(null);
 
     const loadShifts = useCallback(async () => {
         try {
@@ -152,11 +153,14 @@ function DashboardPage() {
     }
 
     async function handleRequest(shiftId) {
+        if (requestingShiftId) return;
+        setRequestingShiftId(shiftId);
         try {
             await requestShift(token, shiftId);
             showToast("Solicitud enviada", "Tu solicitud está pendiente de revisión.");
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
+        finally { setRequestingShiftId(null); }
     }
 
     async function handleCancelRequest(requestId) {
@@ -240,7 +244,8 @@ function DashboardPage() {
 
     const activeShifts = dashTab === "current" ? currentWeekShifts : upcomingShifts;
     const myApprovedShifts = activeShifts.filter((s) =>
-        s.requests?.some((r) => r.user?.id === user?.id && r.status === "APPROVED")
+        s.requests?.some((r) => r.user?.id === user?.id && r.status === "APPROVED") ||
+        s.manualAssignments?.some((a) => a.email?.toLowerCase() === user?.email?.toLowerCase())
     );
     const myPendingCount = activeShifts.filter((s) =>
         s.requests?.some((r) => r.user?.id === user?.id && r.status === "PENDING")
@@ -462,6 +467,7 @@ function DashboardPage() {
                                             userEmail={user?.email}
                                             onRequest={handleRequest}
                                             onCancelRequest={handleCancelRequest}
+                                            isRequesting={requestingShiftId === shift.id}
                                             onDesist={async (reqId, title) => {
                                                 setDesistModal({ requestId: reqId, shiftTitle: title });
                                                 setDesistMode("choose");
@@ -515,6 +521,7 @@ function DashboardPage() {
                                         userEmail={user?.email}
                                         onRequest={handleRequest}
                                         onCancelRequest={handleCancelRequest}
+                                        isRequesting={requestingShiftId === shift.id}
                                         onDesist={async (reqId, title) => {
                                             setDesistModal({ requestId: reqId, shiftTitle: title });
                                             setDesistMode("choose");
@@ -671,7 +678,7 @@ const styles = {
         padding: "14px 18px",
         borderRadius: "12px",
         boxShadow: "var(--card-shadow)",
-        zIndex: 200,
+        zIndex: 500,
         maxWidth: "320px",
         border: "1px solid var(--border-color)",
         backdropFilter: "blur(12px)",

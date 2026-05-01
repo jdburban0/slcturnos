@@ -88,7 +88,7 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
                 where: { shiftId: request.shiftId },
             });
             const approvedCount = approvedReqs + manualAssigned;
-            if (approvedCount >= request.shift.totalSlots) {
+            if (approvedCount >= request.shift.totalSlots && request.shift.status !== "CLOSED") {
                 await prisma.shift.update({
                     where: { id: request.shiftId },
                     data: { status: "FULL" },
@@ -155,7 +155,7 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         io.to(`user:${request.userId}`).emit("notification:new", notification);
 
         // Si ya no quedan pendientes, habilitar nueva notificación al próximo ciclo
-        resetAdminNotifCooldown().catch(() => {});
+        resetAdminNotifCooldown().catch(() => { });
 
         queueShiftResultEmail({
             userId: request.userId,
@@ -221,7 +221,12 @@ router.post("/:id/withdraw", requireAuth, async (req, res) => {
         if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
         if (request.userId !== req.user.id) return res.status(403).json({ message: "Sin permisos" });
         if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes desistir de turnos aprobados" });
-        if (request.transfer) return res.status(400).json({ message: "Ya tienes una solicitud pendiente para este turno" });
+        if (request.transfer?.status === "PENDING") return res.status(400).json({ message: "Ya tienes una solicitud pendiente para este turno" });
+
+        // Si había un transfer rechazado, eliminarlo antes de crear uno nuevo
+        if (request.transfer) {
+            await prisma.shiftTransfer.delete({ where: { id: request.transfer.id } });
+        }
 
         const transfer = await prisma.shiftTransfer.create({
             data: { requestId: id, shiftId: request.shiftId, fromUserId: req.user.id },
@@ -277,7 +282,12 @@ router.post("/:id/transfer", requireAuth, async (req, res) => {
         if (!request) return res.status(404).json({ message: "Solicitud no encontrada" });
         if (request.userId !== req.user.id) return res.status(403).json({ message: "Sin permisos" });
         if (request.status !== "APPROVED") return res.status(400).json({ message: "Solo puedes traspasar turnos aprobados" });
-        if (request.transfer) return res.status(400).json({ message: "Ya tienes una solicitud pendiente para este turno" });
+        if (request.transfer?.status === "PENDING") return res.status(400).json({ message: "Ya tienes una solicitud pendiente para este turno" });
+
+        // Si había un transfer rechazado, eliminarlo antes de crear uno nuevo
+        if (request.transfer) {
+            await prisma.shiftTransfer.delete({ where: { id: request.transfer.id } });
+        }
 
         const cleanToEmail = toEmail.toLowerCase().trim();
         const [alreadyRequest, alreadyManual] = await Promise.all([

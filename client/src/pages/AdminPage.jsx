@@ -7,7 +7,7 @@ import {
     getShifts, getRequests, deleteShift, deleteWeek, updateShift, closeWeek, reviewRequest,
     getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode,
     getAdminRegisterCode, updateAdminRegisterCode, changePassword, assignShift,
-    getTransfers, reviewTransfer,
+    getTransfers, reviewTransfer, removeAssignedOperator, removeManualAssignment, publishWeek, unarchiveWeek,
 } from "../api/index.js";
 
 function getMondayOfWeek(isoDate) {
@@ -73,9 +73,9 @@ function weekRangeLabel(mondayStr) {
 
 function ShiftsTable({
     shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId,
-    startEditSlots, handleSaveSlots, handleDeleteShift, onAssign,
+    startEditSlots, handleSaveSlots, handleDeleteShift, onAssign, onViewAssigned,
     userRole, emptyText, styles, muted,
-    hideStatus, hidePending, allowAssignClosed, weekSeparators, readOnly, onDeleteWeek,
+    hideStatus, hidePending, allowAssignClosed, weekSeparators, readOnly, onDeleteWeek, onUnarchiveWeek,
 }) {
     const cols = [
         "Fecha", "Horario", "Cupos", "Aprobados",
@@ -143,19 +143,39 @@ function ShiftsTable({
                                     }}>
                                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <span>{row.label}</span>
-                                            {onDeleteWeek && (
-                                                <button
-                                                    onClick={() => onDeleteWeek(row.key, row.label)}
-                                                    style={{
-                                                        background: "transparent", color: "var(--danger)",
-                                                        border: "1px solid var(--danger)", borderRadius: "6px",
-                                                        padding: "2px 8px", cursor: "pointer",
-                                                        fontSize: "0.7rem", fontWeight: "700", textTransform: "none",
-                                                    }}
-                                                >
-                                                    Eliminar semana
-                                                </button>
-                                            )}
+                                            <div style={{ display: "flex", gap: "6px" }}>
+                                                {onUnarchiveWeek && (() => {
+                                                    const mondayDate = new Date(row.key + "T00:00:00");
+                                                    const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+                                                    if (mondayDate <= todayMidnight) return null;
+                                                    return (
+                                                        <button
+                                                            onClick={() => onUnarchiveWeek(row.key, row.label)}
+                                                            style={{
+                                                                background: "transparent", color: "var(--primary)",
+                                                                border: "1px solid var(--primary)", borderRadius: "6px",
+                                                                padding: "2px 8px", cursor: "pointer",
+                                                                fontSize: "0.7rem", fontWeight: "700", textTransform: "none",
+                                                            }}
+                                                        >
+                                                            Desarchivar
+                                                        </button>
+                                                    );
+                                                })()}
+                                                {onDeleteWeek && (
+                                                    <button
+                                                        onClick={() => onDeleteWeek(row.key, row.label)}
+                                                        style={{
+                                                            background: "transparent", color: "var(--danger)",
+                                                            border: "1px solid var(--danger)", borderRadius: "6px",
+                                                            padding: "2px 8px", cursor: "pointer",
+                                                            fontSize: "0.7rem", fontWeight: "700", textTransform: "none",
+                                                        }}
+                                                    >
+                                                        Eliminar semana
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -201,15 +221,20 @@ function ShiftsTable({
                                                     <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
                                                     {canAssign && (
                                                         <button
-                                                            style={{ ...styles.assignBtn, ...(shift.status === "FULL" ? styles.assignBtnDisabled : {}) }}
+                                                            style={{ ...styles.assignBtn, ...(approved >= shift.totalSlots ? styles.assignBtnDisabled : {}) }}
                                                             onClick={() => onAssign(shift.id, shift.title)}
-                                                            disabled={shift.status === "FULL"}
+                                                            disabled={approved >= shift.totalSlots}
                                                         >
                                                             Asignar
                                                         </button>
                                                     )}
                                                     {userRole === "admin" && (
                                                         <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
+                                                    )}
+                                                    {onViewAssigned && approved > 0 && (
+                                                        <button style={styles.viewAssignedBtn} onClick={() => onViewAssigned(shift)}>
+                                                            Ver ({approved})
+                                                        </button>
                                                     )}
                                                 </div>
                                             )}
@@ -251,6 +276,7 @@ function AdminPage() {
     const [editingShiftId, setEditingShiftId] = useState(null);
     const [editSlots, setEditSlots] = useState(1);
     const [showHistory, setShowHistory] = useState(false);
+    const [historyWeekIndex, setHistoryWeekIndex] = useState(0);
     const [scheduleView, setScheduleView] = useState("next"); // "next" | "current"
     const [closingWeek, setClosingWeek] = useState(false);
     const [showChangePwd, setShowChangePwd] = useState(false);
@@ -260,6 +286,8 @@ function AdminPage() {
     const [assignModal, setAssignModal] = useState(null); // { shiftId, shiftTitle }
     const [assignForm, setAssignForm] = useState({ name: "", email: "" });
     const [assignLoading, setAssignLoading] = useState(false);
+    const [assignedModal, setAssignedModal] = useState(null); // { shift }
+    const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
 
     const loadShifts = useCallback(async () => {
         try { const s = await getShifts(token); setShifts(s); setShiftsUpdatedAt(Date.now()); } catch {}
@@ -334,15 +362,20 @@ function AdminPage() {
     }
 
     async function handleCloseWeek(monday, label) {
-        if (!confirm(`¿Archivar todos los turnos de la semana ${label}?\n\nLos turnos quedarán guardados en el historial y las solicitudes pendientes serán canceladas.`)) return;
-        setClosingWeek(true);
-        try {
-            const result = await closeWeek(token, monday);
-            showToast("Semana archivada", `${result.count} turno(s) archivados correctamente.`);
-            loadShifts();
-            loadRequests();
-        } catch (err) { showToast("Error", err.message); }
-        finally { setClosingWeek(false); }
+        setConfirmModal({
+            message: `¿Archivar todos los turnos de la semana ${label}? Los turnos quedarán guardados en el historial y las solicitudes pendientes serán canceladas.`,
+            confirmLabel: "Archivar",
+            onConfirm: async () => {
+                setClosingWeek(true);
+                try {
+                    const result = await closeWeek(token, monday);
+                    showToast("Semana archivada", `${result.count} turno(s) archivados correctamente.`);
+                    loadShifts();
+                    loadRequests();
+                } catch (err) { showToast("Error", err.message); }
+                finally { setClosingWeek(false); }
+            },
+        });
     }
 
     function startEditSlots(shift) {
@@ -365,21 +398,51 @@ function AdminPage() {
     }
 
     async function handleDeleteShift(id) {
-        if (!confirm("¿Eliminar este turno? Se cancelarán todas las solicitudes asociadas.")) return;
+        setConfirmModal({
+            message: "¿Eliminar este turno? Se cancelarán todas las solicitudes asociadas.",
+            onConfirm: async () => {
+                try {
+                    await deleteShift(token, id);
+                    showToast("Turno eliminado");
+                    loadShifts();
+                } catch (err) { showToast("Error", err.message); }
+            },
+        });
+    }
+
+    async function handlePublishWeek(monday, published) {
         try {
-            await deleteShift(token, id);
-            showToast("Turno eliminado");
+            await publishWeek(token, monday, published);
+            showToast(published ? "Turnos publicados" : "Turnos ocultados", published ? "Los operadores ya pueden ver y solicitar estos turnos." : "Los operadores ya no pueden ver estos turnos.");
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
     }
 
+    async function handleUnarchiveWeek(monday, label) {
+        setConfirmModal({
+            message: `¿Desarchivar la semana ${label}? Los turnos volverán a estar activos.`,
+            confirmLabel: "Desarchivar",
+            onConfirm: async () => {
+                try {
+                    const { count } = await unarchiveWeek(token, monday);
+                    showToast("Semana desarchivada", `${count} turno(s) restaurados.`);
+                    loadShifts();
+                } catch (err) { showToast("Error", err.message); }
+            },
+        });
+    }
+
     async function handleDeleteWeek(monday, label) {
-        if (!confirm(`¿Eliminar permanentemente todos los turnos de la semana ${label}?\n\nEsta acción no se puede deshacer.`)) return;
-        try {
-            const { count } = await deleteWeek(token, monday);
-            showToast("Semana eliminada", `${count} turno(s) eliminados.`);
-            loadShifts();
-        } catch (err) { showToast("Error", err.message); }
+        setConfirmModal({
+            message: `¿Eliminar permanentemente todos los turnos de la semana ${label}? Esta acción no se puede deshacer.`,
+            onConfirm: async () => {
+                try {
+                    const { count } = await deleteWeek(token, monday);
+                    showToast("Semana eliminada", `${count} turno(s) eliminados.`);
+                    loadShifts();
+                } catch (err) { showToast("Error", err.message); }
+            },
+        });
     }
 
     async function handleToggleUser(id) {
@@ -411,13 +474,56 @@ function AdminPage() {
         finally { setAdminCodeLoading(false); }
     }
 
-    async function handleReviewTransfer(transferId, action) {
+    async function handleReviewTransfer(transferId, action, isDesistimiento = false) {
         try {
             await reviewTransfer(token, transferId, action, "");
-            showToast(action === "approve" ? "Traspaso aprobado" : "Traspaso rechazado");
+            const label = isDesistimiento ? "Desistimiento" : "Traspaso";
+            showToast(action === "approve" ? `${label} aprobado` : `${label} rechazado`);
             loadTransfers();
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
+    }
+
+    async function handleRemoveAssigned(shiftId, requestId) {
+        setConfirmModal({
+            message: "¿Eliminar a este operador del turno?",
+            onConfirm: async () => {
+                try {
+                    await removeAssignedOperator(token, shiftId, requestId);
+                    showToast("Operador eliminado del turno");
+                    const updatedShifts = await getShifts(token).catch(() => null);
+                    if (updatedShifts) {
+                        setShifts(updatedShifts);
+                        setAssignedModal((prev) => {
+                            if (!prev) return null;
+                            const updated = updatedShifts.find((s) => s.id === prev.shift.id);
+                            return updated ? { shift: updated } : null;
+                        });
+                    }
+                } catch (err) { showToast("Error", err.message); }
+            },
+        });
+    }
+
+    async function handleRemoveManual(shiftId, assignmentId) {
+        setConfirmModal({
+            message: "¿Eliminar esta asignación del turno?",
+            onConfirm: async () => {
+                try {
+                    await removeManualAssignment(token, shiftId, assignmentId);
+                    showToast("Asignación eliminada");
+                    const updatedShifts = await getShifts(token).catch(() => null);
+                    if (updatedShifts) {
+                        setShifts(updatedShifts);
+                        setAssignedModal((prev) => {
+                            if (!prev) return null;
+                            const updated = updatedShifts.find((s) => s.id === prev.shift.id);
+                            return updated ? { shift: updated } : null;
+                        });
+                    }
+                } catch (err) { showToast("Error", err.message); }
+            },
+        });
     }
 
     async function handleAssign(e) {
@@ -450,15 +556,20 @@ function AdminPage() {
     }
 
     async function handleDeleteUser(id, name) {
-        if (!confirm(`¿Eliminar permanentemente a ${name}?\n\nSe borrarán sus solicitudes y notificaciones. Esta acción no se puede deshacer.`)) return;
-        try {
-            await deleteUser(token, id);
-            setUsers((prev) => prev.filter((u) => u.id !== id));
-            showToast("Operador eliminado");
-        } catch (err) { showToast("Error", err.message); }
+        setConfirmModal({
+            message: `¿Eliminar permanentemente a ${name}? Se borrarán sus solicitudes y notificaciones. Esta acción no se puede deshacer.`,
+            onConfirm: async () => {
+                try {
+                    await deleteUser(token, id);
+                    setUsers((prev) => prev.filter((u) => u.id !== id));
+                    showToast("Operador eliminado");
+                } catch (err) { showToast("Error", err.message); }
+            },
+        });
     }
 
     const approvedRequests = shifts.filter((s) => s.status !== "CLOSED").flatMap((s) => (s.requests ?? []).filter((r) => r.status === "APPROVED"));
+    const totalApprovedSlots = approvedRequests.length + shifts.filter((s) => s.status !== "CLOSED").reduce((acc, s) => acc + (s.manualAssignments?.length ?? 0), 0);
 
     // Current week range for request/transfer filtering
     const _now = new Date(); _now.setHours(0, 0, 0, 0);
@@ -466,14 +577,26 @@ function AdminPage() {
     const _mon = new Date(_now); _mon.setDate(_now.getDate() + (_dow === 0 ? -6 : 1 - _dow));
     const _sun = new Date(_mon); _sun.setDate(_mon.getDate() + 6);
     const isCurrentWeekDate = (dateStr) => { const d = new Date((dateStr || "").slice(0, 10) + "T12:00:00"); return d >= _mon && d <= _sun; };
+    // Stats: solo próxima semana (excluye semana actual) — definido aquí porque necesita isCurrentWeekDate
+    const nextWeekShifts = shifts.filter((s) => s.status !== "CLOSED" && !isCurrentWeekDate(s.date));
+    const nextWeekApproved = nextWeekShifts.flatMap((s) => (s.requests ?? []).filter((r) => r.status === "APPROVED"));
+    const totalApprovedSlotsNext = nextWeekApproved.length + nextWeekShifts.reduce((acc, s) => acc + (s.manualAssignments?.length ?? 0), 0);
+
     const filteredRequests = requests.filter((r) => reqTab === "current" ? isCurrentWeekDate(r.shift?.date) : !isCurrentWeekDate(r.shift?.date));
     const filteredTransfers = transfers.filter((t) => reqTab === "current" ? isCurrentWeekDate(t.shift?.date) : !isCurrentWeekDate(t.shift?.date));
     const hasCurrentWeekItems = requests.some((r) => isCurrentWeekDate(r.shift?.date)) || transfers.some((t) => isCurrentWeekDate(t.shift?.date));
+
+    // Si ya no quedan items de semana actual pero el tab sigue en "current", resetear a "next"
+    useEffect(() => {
+        if (!hasCurrentWeekItems && reqTab === "current") setReqTab("next");
+    }, [hasCurrentWeekItems, reqTab]);
 
     // Schedule/table view sync
     // "Semana actual" = cualquier turno cuya fecha cae en esta semana (OPEN o CLOSED)
     // "Próxima semana" = turnos no cerrados cuyas fechas NO son de esta semana
     const hasCwShifts = shifts.some((s) => isCurrentWeekDate(s.date));
+    const hasCwActiveShifts = shifts.some((s) => isCurrentWeekDate(s.date) && s.status !== "CLOSED");
+    const isCwTrulyArchived = hasCwShifts && !hasCwActiveShifts;
     const hasActiveShifts = shifts.some((s) => s.status !== "CLOSED" && !isCurrentWeekDate(s.date));
     const bothSchedulesExist = hasCwShifts && hasActiveShifts;
     const effectiveView = bothSchedulesExist ? scheduleView : (hasCwShifts ? "current" : "next");
@@ -491,9 +614,12 @@ function AdminPage() {
             )}
 
             {assignModal && (
-                <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setAssignModal(null)}>
-                    <div className="modal-box-anim" style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-                        <h3 style={styles.modalTitle}>Asignar operador</h3>
+                <div className="modal-overlay-anim" style={styles.modalOverlay}>
+                    <div className="modal-box-anim" style={styles.modalBox}>
+                        <div style={styles.modalHeader}>
+                            <h3 style={{ ...styles.modalTitle, margin: 0 }}>Asignar operador</h3>
+                            <button style={styles.modalCloseBtn} onClick={() => setAssignModal(null)}>✕</button>
+                        </div>
                         <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{assignModal.shiftTitle}</p>
                         <form onSubmit={handleAssign} style={styles.modalForm}>
                             <input
@@ -522,6 +648,98 @@ function AdminPage() {
                     </div>
                 </div>
             )}
+
+            {confirmModal && (
+                <div className="modal-overlay-anim" style={{ ...styles.modalOverlay, zIndex: 400 }}>
+                    <div className="modal-box-anim" style={{ ...styles.modalBox, maxWidth: "460px", textAlign: "center" }}>
+                        {(() => {
+                            const idx = confirmModal.message.indexOf("?");
+                            const hasTwo = idx !== -1 && idx < confirmModal.message.length - 1;
+                            const question = hasTwo ? confirmModal.message.slice(0, idx + 1) : confirmModal.message;
+                            const detail = hasTwo ? confirmModal.message.slice(idx + 1).trim() : null;
+                            return (
+                                <>
+                                    <p style={{ margin: detail ? "0 0 8px" : "0 0 28px", color: "var(--text-main)", fontSize: "1rem", fontWeight: "700", lineHeight: "1.5" }}>
+                                        {question}
+                                    </p>
+                                    {detail && (
+                                        <p style={{ margin: "0 0 28px", color: "var(--text-muted)", fontSize: "0.9rem", fontWeight: "400", lineHeight: "1.55" }}>
+                                            {detail}
+                                        </p>
+                                    )}
+                                </>
+                            );
+                        })()}
+                        <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+                            <button style={styles.modalCancel} onClick={() => setConfirmModal(null)}>Cancelar</button>
+                            <button
+                                style={{ ...styles.modalSave, background: "var(--danger)" }}
+                                onClick={() => { setConfirmModal(null); confirmModal.onConfirm(); }}
+                            >
+                                {confirmModal.confirmLabel ?? "Eliminar"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {assignedModal && (() => {
+                const shift = assignedModal.shift;
+                const approved = (shift.requests ?? [])
+                    .filter((r) => r.status === "APPROVED")
+                    .map((r) => ({ id: r.id, name: r.user?.name ?? "—", email: r.user?.email ?? "", type: "request" }));
+                const manual = (shift.manualAssignments ?? [])
+                    .map((a) => ({ id: a.id, name: a.name, email: a.email, type: "manual" }));
+                const all = [...approved, ...manual].sort((a, b) => a.name.localeCompare(b.name, "es"));
+                return (
+                    <div className="modal-overlay-anim" style={styles.modalOverlay}>
+                        <div className="modal-box-anim" style={{ ...styles.modalBox, maxWidth: "460px" }}>
+                            <div style={styles.modalHeader}>
+                                <h3 style={{ ...styles.modalTitle, margin: 0 }}>Operadores asignados</h3>
+                                <button style={styles.modalCloseBtn} onClick={() => setAssignedModal(null)}>✕</button>
+                            </div>
+                            <p style={{ margin: "0 0 4px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{shift.title}</p>
+                            <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                                {new Date(shift.date.slice(0, 10) + "T00:00:00").toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })}
+                                {" · "}{shift.startTime} – {shift.endTime}
+                            </p>
+                            {all.length === 0 ? (
+                                <p style={{ textAlign: "center", color: "var(--text-muted)", padding: "20px 0", fontSize: "0.9rem" }}>
+                                    No hay operadores asignados aún.
+                                </p>
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "340px", overflowY: "auto" }}>
+                                    {all.map((op) => (
+                                        <div key={op.id} style={styles.assignedRow}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <p style={{ margin: 0, fontWeight: "700", color: "var(--text-main)", fontSize: "0.9rem" }}>{op.name}</p>
+                                                <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                                                    {op.email}
+                                                    <span style={{ marginLeft: "8px", ...styles.typeBadge, ...(op.type === "manual" ? styles.typeBadgeManual : styles.typeBadgeRequest) }}>
+                                                        {op.type === "manual" ? "Manual" : "Solicitud"}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <button
+                                                style={styles.removeBtn}
+                                                onClick={() => op.type === "manual"
+                                                    ? handleRemoveManual(shift.id, op.id)
+                                                    : handleRemoveAssigned(shift.id, op.id)
+                                                }
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
+                                <button style={styles.modalCancel} onClick={() => setAssignedModal(null)}>Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {showChangePwd && (
                 <div className="modal-overlay-anim" style={styles.modalOverlay} onClick={() => setShowChangePwd(false)}>
@@ -566,7 +784,7 @@ function AdminPage() {
                 {/* Barra de estadísticas */}
                 <div style={styles.statsBar}>
                     <div style={styles.statCard}>
-                        <span style={styles.statNum}>{shifts.filter((s) => s.status === "OPEN").length}</span>
+                        <span style={styles.statNum}>{nextWeekShifts.filter((s) => s.status === "OPEN").length}</span>
                         <span style={styles.statLabel}>Turnos abiertos</span>
                     </div>
                     <div style={styles.statCard}>
@@ -574,8 +792,8 @@ function AdminPage() {
                         <span style={styles.statLabel}>Solicitudes pendientes</span>
                     </div>
                     <div style={styles.statCard}>
-                        <span style={{ ...styles.statNum, color: "var(--success)" }}>{approvedRequests.length}</span>
-                        <span style={styles.statLabel}>Turnos aprobados</span>
+                        <span style={{ ...styles.statNum, color: "var(--success)" }}>{totalApprovedSlotsNext}</span>
+                        <span style={styles.statLabel}>Cupos aprobados</span>
                     </div>
                     <div style={styles.statCard}>
                         <span style={styles.statNum}>{users.filter((u) => u.role === "operator" && u.active).length}</span>
@@ -615,35 +833,65 @@ function AdminPage() {
                             </div>
                         )}
 
-                        {/* Traspasos filtrados */}
-                        {filteredTransfers.length > 0 && (
-                            <div style={{ marginBottom: "24px" }}>
-                                <p style={{ ...styles.requestListHint, marginBottom: "10px", color: "var(--primary)", fontWeight: "700" }}>
-                                    Traspasos pendientes · {filteredTransfers.length}
-                                </p>
-                                {filteredTransfers.map((t) => (
-                                    <div key={t.id} style={styles.transferCard}>
-                                        <div style={{ flex: 1 }}>
-                                            <p style={styles.transferTitle}>{t.shift?.title}</p>
-                                            <p style={styles.transferMeta}>
-                                                {new Date(t.shift?.date).toLocaleDateString("es-CO", { weekday: "short", month: "short", day: "numeric" })}
-                                                {" · "}{t.shift?.startTime} – {t.shift?.endTime}
-                                            </p>
-                                            <p style={styles.transferMeta}>
-                                                {t.toName
-                                                    ? <><strong>{t.fromUser?.name}</strong> quiere pasar su turno a <strong>{t.toName}</strong> ({t.toEmail})</>
-                                                    : <><strong>{t.fromUser?.name}</strong> quiere desistir de este turno</>
-                                                }
-                                            </p>
-                                        </div>
-                                        <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                                            <button style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve")}>Aprobar</button>
-                                            <button style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject")}>Rechazar</button>
-                                        </div>
+                        {/* Traspasos y desistimientos filtrados */}
+                        {filteredTransfers.length > 0 && (() => {
+                            const traspasos = filteredTransfers.filter((t) => !!t.toName);
+                            const desistimientos = filteredTransfers.filter((t) => !t.toName);
+                            return (
+                            <div style={{ marginBottom: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                                {desistimientos.length > 0 && (
+                                    <div>
+                                        <p style={{ ...styles.requestListHint, marginBottom: "10px", color: "var(--danger)", fontWeight: "700" }}>
+                                            Desistimientos pendientes · {desistimientos.length}
+                                        </p>
+                                        {desistimientos.map((t) => (
+                                            <div key={t.id} style={{ ...styles.transferCard, borderLeft: "4px solid var(--danger)" }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <p style={styles.transferTitle}>{t.shift?.title}</p>
+                                                    <p style={styles.transferMeta}>
+                                                        {new Date(t.shift?.date).toLocaleDateString("es-CO", { weekday: "short", month: "short", day: "numeric" })}
+                                                        {" · "}{t.shift?.startTime} – {t.shift?.endTime}
+                                                    </p>
+                                                    <p style={styles.transferMeta}>
+                                                        <strong>{t.fromUser?.name}</strong> quiere desistir de este turno
+                                                    </p>
+                                                </div>
+                                                <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                                                    <button style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve", true)}>Aprobar</button>
+                                                    <button style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject", true)}>Rechazar</button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
+                                {traspasos.length > 0 && (
+                                    <div>
+                                        <p style={{ ...styles.requestListHint, marginBottom: "10px", color: "var(--primary)", fontWeight: "700" }}>
+                                            Traspasos pendientes · {traspasos.length}
+                                        </p>
+                                        {traspasos.map((t) => (
+                                            <div key={t.id} style={{ ...styles.transferCard, borderLeft: "4px solid var(--primary)" }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <p style={styles.transferTitle}>{t.shift?.title}</p>
+                                                    <p style={styles.transferMeta}>
+                                                        {new Date(t.shift?.date).toLocaleDateString("es-CO", { weekday: "short", month: "short", day: "numeric" })}
+                                                        {" · "}{t.shift?.startTime} – {t.shift?.endTime}
+                                                    </p>
+                                                    <p style={styles.transferMeta}>
+                                                        <strong>{t.fromUser?.name}</strong> quiere pasar su turno a <strong>{t.toName}</strong> ({t.toEmail})
+                                                    </p>
+                                                </div>
+                                                <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                                                    <button style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve")}>Aprobar</button>
+                                                    <button style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject")}>Rechazar</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Solicitudes filtradas */}
                         {filteredRequests.length === 0 && filteredTransfers.length === 0 ? (
@@ -679,7 +927,7 @@ function AdminPage() {
                         </div>
 
                         {/* Aviso: semana actual archivada, sin próxima semana creada */}
-                        {hasCwShifts && !hasActiveShifts && (
+                        {isCwTrulyArchived && !hasActiveShifts && (
                             <div style={styles.nextWeekNotice}>
                                 <span style={{ fontSize: "1.1rem" }}>📅</span>
                                 <div>
@@ -697,20 +945,28 @@ function AdminPage() {
                                 {bothSchedulesExist && (
                                     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
                                         <button
-                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "next" ? { opacity: 0.35, cursor: "not-allowed" } : {}) }}
+                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "next" ? { opacity: 0.3, cursor: "not-allowed" } : {}) }}
                                             onClick={() => setScheduleView("next")}
                                             disabled={effectiveView === "next"}
                                             title="Próxima semana"
-                                        >←</button>
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        </button>
                                         <span style={styles.historySectionLabel}>
                                             {effectiveView === "current" ? "Semana actual — en curso" : "Próxima semana — turnos abiertos"}
                                         </span>
                                         <button
-                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "current" ? { opacity: 0.35, cursor: "not-allowed" } : {}) }}
+                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "current" ? { opacity: 0.3, cursor: "not-allowed" } : {}) }}
                                             onClick={() => setScheduleView("current")}
                                             disabled={effectiveView === "current"}
                                             title="Semana actual"
-                                        >→</button>
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        </button>
                                     </div>
                                 )}
                                 <ScheduleTable
@@ -719,28 +975,49 @@ function AdminPage() {
                                     canExport
                                     token={token}
                                     showAll={effectiveView === "current"}
+                                    publishToggle={effectiveView !== "current" ? (() => {
+                                        const weeks = getWeeksFromShifts(visibleScheduleShifts);
+                                        if (!weeks.length) return null;
+                                        const [monday] = weeks[0];
+                                        const isPublished = visibleScheduleShifts.some((s) => s.status !== "CLOSED" && s.published);
+                                        return { monday, isPublished, onToggle: () => handlePublishWeek(monday, !isPublished) };
+                                    })() : null}
                                 />
                             </div>
                         )}
 
-                        {/* Control de archivar semana — solo en vista de próxima semana */}
-                        {effectiveView === "next" && getWeeksFromShifts(shifts).length > 0 && (
-                            <div style={styles.weekActions}>
-                                <span style={styles.weekActionsLabel}>Archivar semana:</span>
-                                <div style={styles.weekBtns}>
-                                    {getWeeksFromShifts(shifts).map(([monday, { label, count }]) => (
-                                        <button
-                                            key={monday}
-                                            style={{ ...styles.closeWeekBtn, ...(closingWeek ? styles.exportBtnDisabled : {}) }}
-                                            disabled={closingWeek}
-                                            onClick={() => handleCloseWeek(monday, label)}
-                                        >
-                                            📁 {label} ({count} turnos)
-                                        </button>
-                                    ))}
+                        {/* Archivar semana — solo muestra la semana visible en el schedule */}
+                        {(() => {
+                            const allWeeks = getWeeksFromShifts(shifts);
+                            if (!allWeeks.length) return null;
+                            // Obtener el lunes de la semana actualmente visible
+                            const visibleMonday = visibleScheduleShifts.length
+                                ? getMondayOfWeek(visibleScheduleShifts[0].date.slice(0, 10))
+                                : null;
+                            const week = visibleMonday ? allWeeks.find(([m]) => m === visibleMonday) : null;
+                            if (!week) return null;
+                            const [monday, { label, count }] = week;
+                            const isCurrent = monday === _mon.toISOString().slice(0, 10);
+                            const isOldest = allWeeks[0][0] === monday;
+                            return (
+                                <div style={styles.weekActions}>
+                                    <span style={styles.weekActionsLabel}>
+                                        📁 {label} <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.82rem" }}>({count} turnos)</span>
+                                    </span>
+                                    {isOldest && (
+                                        <div style={styles.weekBtns}>
+                                            <button
+                                                style={{ ...styles.closeWeekBtn, ...(isCurrent ? { background: "var(--warning)", color: "#000", border: "none" } : {}), ...(closingWeek ? styles.exportBtnDisabled : {}) }}
+                                                disabled={closingWeek}
+                                                onClick={() => handleCloseWeek(monday, label)}
+                                            >
+                                                Archivar semana
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Tabla sincronizada con el horario visible */}
                         <ShiftsTable
@@ -753,6 +1030,7 @@ function AdminPage() {
                             handleSaveSlots={handleSaveSlots}
                             handleDeleteShift={handleDeleteShift}
                             onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
+                            onViewAssigned={(shift) => setAssignedModal({ shift })}
                             userRole={user?.role}
                             emptyText="No hay turnos"
                             styles={styles}
@@ -902,32 +1180,101 @@ function AdminPage() {
                         </div>
 
                         {/* Historial de turnos */}
-                        <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                                <div>
-                                    <h3 style={styles.settingsLabel}>Historial de turnos</h3>
-                                    <p style={styles.settingsHint}>Semanas cerradas — solo lectura.</p>
+                        {(() => {
+                            const closedShifts = shifts.filter((s) => s.status === "CLOSED" && !isCurrentWeekDate(s.date));
+                            // Agrupar por semana
+                            const weekMap = new Map();
+                            for (const s of closedShifts) {
+                                const mon = getMondayOfWeek(s.date.slice(0, 10));
+                                if (!weekMap.has(mon)) weekMap.set(mon, []);
+                                weekMap.get(mon).push(s);
+                            }
+                            const historyWeeks = [...weekMap.entries()].sort(([a], [b]) => b.localeCompare(a)); // más reciente primero
+                            const totalWeeks = historyWeeks.length;
+                            const safeIdx = Math.min(historyWeekIndex, Math.max(0, totalWeeks - 1));
+                            const currentHistoryWeek = historyWeeks[safeIdx];
+
+                            return (
+                                <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                                        <div>
+                                            <h3 style={styles.settingsLabel}>Historial de turnos</h3>
+                                            <p style={styles.settingsHint}>Semanas cerradas — solo lectura.</p>
+                                        </div>
+                                        <button
+                                            style={{ ...styles.historyToggle, ...(showHistory ? styles.historyToggleActive : {}) }}
+                                            onClick={() => { setShowHistory((v) => !v); setHistoryWeekIndex(0); }}
+                                        >
+                                            {showHistory ? "Ocultar" : "Ver historial"}
+                                        </button>
+                                    </div>
+
+                                    {showHistory && (
+                                        totalWeeks === 0 ? (
+                                            <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>No hay semanas cerradas aún.</p>
+                                        ) : (
+                                            <div>
+                                                {/* Navegación */}
+                                                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                                                    <button
+                                                        style={{ ...styles.scheduleNavBtn, ...(safeIdx === 0 ? { opacity: 0.3, cursor: "not-allowed" } : {}) }}
+                                                        onClick={() => setHistoryWeekIndex((i) => Math.max(0, i - 1))}
+                                                        disabled={safeIdx === 0}
+                                                        title="Semana más reciente"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                                    </button>
+                                                    <span style={{ ...styles.historySectionLabel, paddingBottom: 0 }}>
+                                                        {weekRangeLabel(currentHistoryWeek[0])}
+                                                        <span style={{ marginLeft: "8px", fontWeight: 400, fontSize: "0.78rem" }}>({safeIdx + 1} de {totalWeeks})</span>
+                                                    </span>
+                                                    <button
+                                                        style={{ ...styles.scheduleNavBtn, ...(safeIdx === totalWeeks - 1 ? { opacity: 0.3, cursor: "not-allowed" } : {}) }}
+                                                        onClick={() => setHistoryWeekIndex((i) => Math.min(totalWeeks - 1, i + 1))}
+                                                        disabled={safeIdx === totalWeeks - 1}
+                                                        title="Semana más antigua"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                                    </button>
+
+                                                    {/* Botones de acción para la semana visible */}
+                                                    <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+                                                        {(() => {
+                                                            const mondayDate = new Date(currentHistoryWeek[0] + "T00:00:00");
+                                                            const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+                                                            const label = weekRangeLabel(currentHistoryWeek[0]);
+                                                            return mondayDate > todayMidnight ? (
+                                                                <button
+                                                                    onClick={() => handleUnarchiveWeek(currentHistoryWeek[0], label)}
+                                                                    style={{ ...styles.historyToggle, color: "var(--primary)", borderColor: "var(--primary)" }}
+                                                                >
+                                                                    Desarchivar
+                                                                </button>
+                                                            ) : null;
+                                                        })()}
+                                                        <button
+                                                            onClick={() => handleDeleteWeek(currentHistoryWeek[0], weekRangeLabel(currentHistoryWeek[0]))}
+                                                            style={{ ...styles.historyToggle, color: "var(--danger)", borderColor: "var(--danger)" }}
+                                                        >
+                                                            Eliminar semana
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <ShiftsTable
+                                                    shifts={currentHistoryWeek[1]}
+                                                    emptyText="No hay turnos."
+                                                    styles={styles}
+                                                    hideStatus
+                                                    hidePending
+                                                    readOnly
+                                                />
+                                            </div>
+                                        )
+                                    )}
                                 </div>
-                                <button
-                                    style={{ ...styles.historyToggle, ...(showHistory ? styles.historyToggleActive : {}) }}
-                                    onClick={() => setShowHistory((v) => !v)}
-                                >
-                                    {showHistory ? "Ocultar" : "Ver historial"}
-                                </button>
-                            </div>
-                            {showHistory && (
-                                <ShiftsTable
-                                    shifts={shifts.filter((s) => s.status === "CLOSED" && !isCurrentWeekDate(s.date))}
-                                    emptyText="No hay semanas cerradas aún."
-                                    styles={styles}
-                                    hideStatus
-                                    hidePending
-                                    weekSeparators
-                                    readOnly
-                                    onDeleteWeek={handleDeleteWeek}
-                                />
-                            )}
-                        </div>
+                            );
+                        })()}
 
                     </section>
                 )}
@@ -937,7 +1284,7 @@ function AdminPage() {
                 <ShiftCreatorModal
                     token={token}
                     onClose={() => setShowCreatorModal(false)}
-                    onCreated={(msg) => { showToast(msg); loadShifts(); }}
+                    onCreated={(msg) => { showToast(msg); loadShifts(); setScheduleView("next"); }}
                 />
             )}
         </div>
@@ -1026,7 +1373,7 @@ const styles = {
     formActions: { display: "flex", gap: "8px" },
     cancelBtn: {
         background: "var(--card-bg)", color: "var(--text-muted)", border: "1px solid var(--border-color)",
-        padding: "10px 16px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold", fontSize: "0.9rem",
+        padding: "4px 8px", borderRadius: "6px", cursor: "pointer", fontWeight: "700", fontSize: "0.85rem",
     },
     tableWrapper: { overflowX: "auto", marginTop: "4px" },
     table: { width: "100%", borderCollapse: "collapse" },
@@ -1080,6 +1427,25 @@ const styles = {
         padding: "5px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: "600",
     },
     assignBtnDisabled: { background: "var(--border-color)", cursor: "not-allowed", },
+    viewAssignedBtn: {
+        background: "var(--primary-light)", color: "var(--primary)", border: "none",
+        padding: "5px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: "600",
+    },
+    assignedRow: {
+        display: "flex", alignItems: "center", gap: "12px",
+        padding: "10px 12px", background: "var(--bg-color)",
+        borderRadius: "10px", border: "1px solid var(--card-border)",
+    },
+    typeBadge: {
+        display: "inline-block", padding: "1px 7px", borderRadius: "999px",
+        fontSize: "0.7rem", fontWeight: "700",
+    },
+    typeBadgeRequest: { background: "var(--success-bg)", color: "var(--success)" },
+    typeBadgeManual: { background: "var(--primary-light)", color: "var(--primary)" },
+    removeBtn: {
+        background: "var(--danger-bg)", color: "var(--danger)", border: "none",
+        padding: "5px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: "600", flexShrink: 0,
+    },
     editBtn: {
         background: "var(--primary-light)", color: "var(--primary)", border: "none",
         padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600",
@@ -1134,15 +1500,15 @@ const styles = {
         letterSpacing: "0.05em", margin: 0, paddingBottom: "8px",
     },
     scheduleNavBtn: {
-        background: "var(--card-bg)", border: "1.5px solid var(--border-color)", color: "var(--text-main)",
-        width: "30px", height: "30px", borderRadius: "8px", cursor: "pointer",
-        fontWeight: "700", fontSize: "1rem", lineHeight: 1, flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "var(--card-bg)", border: "1.5px solid var(--border-color)", color: "var(--text-muted)",
+        width: "32px", height: "32px", borderRadius: "8px", cursor: "pointer",
+        flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "background 0.15s, color 0.15s, border-color 0.15s",
     },
     empty: { textAlign: "center", color: "var(--text-muted)", padding: "40px 0" },
     toast: {
         position: "fixed", bottom: "24px", right: "24px", background: "var(--card-bg)", color: "var(--text-main)",
-        padding: "14px 18px", borderRadius: "12px", boxShadow: "var(--card-shadow)", zIndex: 200, maxWidth: "320px",
+        padding: "14px 18px", borderRadius: "12px", boxShadow: "var(--card-shadow)", zIndex: 500, maxWidth: "320px",
         border: "1px solid var(--border-color)", backdropFilter: "blur(12px)",
     },
     toastMsg: { margin: "4px 0 0", fontSize: "0.85rem", color: "var(--text-muted)" },
@@ -1153,6 +1519,14 @@ const styles = {
     modalBox: {
         background: "var(--bg-color)", borderRadius: "16px", padding: "28px 24px",
         width: "100%", maxWidth: "380px", border: "1px solid var(--border-color)",
+    },
+    modalHeader: {
+        display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px",
+    },
+    modalCloseBtn: {
+        background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)",
+        fontSize: "1.1rem", lineHeight: 1, padding: "4px", borderRadius: "6px",
+        transition: "color 0.15s ease",
     },
     modalTitle: { margin: "0 0 20px", color: "var(--text-main)", fontSize: "1.1rem", fontWeight: "800" },
     modalForm: { display: "flex", flexDirection: "column", gap: "12px" },

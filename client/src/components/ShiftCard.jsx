@@ -1,4 +1,4 @@
-function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, onDesist, onDesistManual }) {
+function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, onDesist, onDesistManual, isRequesting }) {
     const approvedCount = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0)
         + (shift.manualAssignments?.length ?? 0);
     const availableSlots = shift.totalSlots - approvedCount;
@@ -10,7 +10,7 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
         : null;
     const isManualAssigned = !!myManualAssignment;
     const transferStatus = myRequest?.transfer?.status ?? null;
-    const desistDisabled = transferStatus === "PENDING" || transferStatus === "REJECTED";
+    const desistDisabled = transferStatus === "PENDING";
 
     const dateFormatted = new Date(shift.date).toLocaleDateString("es-CO", {
         weekday: "short", month: "short", day: "numeric",
@@ -51,7 +51,7 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
                 style={{ ...styles.desistBtn, ...(desistDisabled ? styles.desistBtnDisabled : {}) }}
                 onClick={() => !desistDisabled && onDesist(myRequest.id, shift.title)}
                 disabled={desistDisabled}
-                title={transferStatus === "REJECTED" ? "Traspaso rechazado" : transferStatus === "PENDING" ? "Traspaso en revisión" : undefined}
+                title={transferStatus === "PENDING" ? "Traspaso en revisión" : undefined}
             >
                 Desistir
             </button>
@@ -63,8 +63,12 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
         );
         if (isFull) return null;
         return (
-            <button style={styles.requestBtn} onClick={() => onRequest(shift.id)}>
-                Solicitar
+            <button
+                style={{ ...styles.requestBtn, ...(isRequesting ? styles.requestBtnDisabled : {}) }}
+                onClick={() => onRequest(shift.id)}
+                disabled={isRequesting}
+            >
+                {isRequesting ? "Enviando…" : "Solicitar"}
             </button>
         );
     }
@@ -174,6 +178,11 @@ const styles = {
         fontWeight: "700",
         fontSize: "0.82rem",
         transition: "transform 0.15s ease, filter 0.15s ease",
+    },
+    requestBtnDisabled: {
+        background: "#93c5fd",
+        cursor: "not-allowed",
+        opacity: 0.75,
     },
     cancelBtn: {
         background: "transparent",

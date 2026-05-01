@@ -8,14 +8,36 @@ const router = Router();
 // GET all shifts with their requests
 router.get("/", requireAuth, async (req, res) => {
     try {
+        const isAdmin = ["admin", "lead"].includes(req.user.role);
+        // Calcular rango de la semana actual
+        const now = new Date();
+        const dow = now.getDay();
+        const diffToMon = dow === 0 ? -6 : 1 - dow;
+        const cwMonday = new Date(now);
+        cwMonday.setDate(now.getDate() + diffToMon);
+        cwMonday.setHours(0, 0, 0, 0);
+        const cwSunday = new Date(cwMonday);
+        cwSunday.setDate(cwMonday.getDate() + 6);
+        cwSunday.setHours(23, 59, 59, 999);
+
+        // Operadores ven: turnos de la semana actual (todos) + turnos publicados + turnos CLOSED
+        const where = isAdmin ? {} : {
+            OR: [
+                { date: { gte: cwMonday, lte: cwSunday } }, // semana actual completa, sin filtro
+                { published: true },
+                { status: "CLOSED" },
+            ],
+        };
+
         const shifts = await prisma.shift.findMany({
+            where,
             orderBy: [{ date: "asc" }, { startTime: "asc" }],
             include: {
                 requests: {
                     where: { status: { in: ["PENDING", "APPROVED"] } },
                     orderBy: { createdAt: "asc" },
                     include: {
-                        user: { select: { id: true, name: true } },
+                        user: { select: { id: true, name: true, email: true } },
                         transfer: { select: { status: true } },
                     },
                 },
@@ -37,32 +59,35 @@ router.post("/", requireAuth, requireRole("admin", "lead"), async (req, res) => 
     }
 
     try {
-        // Calcular semana actual (lun–dom) en el servidor
-        const today = new Date();
-        const dow = today.getDay(); // 0=dom … 6=sáb
-        const daysFromMon = dow === 0 ? 6 : dow - 1;
-        const cwMonday = new Date(today);
-        cwMonday.setDate(today.getDate() - daysFromMon);
-        cwMonday.setHours(0, 0, 0, 0);
-        const cwSunday = new Date(cwMonday);
-        cwSunday.setDate(cwMonday.getDate() + 6);
-        cwSunday.setHours(23, 59, 59, 999);
-
+        // Calcular el lunes de la semana del nuevo turno
         const shiftDate = new Date(date + "T12:00:00");
-        const isCurrentWeek = shiftDate >= cwMonday && shiftDate <= cwSunday;
+        const shiftDow = shiftDate.getDay();
+        const shiftDaysFromMon = shiftDow === 0 ? 6 : shiftDow - 1;
+        const shiftMonday = new Date(shiftDate);
+        shiftMonday.setDate(shiftDate.getDate() - shiftDaysFromMon);
+        shiftMonday.setHours(0, 0, 0, 0);
 
-        // Si el turno es de una semana distinta a la actual, verificar que la
-        // semana actual ya esté archivada (sin turnos OPEN)
-        if (!isCurrentWeek) {
-            const openNow = await prisma.shift.count({
-                where: { status: "OPEN", date: { gte: cwMonday, lte: cwSunday } },
+        // Verificar que no existan turnos activos en semanas ANTERIORES a la del nuevo turno
+        const activeInPriorWeeks = await prisma.shift.count({
+            where: {
+                status: { in: ["OPEN", "FULL"] },
+                date: { lt: shiftMonday },
+            },
+        });
+        if (activeInPriorWeeks > 0) {
+            return res.status(409).json({
+                message: "Debes archivar la semana anterior antes de crear turnos para una semana nueva.",
             });
-            if (openNow > 0) {
-                return res.status(409).json({
-                    message: "Debes archivar la semana actual antes de crear turnos para una semana nueva.",
-                });
-            }
         }
+
+        // Heredar el estado published de los otros turnos de esa semana
+        const weekEnd = new Date(shiftMonday);
+        weekEnd.setDate(shiftMonday.getDate() + 7);
+        const sibling = await prisma.shift.findFirst({
+            where: { date: { gte: shiftMonday, lt: weekEnd }, published: true },
+            select: { published: true },
+        });
+        const inheritedPublished = !!sibling;
 
         const shift = await prisma.shift.create({
             data: {
@@ -73,6 +98,7 @@ router.post("/", requireAuth, requireRole("admin", "lead"), async (req, res) => 
                 type,
                 totalSlots: parseInt(totalSlots),
                 createdBy: req.user.id,
+                published: inheritedPublished,
             },
             include: { requests: true },
         });
@@ -513,7 +539,7 @@ router.post("/:id/assign", requireAuth, requireRole("admin", "lead"), async (req
         });
 
         const newOccupied = occupiedSlots + 1;
-        if (newOccupied >= shift.totalSlots) {
+        if (newOccupied >= shift.totalSlots && shift.status !== "CLOSED") {
             await prisma.shift.update({ where: { id }, data: { status: "FULL" } });
         }
 
@@ -678,6 +704,153 @@ router.post("/send-schedule", requireAuth, requireRole("admin", "lead"), async (
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al enviar el horario" });
+    }
+});
+
+// DELETE /:id/assigned/:requestId — admin elimina a un operador aprobado del turno
+router.delete("/:id/assigned/:requestId", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    const { id: shiftId, requestId } = req.params;
+    try {
+        const request = await prisma.shiftRequest.findUnique({
+            where: { id: requestId },
+            include: { shift: true },
+        });
+        if (!request || request.shiftId !== shiftId) {
+            return res.status(404).json({ message: "Solicitud no encontrada" });
+        }
+        if (request.status !== "APPROVED") {
+            return res.status(400).json({ message: "La solicitud no está aprobada" });
+        }
+
+        await prisma.shiftRequest.update({
+            where: { id: requestId },
+            data: { status: "CANCELLED", reviewedBy: req.user.id, reviewedAt: new Date() },
+        });
+
+        // Eliminar cualquier solicitud de desistimiento/traspaso pendiente asociada
+        await prisma.shiftTransfer.deleteMany({
+            where: { requestId, status: "PENDING" },
+        });
+
+        // Si el turno estaba lleno, volver a abrirlo
+        if (request.shift.status === "FULL") {
+            await prisma.shift.update({ where: { id: shiftId }, data: { status: "OPEN" } });
+        }
+
+        const io = req.app.get("io");
+        io.emit("shifts:refresh");
+        io.to("admins").emit("requests:refresh");
+        io.to("admins").emit("transfers:refresh");
+
+        res.json({ message: "Operador eliminado del turno" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al eliminar operador del turno" });
+    }
+});
+
+// DELETE /:id/manual/:assignmentId — admin elimina una asignación manual del turno
+router.delete("/:id/manual/:assignmentId", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    const { id: shiftId, assignmentId } = req.params;
+    try {
+        const assignment = await prisma.manualAssignment.findUnique({
+            where: { id: assignmentId },
+            include: { shift: true },
+        });
+        if (!assignment || assignment.shiftId !== shiftId) {
+            return res.status(404).json({ message: "Asignación no encontrada" });
+        }
+
+        // Eliminar cualquier solicitud de desistimiento/traspaso pendiente asociada
+        await prisma.shiftTransfer.deleteMany({
+            where: { assignmentId, status: "PENDING" },
+        });
+
+        await prisma.manualAssignment.delete({ where: { id: assignmentId } });
+
+        // Si el turno estaba lleno, volver a abrirlo
+        if (assignment.shift.status === "FULL") {
+            await prisma.shift.update({ where: { id: shiftId }, data: { status: "OPEN" } });
+        }
+
+        const io = req.app.get("io");
+        io.emit("shifts:refresh");
+        io.to("admins").emit("transfers:refresh");
+
+        res.json({ message: "Asignación eliminada del turno" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al eliminar la asignación" });
+    }
+});
+
+// PATCH /week/:monday/unarchive — restaurar turnos archivados de una semana
+router.patch("/week/:monday/unarchive", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    const { monday } = req.params;
+    const weekStart = new Date(monday + "T00:00:00");
+    const weekEnd = new Date(monday + "T00:00:00");
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    try {
+        // Solo permitir desarchivar si la semana aún no ha comenzado
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        if (weekStart <= today) {
+            return res.status(400).json({ message: "Solo se pueden desarchivar semanas que aún no han comenzado" });
+        }
+
+        const closedShifts = await prisma.shift.findMany({
+            where: { date: { gte: weekStart, lt: weekEnd }, status: "CLOSED" },
+            include: {
+                requests: { where: { status: "APPROVED" } },
+                manualAssignments: true,
+            },
+        });
+
+        if (closedShifts.length === 0) {
+            return res.status(400).json({ message: "No hay turnos archivados en esa semana" });
+        }
+
+        // Restaurar cada turno al estado correcto según cupos ocupados
+        await Promise.all(closedShifts.map((s) => {
+            const occupied = s.requests.length + s.manualAssignments.length;
+            const newStatus = occupied >= s.totalSlots ? "FULL" : "OPEN";
+            return prisma.shift.update({ where: { id: s.id }, data: { status: newStatus } });
+        }));
+
+        const io = req.app.get("io");
+        io.emit("shifts:refresh");
+
+        res.json({ count: closedShifts.length });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al desarchivar semana" });
+    }
+});
+
+// PATCH /week/:monday/publish — publicar o despublicar todos los turnos de una semana
+router.patch("/week/:monday/publish", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    const { monday } = req.params;
+    const { published } = req.body;
+    if (typeof published !== "boolean") {
+        return res.status(400).json({ message: "El campo 'published' debe ser true o false" });
+    }
+    try {
+        const weekStart = new Date(monday + "T00:00:00");
+        const weekEnd = new Date(monday + "T00:00:00");
+        weekEnd.setDate(weekEnd.getDate() + 7);
+
+        const { count } = await prisma.shift.updateMany({
+            where: { date: { gte: weekStart, lt: weekEnd }, status: { not: "CLOSED" } },
+            data: { published },
+        });
+
+        const io = req.app.get("io");
+        io.emit("shifts:refresh");
+
+        res.json({ count, published });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al actualizar visibilidad" });
     }
 });
 

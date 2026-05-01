@@ -115,12 +115,49 @@ export async function deleteWeek(token, monday) {
     );
 }
 
+export async function publishWeek(token, monday, published) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/week/${monday}/publish`, {
+            method: "PATCH",
+            headers: headers(token),
+            body: JSON.stringify({ published }),
+        })
+    );
+}
+
+export async function unarchiveWeek(token, monday) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/week/${monday}/unarchive`, {
+            method: "PATCH",
+            headers: headers(token),
+        })
+    );
+}
+
 export async function assignShift(token, shiftId, name, email) {
     return handle(
         await fetch(`${BASE}/api/shifts/${shiftId}/assign`, {
             method: "POST",
             headers: headers(token),
             body: JSON.stringify({ name, email }),
+        })
+    );
+}
+
+export async function removeAssignedOperator(token, shiftId, requestId) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/${shiftId}/assigned/${requestId}`, {
+            method: "DELETE",
+            headers: headers(token),
+        })
+    );
+}
+
+export async function removeManualAssignment(token, shiftId, assignmentId) {
+    return handle(
+        await fetch(`${BASE}/api/shifts/${shiftId}/manual/${assignmentId}`, {
+            method: "DELETE",
+            headers: headers(token),
         })
     );
 }

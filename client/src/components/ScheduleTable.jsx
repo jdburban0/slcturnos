@@ -42,7 +42,7 @@ function getWeekKey(isoString) {
     return monday.toISOString().slice(0, 10);
 }
 
-export default function ScheduleTable({ shifts, updatedAt, canExport, token, showAll }) {
+export default function ScheduleTable({ shifts, updatedAt, canExport, token, showAll, publishToggle }) {
     const [flash, setFlash] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [weekIndex, setWeekIndex] = useState(0);
@@ -74,11 +74,37 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
     const safeIndex = Math.min(weekIndex, total - 1);
     const [currentKey, currentShifts] = weeks[safeIndex];
 
+
     return (
         <div style={{ ...styles.wrapper, ...(flash ? styles.wrapperFlash : {}) }} className="schedule-wrapper">
             <div style={styles.liveRow}>
                 <span style={styles.liveTitle}>Schedule</span>
-                <span style={styles.liveBadge}>● LIVE</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    {publishToggle && (
+                        <div
+                            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+                            onClick={publishToggle.onToggle}
+                        >
+                            <div style={{
+                                width: "38px", height: "22px", borderRadius: "999px",
+                                background: publishToggle.isPublished ? "#16a34a" : "#94a3b8",
+                                position: "relative", transition: "background 0.2s", flexShrink: 0,
+                            }}>
+                                <div style={{
+                                    position: "absolute", top: "3px",
+                                    left: publishToggle.isPublished ? "19px" : "3px",
+                                    width: "16px", height: "16px", borderRadius: "50%",
+                                    background: "#fff", transition: "left 0.2s",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+                                }} />
+                            </div>
+                            <span style={{ fontSize: "0.8rem", fontWeight: "600", color: publishToggle.isPublished ? "#16a34a" : "#64748b", whiteSpace: "nowrap" }}>
+                                {publishToggle.isPublished ? "Visible para operadores" : "Oculto para operadores"}
+                            </span>
+                        </div>
+                    )}
+                    <span style={styles.liveBadge}>● LIVE</span>
+                </div>
             </div>
 
             {/* Navegación entre semanas */}
@@ -160,9 +186,12 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         if (!shift) return null;
         const fromRequests = (shift.requests ?? [])
             .filter((r) => r.status === "APPROVED")
-            .map((r) => r.user?.name ?? "");
-        const fromManual = (shift.manualAssignments ?? []).map((a) => a.name);
-        const approved = [...fromRequests, ...fromManual];
+            .map((r) => ({ name: r.user?.name ?? "", time: new Date(r.reviewedAt ?? r.createdAt ?? 0) }));
+        const fromManual = (shift.manualAssignments ?? [])
+            .map((a) => ({ name: a.name, time: new Date(a.createdAt ?? 0) }));
+        const approved = [...fromRequests, ...fromManual]
+            .sort((a, b) => a.time - b.time)
+            .map((x) => x.name);
         return { approved, totalSlots: shift.totalSlots, isFull: shift.status === "FULL" };
     }
 
