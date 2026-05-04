@@ -228,7 +228,7 @@ function ShiftsTable({
                                                             Asignar
                                                         </button>
                                                     )}
-                                                    {userRole === "admin" && (
+                                                    {["admin", "lead"].includes(userRole) && (
                                                         <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
                                                     )}
                                                     {onViewAssigned && approved > 0 && (
@@ -555,14 +555,15 @@ function AdminPage() {
         } catch (err) { setPwdError(err.message); }
     }
 
-    async function handleDeleteUser(id, name) {
+    async function handleDeleteUser(id, name, role = "operator") {
+        const label = role === "lead" ? "Lead" : "Operador";
         setConfirmModal({
             message: `¿Eliminar permanentemente a ${name}? Se borrarán sus solicitudes y notificaciones. Esta acción no se puede deshacer.`,
             onConfirm: async () => {
                 try {
                     await deleteUser(token, id);
                     setUsers((prev) => prev.filter((u) => u.id !== id));
-                    showToast("Operador eliminado");
+                    showToast(`${label} eliminado`);
                 } catch (err) { showToast("Error", err.message); }
             },
         });
@@ -807,6 +808,7 @@ function AdminPage() {
                         { id: "requests", label: `Solicitudes${requests.length + transfers.length > 0 ? ` (${requests.length + transfers.length})` : ""}` },
                         { id: "shifts", label: "Turnos" },
                         { id: "users", label: "Operadores" },
+                        ...(user?.role === "admin" ? [{ id: "leads", label: "Leads" }] : []),
                         ...(user?.role === "admin" ? [{ id: "settings", label: "⚙ Ajustes" }] : []),
                     ].map((tab) => (
                         <button
@@ -1037,148 +1039,6 @@ function AdminPage() {
                             allowAssignClosed={effectiveView === "current"}
                         />
 
-                    </section>
-                )}
-
-                {activeTab === "users" && (
-                    <section style={styles.section}>
-                        <h2 style={styles.sectionTitle}>Operadores del equipo</h2>
-
-                        <div style={styles.tableWrapper}>
-                            <table style={styles.table}>
-                                <thead>
-                                    <tr>
-                                        {["Nombre", "Correo", "Grupo", "Estado", "Acciones"].map((h) => (
-                                            <th key={h} style={styles.th}>{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.filter((u) => u.role === "operator").map((u) => (
-                                        <tr key={u.id} style={styles.tr}>
-                                            <td style={styles.td}>{u.name}</td>
-                                            <td style={styles.td}>{u.email}</td>
-                                            <td style={styles.td}>{u.group ?? <span style={{ color: "var(--text-muted)" }}>—</span>}</td>
-                                            <td style={styles.td}>
-                                                <span style={{
-                                                    ...styles.badge,
-                                                    ...(u.active
-                                                        ? { background: "var(--success-bg)", color: "var(--success)" }
-                                                        : { background: "var(--danger-bg)", color: "var(--danger)" }),
-                                                }}>
-                                                    {u.active ? "Activo" : "Baneado"}
-                                                </span>
-                                            </td>
-                                            <td style={styles.td}>
-                                                <div style={styles.actionBtns}>
-                                                    <button
-                                                        style={u.active ? styles.warnBtn : styles.activateBtn}
-                                                        onClick={() => handleToggleUser(u.id)}
-                                                    >
-                                                        {u.active ? "Banear" : "Desbanear"}
-                                                    </button>
-                                                    <button
-                                                        style={styles.deleteBtn}
-                                                        onClick={() => handleDeleteUser(u.id, u.name)}
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {users.filter((u) => u.role === "operator").length === 0 && (
-                                        <tr>
-                                            <td colSpan={5} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
-                                                No hay operadores registrados
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-                )}
-
-                {activeTab === "settings" && user?.role === "admin" && (
-                    <section style={styles.section}>
-                        <h2 style={styles.sectionTitle}>Ajustes del sistema</h2>
-
-                        <div style={styles.settingsBlock}>
-                            <h3 style={styles.settingsLabel}>Código de acceso — operadores</h3>
-                            <p style={styles.settingsHint}>
-                                Los operadores usan este código al registrarse. Cámbialo para revocar el acceso a nuevos registros.
-                            </p>
-                            <form style={styles.settingsForm} onSubmit={handleSaveCode}>
-                                <div style={styles.codeRow}>
-                                    <input
-                                        type={codeVisible ? "text" : "password"}
-                                        style={styles.codeInput}
-                                        value={newCode}
-                                        onChange={(e) => setNewCode(e.target.value)}
-                                        required
-                                        minLength={4}
-                                        placeholder="Nuevo código"
-                                    />
-                                    <button
-                                        type="button"
-                                        style={styles.codeToggleBtn}
-                                        onClick={() => setCodeVisible((v) => !v)}
-                                    >
-                                        {codeVisible ? "Ocultar" : "Ver"}
-                                    </button>
-                                </div>
-                                <p style={styles.codeCurrentHint}>
-                                    Código actual: <strong>{codeVisible ? registerCode : "••••••••"}</strong>
-                                </p>
-                                <button
-                                    type="submit"
-                                    style={styles.createButton}
-                                    disabled={codeLoading || newCode === registerCode || newCode.length < 4}
-                                >
-                                    {codeLoading ? "Guardando..." : "Guardar nuevo código"}
-                                </button>
-                            </form>
-                        </div>
-
-                        <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
-                            <h3 style={styles.settingsLabel}>Código de acceso — administradores</h3>
-
-                            <p style={styles.settingsHint}>
-                                Los administradores usan este código al registrarse. No es necesario seleccionar grupo con este código.
-                            </p>
-                            <form style={styles.settingsForm} onSubmit={handleSaveAdminCode}>
-                                <div style={styles.codeRow}>
-                                    <input
-                                        type={adminCodeVisible ? "text" : "password"}
-                                        style={styles.codeInput}
-                                        value={newAdminCode}
-                                        onChange={(e) => setNewAdminCode(e.target.value)}
-                                        required
-                                        minLength={4}
-                                        placeholder="Nuevo código admin"
-                                    />
-                                    <button
-                                        type="button"
-                                        style={styles.codeToggleBtn}
-                                        onClick={() => setAdminCodeVisible((v) => !v)}
-                                    >
-                                        {adminCodeVisible ? "Ocultar" : "Ver"}
-                                    </button>
-                                </div>
-                                <p style={styles.codeCurrentHint}>
-                                    Código actual: <strong>{adminCodeVisible ? adminRegisterCode : "••••••••"}</strong>
-                                </p>
-                                <button
-                                    type="submit"
-                                    style={styles.createButton}
-                                    disabled={adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4}
-                                >
-                                    {adminCodeLoading ? "Guardando..." : "Guardar nuevo código"}
-                                </button>
-                            </form>
-                        </div>
-
                         {/* Historial de turnos */}
                         {(() => {
                             const closedShifts = shifts.filter((s) => s.status === "CLOSED" && !isCurrentWeekDate(s.date));
@@ -1275,6 +1135,188 @@ function AdminPage() {
                                 </div>
                             );
                         })()}
+
+                    </section>
+                )}
+
+                {activeTab === "users" && (
+                    <section style={styles.section}>
+                        <h2 style={styles.sectionTitle}>Operadores del equipo</h2>
+
+                        <div style={styles.tableWrapper}>
+                            <table style={styles.table}>
+                                <thead>
+                                    <tr>
+                                        {["Nombre", "Correo", "Grupo", "Estado", "Acciones"].map((h) => (
+                                            <th key={h} style={styles.th}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.filter((u) => u.role === "operator").map((u) => (
+                                        <tr key={u.id} style={styles.tr}>
+                                            <td style={styles.td}>{u.name}</td>
+                                            <td style={styles.td}>{u.email}</td>
+                                            <td style={styles.td}>{u.group ?? <span style={{ color: "var(--text-muted)" }}>—</span>}</td>
+                                            <td style={styles.td}>
+                                                <span style={{
+                                                    ...styles.badge,
+                                                    ...(u.active
+                                                        ? { background: "var(--success-bg)", color: "var(--success)" }
+                                                        : { background: "var(--danger-bg)", color: "var(--danger)" }),
+                                                }}>
+                                                    {u.active ? "Activo" : "Baneado"}
+                                                </span>
+                                            </td>
+                                            <td style={styles.td}>
+                                                <div style={styles.actionBtns}>
+                                                    <button
+                                                        style={u.active ? styles.warnBtn : styles.activateBtn}
+                                                        onClick={() => handleToggleUser(u.id)}
+                                                    >
+                                                        {u.active ? "Banear" : "Desbanear"}
+                                                    </button>
+                                                    <button
+                                                        style={styles.deleteBtn}
+                                                        onClick={() => handleDeleteUser(u.id, u.name)}
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {users.filter((u) => u.role === "operator").length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
+                                                No hay operadores registrados
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                )}
+
+                {activeTab === "leads" && user?.role === "admin" && (
+                    <section style={styles.section}>
+                        <h2 style={styles.sectionTitle}>Leads del equipo</h2>
+                        <div style={styles.tableWrapper}>
+                            <table style={styles.table}>
+                                <thead>
+                                    <tr>
+                                        {["Nombre", "Correo", "Acciones"].map((h) => (
+                                            <th key={h} style={styles.th}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.filter((u) => u.role === "lead").map((u) => (
+                                        <tr key={u.id} style={styles.tr}>
+                                            <td style={styles.td}>{u.name}</td>
+                                            <td style={styles.td}>{u.email}</td>
+                                            <td style={styles.td}>
+                                                <button
+                                                    style={styles.deleteBtn}
+                                                    onClick={() => handleDeleteUser(u.id, u.name, "lead")}
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {users.filter((u) => u.role === "lead").length === 0 && (
+                                        <tr>
+                                            <td colSpan={3} style={{ ...styles.td, textAlign: "center", color: "var(--text-muted)" }}>
+                                                No hay leads registrados
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                )}
+
+                {activeTab === "settings" && user?.role === "admin" && (
+                    <section style={styles.section}>
+                        <h2 style={styles.sectionTitle}>Ajustes del sistema</h2>
+
+                        <div style={styles.settingsBlock}>
+                            <h3 style={styles.settingsLabel}>Código de acceso — operadores</h3>
+                            <p style={styles.settingsHint}>
+                                Los operadores usan este código al registrarse. Cámbialo para revocar el acceso a nuevos registros.
+                            </p>
+                            <form style={styles.settingsForm} onSubmit={handleSaveCode}>
+                                <div style={styles.codeRow}>
+                                    <input
+                                        type={codeVisible ? "text" : "password"}
+                                        style={styles.codeInput}
+                                        value={newCode}
+                                        onChange={(e) => setNewCode(e.target.value)}
+                                        required
+                                        minLength={4}
+                                        placeholder="Nuevo código"
+                                    />
+                                    <button
+                                        type="button"
+                                        style={styles.codeToggleBtn}
+                                        onClick={() => setCodeVisible((v) => !v)}
+                                    >
+                                        {codeVisible ? "Ocultar" : "Ver"}
+                                    </button>
+                                </div>
+                                <p style={styles.codeCurrentHint}>
+                                    Código actual: <strong>{codeVisible ? registerCode : "••••••••"}</strong>
+                                </p>
+                                <button
+                                    type="submit"
+                                    style={styles.createButton}
+                                    disabled={codeLoading || newCode === registerCode || newCode.length < 4}
+                                >
+                                    {codeLoading ? "Guardando..." : "Guardar nuevo código"}
+                                </button>
+                            </form>
+                        </div>
+
+                        <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
+                            <h3 style={styles.settingsLabel}>Código de acceso — administradores</h3>
+
+                            <p style={styles.settingsHint}>
+                                Los administradores usan este código al registrarse. No es necesario seleccionar grupo con este código.
+                            </p>
+                            <form style={styles.settingsForm} onSubmit={handleSaveAdminCode}>
+                                <div style={styles.codeRow}>
+                                    <input
+                                        type={adminCodeVisible ? "text" : "password"}
+                                        style={styles.codeInput}
+                                        value={newAdminCode}
+                                        onChange={(e) => setNewAdminCode(e.target.value)}
+                                        required
+                                        minLength={4}
+                                        placeholder="Nuevo código admin"
+                                    />
+                                    <button
+                                        type="button"
+                                        style={styles.codeToggleBtn}
+                                        onClick={() => setAdminCodeVisible((v) => !v)}
+                                    >
+                                        {adminCodeVisible ? "Ocultar" : "Ver"}
+                                    </button>
+                                </div>
+                                <p style={styles.codeCurrentHint}>
+                                    Código actual: <strong>{adminCodeVisible ? adminRegisterCode : "••••••••"}</strong>
+                                </p>
+                                <button
+                                    type="submit"
+                                    style={styles.createButton}
+                                    disabled={adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4}
+                                >
+                                    {adminCodeLoading ? "Guardando..." : "Guardar nuevo código"}
+                                </button>
+                            </form>
+                        </div>
 
                     </section>
                 )}

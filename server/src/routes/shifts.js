@@ -182,7 +182,7 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
 
 // DELETE shift (admin only) — cancels pending requests and notifies users
 // DELETE all CLOSED shifts for a given week (admin only)
-router.delete("/week/:monday", requireAuth, requireRole("admin"), async (req, res) => {
+router.delete("/week/:monday", requireAuth, requireRole("admin", "lead"), async (req, res) => {
     const { monday } = req.params;
     const monDate = new Date(monday + "T00:00:00");
     const sunDate = new Date(monday + "T00:00:00");
@@ -208,7 +208,7 @@ router.delete("/week/:monday", requireAuth, requireRole("admin"), async (req, re
     }
 });
 
-router.delete("/:id", requireAuth, requireRole("admin"), async (req, res) => {
+router.delete("/:id", requireAuth, requireRole("admin", "lead"), async (req, res) => {
     const { id } = req.params;
     try {
         const shift = await prisma.shift.findUnique({
