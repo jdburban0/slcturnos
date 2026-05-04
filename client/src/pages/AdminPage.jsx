@@ -1281,10 +1281,10 @@ function AdminPage() {
                         </div>
 
                         <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
-                            <h3 style={styles.settingsLabel}>Código de acceso — administradores</h3>
+                            <h3 style={styles.settingsLabel}>Código de acceso — leads</h3>
 
                             <p style={styles.settingsHint}>
-                                Los administradores usan este código al registrarse. No es necesario seleccionar grupo con este código.
+                                Los leads usan este código al registrarse. No es necesario seleccionar grupo con este código.
                             </p>
                             <form style={styles.settingsForm} onSubmit={handleSaveAdminCode}>
                                 <div style={styles.codeRow}>

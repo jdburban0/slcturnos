@@ -77,14 +77,14 @@ router.post("/register", async (req, res) => {
             prisma.setting.findUnique({ where: { key: "admin_register_code" } }),
         ]);
 
-        const isAdminCode = adminSetting && code.trim() === adminSetting.value;
+        const isLeadCode = adminSetting && code.trim() === adminSetting.value;
         const isOperatorCode = operatorSetting && code.trim() === operatorSetting.value;
 
-        if (!isAdminCode && !isOperatorCode) {
+        if (!isLeadCode && !isOperatorCode) {
             return res.status(403).json({ message: "Código de acceso incorrecto" });
         }
 
-        const role = isAdminCode ? "admin" : "operator";
+        const role = isLeadCode ? "lead" : "operator";
 
         if (role === "operator" && !group) {
             return res.status(400).json({ message: "Debes seleccionar tu grupo (E1 o E2)" });
