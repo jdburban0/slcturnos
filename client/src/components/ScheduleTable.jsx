@@ -165,24 +165,13 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         return h * 60 + m;
     }
 
-    function getTimeRanges(group) {
-        return [
-            ...new Map(
-                group.map((s) => [
-                    `${s.startTime}||${s.endTime}`,
-                    { start: s.startTime, end: s.endTime },
-                ])
-            ).values(),
-        ].sort((a, b) => parseTimeToMinutes(a.start) - parseTimeToMinutes(b.start));
+    function getShiftsByDateAndType(type, date) {
+        return shifts
+            .filter((s) => s.date.slice(0, 10) === date && s.type === type)
+            .sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
     }
 
-    function getCellData(timeStart, timeEnd, date) {
-        const shift = shifts.find(
-            (s) =>
-                s.date.slice(0, 10) === date &&
-                s.startTime === timeStart &&
-                s.endTime === timeEnd
-        );
+    function getCellDataFromShift(shift) {
         if (!shift) return null;
         const fromRequests = (shift.requests ?? [])
             .filter((r) => r.status === "APPROVED")
@@ -192,11 +181,11 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         const approved = [...fromRequests, ...fromManual]
             .sort((a, b) => a.time - b.time)
             .map((x) => x.name);
-        return { approved, totalSlots: shift.totalSlots, isFull: shift.status === "FULL" };
+        return { approved, totalSlots: shift.totalSlots, startTime: shift.startTime, endTime: shift.endTime };
     }
 
-    const dayRanges = getTimeRanges(dayShifts);
-    const nightRanges = getTimeRanges(nightShifts);
+    const maxDayRows = Math.max(0, ...dates.map((d) => getShiftsByDateAndType("DAY", d).length));
+    const maxNightRows = Math.max(0, ...dates.map((d) => getShiftsByDateAndType("NIGHT", d).length));
     const dateRange = getDateRange(shifts);
 
     function handleExportExcel() {
@@ -208,21 +197,21 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             `<th style="${thStyle}"><b>${getDayName(d)}</b><br/><span style="font-weight:normal;">${formatShortDate(d)}</span></th>`
         ).join("");
 
-        const buildRows = (ranges) => ranges.map((tr) => {
+        const buildRows = (type, rowCount) => Array.from({ length: rowCount }, (_, rowIdx) => {
             const cells = dates.map((date) => {
-                const cell = getCellData(tr.start, tr.end, date);
+                const cell = getCellDataFromShift(getShiftsByDateAndType(type, date)[rowIdx]);
                 if (!cell) return `<td style="${tdEmptyStyle}"></td>`;
                 const slotLines = Array.from({ length: cell.totalSlots }, (_, i) =>
                     cell.approved[i]
                         ? `<span style="color:#0f172a;">${cell.approved[i]}</span>`
                         : `<span style="color:#94a3b8;">${i + 1}</span>`
                 ).join("<br/>");
-                return `<td style="${tdStyle}"><b style="color:#1e3a5f;">${tr.start} – ${tr.end}</b><br/>${slotLines}</td>`;
+                return `<td style="${tdStyle}"><b style="color:#1e3a5f;">${cell.startTime} – ${cell.endTime}</b><br/>${slotLines}</td>`;
             }).join("");
             return `<tr>${cells}</tr>`;
         }).join("");
 
-        const separatorRow = dayRanges.length && nightRanges.length
+        const separatorRow = maxDayRows > 0 && maxNightRows > 0
             ? `<tr><td colspan="${dates.length}" style="background:#f1f5f9;height:8px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-top:none;border-bottom:none;"></td></tr>`
             : "";
 
@@ -239,9 +228,9 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         <tr>${headerCells}</tr>
     </thead>
     <tbody>
-        ${buildRows(dayRanges)}
+        ${buildRows("DAY", maxDayRows)}
         ${separatorRow}
-        ${buildRows(nightRanges)}
+        ${buildRows("NIGHT", maxNightRows)}
     </tbody>
 </table>
 </body></html>`;
@@ -475,17 +464,17 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* DAY rows */}
-                            {dayRanges.map((tr) => (
-                                <tr key={`day-${tr.start}`}>
+                            {/* DAY rows — one row per "slot index", not per time range */}
+                            {Array.from({ length: maxDayRows }, (_, rowIdx) => (
+                                <tr key={`day-${rowIdx}`}>
                                     {dates.map((date) => {
-                                        const cell = getCellData(tr.start, tr.end, date);
+                                        const cell = getCellDataFromShift(getShiftsByDateAndType("DAY", date)[rowIdx]);
                                         return (
                                             <td key={date} style={styles.tdCell}>
                                                 {cell ? (
                                                     <>
                                                         <div style={styles.timeInCell}>
-                                                            {tr.start} - {tr.end}
+                                                            {cell.startTime} - {cell.endTime}
                                                         </div>
                                                         {Array.from({ length: cell.totalSlots }, (_, i) =>
                                                             cell.approved[i] ? (
@@ -507,26 +496,23 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                             ))}
 
                             {/* Separator between DAY and NIGHT */}
-                            {dayRanges.length > 0 && nightRanges.length > 0 && (
+                            {maxDayRows > 0 && maxNightRows > 0 && (
                                 <tr>
-                                    <td
-                                        colSpan={dates.length}
-                                        style={styles.separator}
-                                    />
+                                    <td colSpan={dates.length} style={styles.separator} />
                                 </tr>
                             )}
 
-                            {/* NIGHT rows */}
-                            {nightRanges.map((tr) => (
-                                <tr key={`night-${tr.start}`}>
+                            {/* NIGHT rows — one row per "slot index", not per time range */}
+                            {Array.from({ length: maxNightRows }, (_, rowIdx) => (
+                                <tr key={`night-${rowIdx}`}>
                                     {dates.map((date) => {
-                                        const cell = getCellData(tr.start, tr.end, date);
+                                        const cell = getCellDataFromShift(getShiftsByDateAndType("NIGHT", date)[rowIdx]);
                                         return (
                                             <td key={date} style={styles.tdCell}>
                                                 {cell ? (
                                                     <>
                                                         <div style={styles.timeInCell}>
-                                                            {tr.start} - {tr.end}
+                                                            {cell.startTime} - {cell.endTime}
                                                         </div>
                                                         {Array.from({ length: cell.totalSlots }, (_, i) =>
                                                             cell.approved[i] ? (
