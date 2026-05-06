@@ -233,42 +233,26 @@ export async function sendPasswordResetEmail({ email, name, code }) {
 
 // ─── Admin pending-requests digest ────────────────────────────────────────────
 // Debounce: waits 3 min after last request before sending.
-// Cooldown: once sent, won't send again for 1 hour even if more requests arrive.
-const ADMIN_NOTIF_DEBOUNCE_MS  = 3 * 60 * 1000;   // 3 minutes
-const ADMIN_NOTIF_COOLDOWN_MS  = 60 * 60 * 1000;  // 1 hour
+const ADMIN_NOTIF_DEBOUNCE_MS = 3 * 60 * 1000; // 3 minutes
 
-const _adminNotif = { timer: null, count: 0, lastSent: 0, admins: [] };
+const _adminNotif = { timer: null, admins: [] };
 
 export function queueAdminPendingNotification(admins) {
     if (!process.env.RESEND_API_KEY) return;
 
-    _adminNotif.count++;
     _adminNotif.admins = admins; // keep fresh in case admin list changed
-
-    // Still within cooldown — don't schedule another send
-    if (Date.now() - _adminNotif.lastSent < ADMIN_NOTIF_COOLDOWN_MS) return;
 
     // Reset debounce timer
     if (_adminNotif.timer) clearTimeout(_adminNotif.timer);
     _adminNotif.timer = setTimeout(async () => {
         const admins = _adminNotif.admins;
-        _adminNotif.count    = 0;
-        _adminNotif.timer    = null;
-        _adminNotif.lastSent = Date.now();
+        _adminNotif.timer = null;
         await _flushAdminPendingDigest(admins);
     }, ADMIN_NOTIF_DEBOUNCE_MS);
 }
 
-// Llamar cuando el admin procesa solicitudes. Si ya no quedan pendientes,
-// se resetea el cooldown para que el próximo ciclo de solicitudes
-// pueda volver a disparar una notificación.
 export async function resetAdminNotifCooldown() {
-    const pending = await prisma.shiftRequest.count({ where: { status: "PENDING" } });
-    if (pending === 0) {
-        _adminNotif.lastSent = 0;
-        _adminNotif.count    = 0;
-        if (_adminNotif.timer) { clearTimeout(_adminNotif.timer); _adminNotif.timer = null; }
-    }
+    // Kept for compatibility — no-op now that cooldown is removed
 }
 
 function isValidEmail(email) {
