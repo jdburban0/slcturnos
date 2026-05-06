@@ -146,8 +146,12 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
         const batch = emails.slice(i, i + BATCH_SIZE);
         try {
             const result = await getResend().batch.send(batch);
-            const sent = result?.data?.length ?? batch.length;
-            console.log(`[Mailer] Horario enviado a ${sent}/${batch.length} operadores (lote ${Math.floor(i / BATCH_SIZE) + 1})`);
+            if (result.error) {
+                console.error(`[Mailer] Error en batch horario (lote ${Math.floor(i / BATCH_SIZE) + 1}):`, JSON.stringify(result.error));
+            } else {
+                const sent = result?.data?.length ?? batch.length;
+                console.log(`[Mailer] Horario enviado a ${sent}/${batch.length} operadores (lote ${Math.floor(i / BATCH_SIZE) + 1})`);
+            }
         } catch (err) {
             console.error(`[Mailer] Error en batch horario (lote ${Math.floor(i / BATCH_SIZE) + 1}):`, err.message);
         }
@@ -186,8 +190,12 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
         const batch = emails.slice(i, i + BATCH_SIZE);
         try {
             const result = await getResend().batch.send(batch);
-            const sent = result?.data?.length ?? batch.length;
-            console.log(`[Mailer] Nuevo cupo notificado a ${sent}/${batch.length} operadores`);
+            if (result.error) {
+                console.error(`[Mailer] Error en batch nuevo cupo:`, JSON.stringify(result.error));
+            } else {
+                const sent = result?.data?.length ?? batch.length;
+                console.log(`[Mailer] Nuevo cupo notificado a ${sent}/${batch.length} operadores`);
+            }
         } catch (err) {
             console.error(`[Mailer] Error en batch nuevo cupo:`, err.message);
         }
@@ -263,8 +271,20 @@ export async function resetAdminNotifCooldown() {
     }
 }
 
+function isValidEmail(email) {
+    // Filtrar emails con TLDs inventados (ej: .noreply, .disabled) que Resend rechaza
+    const parts = email.split("@");
+    if (parts.length !== 2) return false;
+    const tld = parts[1].split(".").pop();
+    const knownFakeTlds = ["noreply", "disabled", "invalid", "test", "example", "local"];
+    return !knownFakeTlds.includes(tld.toLowerCase());
+}
+
 async function _flushAdminPendingDigest(admins) {
     if (!admins.length) return;
+    const validAdmins = admins.filter((a) => isValidEmail(a.email));
+    if (!validAdmins.length) return;
+    admins = validAdmins;
 
     // Consultar el conteo real al momento de enviar — puede que todas
     // las solicitudes hayan sido canceladas durante el debounce
@@ -300,8 +320,13 @@ async function _flushAdminPendingDigest(admins) {
     }));
 
     try {
-        await getResend().batch.send(emails);
-        console.log(`[Mailer] Digest de ${count} solicitudes enviado a ${admins.length} admin(s)`);
+        const result = await getResend().batch.send(emails);
+        if (result.error) {
+            console.error("[Mailer] Error enviando digest admin:", JSON.stringify(result.error));
+        } else {
+            const sent = result?.data?.length ?? admins.length;
+            console.log(`[Mailer] Digest de ${count} solicitudes enviado a ${sent}/${admins.length} admin(s)`);
+        }
     } catch (err) {
         console.error("[Mailer] Error enviando digest admin:", err.message);
     }
