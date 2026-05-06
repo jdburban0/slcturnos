@@ -13,6 +13,10 @@ dotenv.config();
 
 const app = express();
 
+// Render (y otros PaaS) corren detrás de un proxy; esto permite que
+// express-rate-limit y req.ip usen la IP real del cliente.
+app.set("trust proxy", 1);
+
 const allowedOrigins = [
     process.env.CLIENT_URL || "http://localhost:5173",
     "http://localhost:5173",
