@@ -165,20 +165,22 @@ router.post("/forgot-password", async (req, res) => {
     try {
         const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
 
-        if (user) {
-            const code = String(Math.floor(100000 + Math.random() * 900000));
-
-            await prisma.passwordResetToken.deleteMany({ where: { email: email.toLowerCase() } });
-            await prisma.passwordResetToken.create({
-                data: {
-                    email: email.toLowerCase(),
-                    code,
-                    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-                },
-            });
-
-            await sendPasswordResetEmail({ email: email.toLowerCase(), name: user.name, code });
+        if (!user) {
+            return res.status(404).json({ message: "No existe ninguna cuenta con ese correo" });
         }
+
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+
+        await prisma.passwordResetToken.deleteMany({ where: { email: email.toLowerCase() } });
+        await prisma.passwordResetToken.create({
+            data: {
+                email: email.toLowerCase(),
+                code,
+                expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+            },
+        });
+
+        await sendPasswordResetEmail({ email: email.toLowerCase(), name: user.name, code });
 
         res.json({ message: "Si el correo existe, recibirás un código" });
     } catch (err) {
