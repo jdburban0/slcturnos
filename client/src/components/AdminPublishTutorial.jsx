@@ -46,7 +46,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                     <span style={styles.tutorialBadge}>Tutorial — Primeros pasos</span>
                     <div style={styles.stepIndicator}>
                         {[0, 1].map((i) => (
-                            <div key={i} style={{ ...styles.dot, background: i <= step ? "#3b82f6" : "#334155" }} />
+                            <div key={i} style={{ ...styles.dot, background: i <= step ? "#3b82f6" : "var(--card-border)" }} />
                         ))}
                     </div>
                 </div>
@@ -81,7 +81,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                 {/* Navegación */}
                 <div style={styles.navRow}>
                     {step > 0 && (
-                        <button style={styles.backBtn} onClick={() => setStep(0)}>
+                        <button className="tutorial-back-btn" style={styles.backBtn} onClick={() => setStep(0)}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ display: "block" }}>
                                 <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
@@ -89,6 +89,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                         </button>
                     )}
                     <button
+                        className="tutorial-btn"
                         style={{
                             ...styles.btn,
                             ...(canAdvance ? {} : styles.btnDisabled),
@@ -200,8 +201,8 @@ const styles = {
         width: "100%",
     },
     tutorialBadge: {
-        background: "#1e3a5f",
-        color: "#93c5fd",
+        background: "var(--primary-muted, #dbeafe)",
+        color: "var(--primary, #1e3a5f)",
         fontSize: "0.72rem",
         fontWeight: "700",
         padding: "4px 14px",
@@ -267,14 +268,14 @@ const styles = {
         cursor: "pointer",
     },
     btnDisabled: {
-        background: "#334155",
-        color: "#64748b",
+        background: "var(--hover-overlay, #e2e8f0)",
+        color: "var(--text-muted)",
         cursor: "not-allowed",
     },
     stepLabel: {
         margin: 0,
         fontSize: "0.74rem",
-        color: "#475569",
+        color: "var(--text-muted)",
     },
 };
 

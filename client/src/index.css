@@ -203,6 +203,45 @@ body {
   filter: brightness(0.96);
 }
 
+/* ─── Global button hover (catch-all) ────────────────── */
+button {
+  transition: opacity 0.15s ease, transform 0.15s ease, filter 0.15s ease;
+}
+button:hover:not(:disabled) {
+  filter: brightness(1.07);
+  opacity: 0.92;
+}
+button:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 1;
+}
+/* Botones que ya tienen su propio hover no se ven afectados
+   porque sus reglas tienen mayor especificidad */
+
+/* ─── Tutorial buttons ────────────────────────────────── */
+.tutorial-btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+}
+.tutorial-btn:hover:not(:disabled) {
+  filter: brightness(1.1) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35) !important;
+  opacity: 1 !important;
+}
+.tutorial-btn:active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+.tutorial-back-btn {
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+}
+.tutorial-back-btn:hover {
+  background: var(--hover-overlay) !important;
+  border-color: var(--text-muted) !important;
+  color: var(--text-main) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
 /* ─── Global Components ───────────────────────────────── */
 .glass-container {
   background: var(--card-bg);
