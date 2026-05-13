@@ -119,7 +119,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                         {!canAdvance
                             ? "Un momento..."
                             : isLast
-                                ? "Entendido, no mostrar de nuevo"
+                                ? "Entendido"
                                 : "Siguiente"}
                     </button>
                 </div>
