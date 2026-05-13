@@ -112,6 +112,7 @@ function DashboardPage() {
     const [colleagues, setColleagues] = useState([]);
     const [selectedColleague, setSelectedColleague] = useState(null);
     const [transferLoading, setTransferLoading] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
     const [dashTab, setDashTab] = useState("upcoming");
     const [requestingShiftId, setRequestingShiftId] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
@@ -384,17 +385,49 @@ function DashboardPage() {
                         <p style={styles.subtitle}>Bienvenido, {user?.name}</p>
                     </div>
                     <div className="dash-actions" style={styles.headerActions}>
-                        <button className="pwd-btn" style={styles.pwdButton} onClick={() => { setShowChangePwd(true); setPwdError(""); setPwdSuccess(""); }}>
-                            🔒<span className="btn-label-full"> Contraseña</span>
-                        </button>
-                        <button onClick={toggleTheme} className="theme-toggle" title="Alternar tema">
-                            {theme === 'dark' ? '☀️' : '🌙'}
-                        </button>
-                        <button className="logout-btn" style={styles.logoutButton} onClick={() => { setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
-                            <span className="btn-label-full">Cerrar sesión</span>
-                            <span className="btn-label-short">Cerrar sesión</span>
-                        </button>
                         <NotificationBell token={token} refreshSignal={notifSignal} />
+                        <div style={{ position: "relative" }}>
+                            <button
+                                style={styles.menuButton}
+                                onClick={() => setShowMenu((v) => !v)}
+                                title="Menú"
+                            >
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <rect y="2" width="18" height="2" rx="1" fill="currentColor"/>
+                                    <rect y="8" width="18" height="2" rx="1" fill="currentColor"/>
+                                    <rect y="14" width="18" height="2" rx="1" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            {showMenu && (
+                                <>
+                                    <div style={styles.menuBackdrop} onClick={() => setShowMenu(false)} />
+                                    <div className="dropdown-anim" style={styles.menuDropdown}>
+                                        <button style={styles.menuItem} onClick={() => { setShowMenu(false); toggleTheme(); }}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                {theme === "dark"
+                                                    ? <><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>
+                                                    : <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                                }
+                                            </svg>
+                                            {theme === "dark" ? "Modo claro" : "Modo oscuro"}
+                                        </button>
+                                        <button style={styles.menuItem} onClick={() => { setShowMenu(false); setShowChangePwd(true); setPwdError(""); setPwdSuccess(""); }}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                            </svg>
+                                            Cambiar contraseña
+                                        </button>
+                                        <div style={styles.menuDivider} />
+                                        <button style={{ ...styles.menuItem, color: "var(--danger)" }} onClick={() => { setShowMenu(false); setLeaving(true); setTimeout(() => { logout(); navigate("/login"); }, 320); }}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                                            </svg>
+                                            Cerrar sesión
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </header>
 
@@ -687,25 +720,56 @@ const styles = {
     title: { margin: 0, color: "var(--text-main)", fontSize: "1.6rem", fontWeight: "800" },
     subtitle: { margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.9rem" },
     headerActions: { display: "flex", gap: "10px", alignItems: "center" },
-    pwdButton: {
+    menuButton: {
         background: "var(--card-bg)",
         color: "var(--text-main)",
         border: "1px solid var(--border-color)",
-        padding: "9px 14px",
-        borderRadius: "9px",
+        width: "40px",
+        height: "40px",
+        borderRadius: "10px",
         cursor: "pointer",
-        fontWeight: "bold",
-        fontSize: "0.85rem",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
     },
-    logoutButton: {
-        background: "var(--danger)",
-        color: "#fff",
+    menuBackdrop: {
+        position: "fixed",
+        inset: 0,
+        zIndex: 99,
+    },
+    menuDropdown: {
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        right: 0,
+        background: "var(--card-bg)",
+        border: "1px solid var(--card-border)",
+        borderRadius: "12px",
+        boxShadow: "var(--card-shadow)",
+        padding: "6px",
+        minWidth: "200px",
+        zIndex: 100,
+        backdropFilter: "blur(16px)",
+    },
+    menuItem: {
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        width: "100%",
+        background: "none",
         border: "none",
-        padding: "9px 14px",
-        borderRadius: "9px",
+        borderRadius: "8px",
+        padding: "10px 12px",
+        color: "var(--text-main)",
+        fontSize: "0.88rem",
+        fontWeight: "600",
         cursor: "pointer",
-        fontWeight: "bold",
-        fontSize: "0.85rem",
+        textAlign: "left",
+        transition: "background 0.15s ease",
+    },
+    menuDivider: {
+        height: "1px",
+        background: "var(--border-color)",
+        margin: "4px 0",
     },
     statsRow: {
         display: "flex",
