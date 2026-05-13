@@ -77,6 +77,18 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
 
     return (
         <div style={{ ...styles.wrapper, ...(flash ? styles.wrapperFlash : {}) }} className="schedule-wrapper">
+            {publishToggle && !publishToggle.isPublished && (
+                <div style={{
+                    display: "flex", alignItems: "center", gap: "10px",
+                    background: "#fff7ed", border: "1px solid #fed7aa",
+                    borderRadius: "8px", padding: "9px 14px", marginBottom: "12px",
+                }}>
+                    <span style={{ fontSize: "1rem" }}>⚠️</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "#c2410c" }}>
+                        El horario está sin publicar. Los operadores no podrán solicitar turnos hasta que lo hagas visible.
+                    </span>
+                </div>
+            )}
             <div style={styles.liveRow}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={styles.liveTitle}>Schedule</span>
@@ -542,15 +554,16 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
 
 const styles = {
     wrapper: {
-        background: "#ffffff",
-        borderRadius: "16px",
-        padding: "20px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-        marginBottom: "28px",
+        background: "var(--card-bg)",
+        borderRadius: "14px",
+        padding: "16px 18px",
+        border: "1px solid var(--card-border)",
+        boxShadow: "var(--card-shadow)",
+        marginBottom: "20px",
         transition: "box-shadow 0.4s",
     },
     wrapperFlash: {
-        boxShadow: "0 0 0 3px #3b82f6, 0 4px 20px rgba(0,0,0,0.12)",
+        boxShadow: "0 0 0 2px #3b82f6",
     },
     liveRow: {
         display: "flex",
@@ -561,7 +574,7 @@ const styles = {
     liveTitle: {
         fontWeight: "800",
         fontSize: "1.05rem",
-        color: "#0f172a",
+        color: "var(--text-main)",
     },
     liveBadge: {
         fontSize: "0.75rem",
