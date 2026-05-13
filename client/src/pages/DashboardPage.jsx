@@ -7,6 +7,7 @@ import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
+import OperatorTutorial, { useOperatorTutorial } from "../components/OperatorTutorial.jsx";
 
 const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -112,6 +113,7 @@ function DashboardPage() {
     const [colleagues, setColleagues] = useState([]);
     const [selectedColleague, setSelectedColleague] = useState(null);
     const [transferLoading, setTransferLoading] = useState(false);
+    const { show: showTutorial, complete: completeTutorial } = useOperatorTutorial();
     const [showMenu, setShowMenu] = useState(false);
     const [dashTab, setDashTab] = useState("upcoming");
     const [requestingShiftId, setRequestingShiftId] = useState(null);
@@ -279,6 +281,7 @@ function DashboardPage() {
 
     return (
         <div className={`${leaving ? "anim-fade-out" : "anim-fade-in"} dash-page`} style={styles.page}>
+            {showTutorial && <OperatorTutorial onComplete={completeTutorial} />}
             {toast && (
                 <div className="anim-slide-right dash-toast" style={styles.toast}>
                     <strong>{toast.title}</strong>

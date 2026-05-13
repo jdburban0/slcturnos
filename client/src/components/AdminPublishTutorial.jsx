@@ -8,7 +8,7 @@ export function useAdminTutorial() {
 
     useEffect(() => {
         if (!user) return;
-        if (!user.tutorialDone) setShow(true);
+        if ((user.role === "admin" || user.role === "lead") && !user.tutorialDone) setShow(true);
     }, [user?.id]);
 
     async function complete() {
@@ -35,7 +35,8 @@ export default function AdminPublishTutorial({ onComplete }) {
         return () => clearTimeout(t);
     }, [step]);
 
-    const isLast = step === 1;
+    const STEPS = 2;
+    const isLast = step === STEPS;
 
     return (
         <div style={styles.overlay}>
@@ -45,14 +46,14 @@ export default function AdminPublishTutorial({ onComplete }) {
                 <div style={styles.header}>
                     <span style={styles.tutorialBadge}>Tutorial — Primeros pasos</span>
                     <div style={styles.stepIndicator}>
-                        {[0, 1].map((i) => (
+                        {Array.from({ length: STEPS + 1 }).map((_, i) => (
                             <div key={i} style={{ ...styles.dot, background: i <= step ? "#3b82f6" : "var(--card-border)" }} />
                         ))}
                     </div>
                 </div>
 
-                {/* Contenido del paso */}
-                {step === 0 ? (
+                {/* Paso 0 */}
+                {step === 0 && (
                     <>
                         <h2 style={styles.title}>El horario empieza oculto</h2>
                         <p style={styles.desc}>
@@ -64,7 +65,10 @@ export default function AdminPublishTutorial({ onComplete }) {
                             <StepOneVisual />
                         </div>
                     </>
-                ) : (
+                )}
+
+                {/* Paso 1 */}
+                {step === 1 && (
                     <>
                         <h2 style={styles.title}>Activa el toggle para publicarlo</h2>
                         <p style={styles.desc}>
@@ -78,10 +82,24 @@ export default function AdminPublishTutorial({ onComplete }) {
                     </>
                 )}
 
+                {/* Paso 2 */}
+                {step === 2 && (
+                    <>
+                        <h2 style={styles.title}>Nuevo menú de navegación</h2>
+                        <p style={styles.desc}>
+                            Las opciones de <strong>modo oscuro</strong>, <strong>cambiar contraseña</strong> y{" "}
+                            <strong>cerrar sesión</strong> ahora están en el menú de las tres rayas, en la esquina superior derecha.
+                        </p>
+                        <div style={styles.visualBox}>
+                            <StepMenuVisual />
+                        </div>
+                    </>
+                )}
+
                 {/* Navegación */}
                 <div style={styles.navRow}>
                     {step > 0 && (
-                        <button className="tutorial-back-btn" style={styles.backBtn} onClick={() => setStep(0)}>
+                        <button className="tutorial-back-btn" style={styles.backBtn} onClick={() => setStep((s) => s - 1)}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ display: "block" }}>
                                 <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
@@ -95,7 +113,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                             ...(canAdvance ? {} : styles.btnDisabled),
                             ...(step === 0 ? { marginLeft: "auto" } : {}),
                         }}
-                        onClick={canAdvance ? (isLast ? onComplete : () => setStep(1)) : undefined}
+                        onClick={canAdvance ? (isLast ? onComplete : () => setStep((s) => s + 1)) : undefined}
                         disabled={!canAdvance}
                     >
                         {!canAdvance
@@ -106,7 +124,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                     </button>
                 </div>
 
-                <p style={styles.stepLabel}>Paso {step + 1} de 2</p>
+                <p style={styles.stepLabel}>Paso {step + 1} de {STEPS + 1}</p>
             </div>
         </div>
     );
@@ -161,6 +179,48 @@ function StepTwoVisual() {
                         <div style={viz.miniCell}>7:30am</div>
                     </div>
                 ))}
+            </div>
+        </div>
+    );
+}
+
+function StepMenuVisual() {
+    return (
+        <div style={viz.card}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                    <div style={{ fontWeight: "800", fontSize: "0.95rem", color: "#f1f5f9" }}>Panel Admin</div>
+                    <div style={{ fontSize: "0.65rem", color: "#94a3b8", marginTop: "2px" }}>Admin · SLC Turnos</div>
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={viz.iconBtn}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                    </div>
+                    <div style={{ ...viz.iconBtn, background: "#3b82f6", border: "1px solid #3b82f6" }}>
+                        <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+                            <rect y="2" width="18" height="2" rx="1" fill="#fff"/>
+                            <rect y="8" width="18" height="2" rx="1" fill="#fff"/>
+                            <rect y="14" width="18" height="2" rx="1" fill="#fff"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div style={viz.dropdown}>
+                <div style={viz.dropItem}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <span>Modo oscuro</span>
+                </div>
+                <div style={viz.dropItem}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>Cambiar contraseña</span>
+                </div>
+                <div style={{ height: "1px", background: "#334155", margin: "2px 0" }} />
+                <div style={{ ...viz.dropItem, color: "#f87171" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Cerrar sesión</span>
+                </div>
             </div>
         </div>
     );
@@ -380,5 +440,18 @@ const viz = {
         textAlign: "center",
         padding: "4px 2px",
         borderRadius: "4px",
+    },
+    iconBtn: {
+        width: "30px", height: "30px", borderRadius: "8px",
+        background: "#1e293b", border: "1px solid #334155",
+        display: "flex", alignItems: "center", justifyContent: "center",
+    },
+    dropdown: {
+        background: "#1e293b", borderRadius: "8px", padding: "4px",
+        border: "1px solid #334155", display: "flex", flexDirection: "column", gap: "2px",
+    },
+    dropItem: {
+        display: "flex", alignItems: "center", gap: "8px", padding: "7px 10px",
+        borderRadius: "6px", fontSize: "0.75rem", color: "#e2e8f0", fontWeight: "600",
     },
 };
