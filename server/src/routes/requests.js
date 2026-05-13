@@ -5,6 +5,32 @@ import { queueShiftResultEmail, sendAdminTransferAlertEmail, resetAdminNotifCool
 
 const router = Router();
 
+// GET historial de turnos del operador autenticado (aprobados + asignaciones manuales)
+router.get("/my-history", requireAuth, async (req, res) => {
+    try {
+        const [requests, manuals] = await Promise.all([
+            prisma.shiftRequest.findMany({
+                where: { userId: req.user.id, status: "APPROVED" },
+                include: { shift: { select: { id: true, title: true, date: true, startTime: true, endTime: true, type: true } } },
+            }),
+            prisma.manualAssignment.findMany({
+                where: { email: { equals: req.user.email, mode: "insensitive" } },
+                include: { shift: { select: { id: true, title: true, date: true, startTime: true, endTime: true, type: true } } },
+            }),
+        ]);
+
+        const normalized = [
+            ...requests.map((r) => ({ id: r.id, source: "request", shift: r.shift, createdAt: r.createdAt })),
+            ...manuals.map((m) => ({ id: m.id, source: "manual", shift: m.shift, createdAt: m.createdAt })),
+        ].sort((a, b) => new Date(b.shift.date) - new Date(a.shift.date));
+
+        res.json(normalized);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al obtener historial" });
+    }
+});
+
 // GET pending requests (admin/lead) or own requests (operator)
 router.get("/", requireAuth, async (req, res) => {
     try {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
-import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues, desistManualAssignment, transferManualAssignment } from "../api/index.js";
+import { getShifts, requestShift, cancelRequest, changePassword, requestTransfer, requestWithdrawal, getColleagues, desistManualAssignment, transferManualAssignment, getMyHistory } from "../api/index.js";
 import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
@@ -114,6 +114,12 @@ function DashboardPage() {
     const [transferLoading, setTransferLoading] = useState(false);
     const [dashTab, setDashTab] = useState("upcoming");
     const [requestingShiftId, setRequestingShiftId] = useState(null);
+    const [showHistory, setShowHistory] = useState(false);
+    const [history, setHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState({ DAY: true, NIGHT: true });
+    const [historyExpanded, setHistoryExpanded] = useState({ DAY: false, NIGHT: false });
+    const HISTORY_PAGE = 5;
 
     const loadShifts = useCallback(async () => {
         try {
@@ -205,6 +211,19 @@ function DashboardPage() {
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
         finally { setTransferLoading(false); }
+    }
+
+    async function openHistory() {
+        setShowHistory(true);
+        setHistoryLoading(true);
+        try {
+            const data = await getMyHistory(token);
+            setHistory(data);
+        } catch (err) {
+            showToast("Error", err.message);
+        } finally {
+            setHistoryLoading(false);
+        }
     }
 
     async function handleChangePwd(e) {
@@ -405,7 +424,7 @@ function DashboardPage() {
                     >
                         Próxima semana
                     </button>
-                    {currentWeekShifts.length > 0 && (
+                        {currentWeekShifts.length > 0 && (
                         <button
                             style={{ ...styles.dashTabBtn, ...(dashTab === "current" ? styles.dashTabBtnActive : {}) }}
                             onClick={() => { setDashTab("current"); setSelectedDay(null); }}
@@ -413,14 +432,22 @@ function DashboardPage() {
                             Semana actual
                         </button>
                     )}
+                    <button
+                        style={{ ...styles.dashTabBtn, ...(dashTab === "history" ? styles.dashTabBtnActive : {}) }}
+                        onClick={() => { setDashTab("history"); setSelectedDay(null); openHistory(); }}
+                    >
+                        Mi historial
+                    </button>
                 </div>
 
                 {/* Horario — sincronizado con el tab activo */}
-                <ScheduleTable
-                    shifts={dashTab === "current" ? currentWeekShifts : upcomingShifts}
-                    updatedAt={shiftsUpdatedAt}
-                    showAll={dashTab === "current"}
-                />
+                {dashTab !== "history" && (
+                    <ScheduleTable
+                        shifts={dashTab === "current" ? currentWeekShifts : upcomingShifts}
+                        updatedAt={shiftsUpdatedAt}
+                        showAll={dashTab === "current"}
+                    />
+                )}
 
                 {/* Filtro por día */}
                 {dashTab === "upcoming" && (
@@ -501,6 +528,84 @@ function DashboardPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {dashTab === "history" && (
+                    <div className="anim-fade-in">
+                        {historyLoading && (
+                            <p style={styles.info}>Cargando historial...</p>
+                        )}
+                        {!historyLoading && history.length === 0 && (
+                            <div style={styles.emptyState}>
+                                <p style={styles.emptyText}>No tienes turnos aprobados aún.</p>
+                                <p style={styles.emptySubtext}>Aquí aparecerán los turnos que hayas tomado.</p>
+                            </div>
+                        )}
+                        {!historyLoading && history.length > 0 && (
+                            <>
+                                <p style={{ margin: "0 0 16px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                                    {history.length} turno{history.length !== 1 ? "s" : ""} aprobado{history.length !== 1 ? "s" : ""}
+                                </p>
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))", gap: "16px", alignItems: "start" }}>
+                                    {[{ type: "DAY", label: "Diurnos" }, { type: "NIGHT", label: "Nocturnos" }].map(({ type, label }) => {
+                                        const group = history.filter((r) => r.shift.type === type);
+                                        if (group.length === 0) return null;
+                                        const isOpen = historyOpen[type];
+                                        return (
+                                            <div key={type} style={styles.historyGroup}>
+                                                <button
+                                                    style={styles.historyGroupHeader}
+                                                    onClick={() => setHistoryOpen((prev) => ({ ...prev, [type]: !prev[type] }))}
+                                                >
+                                                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                        <span style={{ ...styles.historyTypeBadge, background: type === "DAY" ? "var(--warning-bg)" : "var(--primary-light)", color: type === "DAY" ? "var(--warning)" : "var(--primary)" }}>
+                                                            {label}
+                                                        </span>
+                                                        <span style={{ fontSize: "0.88rem", color: "var(--text-muted)", fontWeight: "600" }}>{group.length} turno{group.length !== 1 ? "s" : ""}</span>
+                                                    </span>
+                                                    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, transition: "transform 0.2s ease", transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)", color: "var(--text-muted)" }}>
+                                                        <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                                    </svg>
+                                                </button>
+                                                {isOpen && (
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+                                                        {(historyExpanded[type] ? group : group.slice(0, HISTORY_PAGE)).map((req) => {
+                                                            const [y, m, d] = req.shift.date.slice(0, 10).split("-").map(Number);
+                                                            const dateStr = new Date(y, m - 1, d).toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+                                                            return (
+                                                                <div key={req.id} style={styles.historyItem}>
+                                                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                                                                        <span style={{ fontWeight: "700", fontSize: "0.92rem", color: "var(--text-main)" }}>{req.shift.title}</span>
+                                                                        <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "600", flexShrink: 0 }}>
+                                                                            {req.source === "manual" ? "Asignado" : "Solicitado"}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "4px" }}>
+                                                                        <span style={styles.historyMeta}>{dateStr}</span>
+                                                                        <span style={styles.historyMeta}>{req.shift.startTime} – {req.shift.endTime}</span>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        {group.length > HISTORY_PAGE && (
+                                                            <button
+                                                                style={styles.historyShowMore}
+                                                                onClick={() => setHistoryExpanded((prev) => ({ ...prev, [type]: !prev[type] }))}
+                                                            >
+                                                                {historyExpanded[type]
+                                                                    ? "Ver menos"
+                                                                    : `Ver ${group.length - HISTORY_PAGE} turno${group.length - HISTORY_PAGE !== 1 ? "s" : ""} más`}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -725,6 +830,52 @@ const styles = {
     },
     colleagueName: { color: "var(--text-main)", fontWeight: "700", fontSize: "0.88rem" },
     colleagueEmail: { color: "var(--text-muted)", fontSize: "0.78rem" },
+    historyGroup: {
+        background: "var(--card-bg)",
+        border: "1px solid var(--card-border)",
+        borderRadius: "14px",
+        padding: "20px 22px",
+        boxShadow: "var(--card-shadow)",
+    },
+    historyGroupHeader: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: 0,
+        color: "var(--text-main)",
+    },
+    historyItem: {
+        background: "var(--hover-overlay)",
+        border: "1px solid var(--card-border)",
+        borderRadius: "8px",
+        padding: "10px 12px",
+    },
+    historyTypeBadge: {
+        fontSize: "0.82rem",
+        fontWeight: "700",
+        padding: "5px 14px",
+        borderRadius: "999px",
+        flexShrink: 0,
+    },
+    historyMeta: {
+        fontSize: "0.78rem",
+        color: "var(--text-muted)",
+        textTransform: "capitalize",
+    },
+    historyShowMore: {
+        background: "none",
+        border: "none",
+        color: "var(--primary)",
+        fontSize: "0.82rem",
+        fontWeight: "600",
+        cursor: "pointer",
+        padding: "6px 0 2px",
+        textAlign: "left",
+    },
     modalCancel: {
         background: "var(--card-bg)", color: "var(--text-muted)", border: "1px solid var(--border-color)",
         padding: "9px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: "700",

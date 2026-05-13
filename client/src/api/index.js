@@ -300,6 +300,10 @@ export async function completeTutorial(token) {
     }));
 }
 
+export async function getMyHistory(token) {
+    return handle(await fetch(`${BASE}/api/requests/my-history`, { headers: headers(token) }));
+}
+
 export async function requestWithdrawal(token, requestId) {
     return handle(
         await fetch(`${BASE}/api/requests/${requestId}/withdraw`, {
