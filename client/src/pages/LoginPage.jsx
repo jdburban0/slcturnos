@@ -115,7 +115,11 @@ function LoginPage() {
                 setTimeout(() => switchMode("login"), 2000);
             }
         } catch (err) {
-            setError(err.message);
+            if (mode === "login") {
+                setError("Correo o contraseña incorrectos. Verifica tus datos e intenta de nuevo.");
+            } else {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -188,6 +192,10 @@ function LoginPage() {
                         {/* ── reset mode ── */}
                         {isReset && !resetSuccess && (
                             <>
+                                <div className="anim-field" style={styles.codeNotice}>
+                                    <span style={styles.codeNoticeIcon}>✉</span>
+                                    <span>Enviamos un código a <strong>{resetEmail}</strong>. Revisa tu bandeja de entrada.</span>
+                                </div>
                                 <div key={`reset-code-${fieldKey}`} className="anim-field" style={styles.field}>
                                     <label style={styles.label}>Código</label>
                                     <input
@@ -494,13 +502,14 @@ const styles = {
         fontSize: "0.9rem",
     },
     error: {
-        background: "var(--danger-bg)",
-        color: "var(--danger)",
-        padding: "12px 14px",
-        borderRadius: "10px",
+        color: "var(--text-muted)",
         margin: 0,
-        fontSize: "0.9rem",
-        border: "1px solid rgba(220, 38, 38, 0.2)"
+        fontSize: "0.83rem",
+        textAlign: "center",
+        padding: "4px 0",
+        borderLeft: "3px solid var(--danger)",
+        paddingLeft: "10px",
+        textAlign: "left",
     },
     serverWaiting: {
         display: "flex",
@@ -566,6 +575,24 @@ const styles = {
         background: "rgba(22,163,74,0.1)",
         borderRadius: "10px",
         border: "1px solid rgba(22,163,74,0.2)",
+    },
+    codeNotice: {
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "10px",
+        background: "var(--hover-overlay)",
+        border: "1px solid var(--card-border)",
+        borderRadius: "10px",
+        padding: "10px 14px",
+        fontSize: "0.84rem",
+        color: "var(--text-muted)",
+        lineHeight: 1.5,
+    },
+    codeNoticeIcon: {
+        fontSize: "1rem",
+        flexShrink: 0,
+        marginTop: "1px",
+        color: "var(--text-muted)",
     },
 };
 
