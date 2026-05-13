@@ -38,6 +38,7 @@ import PendingRequestCard from "../components/PendingRequestCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
 import ShiftCreatorModal from "../components/ShiftCreatorModal.jsx";
+import AdminPublishTutorial, { useAdminTutorial } from "../components/AdminPublishTutorial.jsx";
 
 const STATUS_LABEL = { OPEN: "Abierto", FULL: "Lleno", CLOSED: "Cerrado" };
 const STATUS_STYLE = {
@@ -117,7 +118,10 @@ function ShiftsTable({
         <div style={styles.tableWrapper}>
             <table style={{ ...styles.table, opacity: muted ? 0.65 : 1 }}>
                 <thead>
-                    <tr>{cols.map((h) => <th key={h} style={styles.th}>{h}</th>)}</tr>
+                    <tr>{cols.map((h) => {
+                        const centered = ["Cupos", "Aprobados", "Pendientes", "Estado", "Acciones"].includes(h);
+                        return <th key={h} style={{ ...styles.th, ...(centered ? styles.thCenter : {}) }}>{h}</th>;
+                    })}</tr>
                 </thead>
                 <tbody>
                     {grouped.length === 0 && (
@@ -196,18 +200,18 @@ function ShiftsTable({
                                         </td>
                                     )}
                                     <td style={styles.td}>{shift.startTime} – {shift.endTime}</td>
-                                    <td style={styles.td}>{shift.totalSlots}</td>
-                                    <td style={{ ...styles.td, color: approved > 0 ? "var(--success)" : "var(--text-muted)", fontWeight: "bold" }}>{approved}</td>
-                                    {!hidePending && <td style={{ ...styles.td, color: pending > 0 ? "var(--warning)" : "var(--text-muted)" }}>{pending}</td>}
+                                    <td style={{ ...styles.td, ...styles.tdCenter }}>{shift.totalSlots}</td>
+                                    <td style={{ ...styles.td, ...styles.tdCenter, color: approved > 0 ? "var(--success)" : "var(--text-muted)", fontWeight: "bold" }}>{approved}</td>
+                                    {!hidePending && <td style={{ ...styles.td, ...styles.tdCenter, color: pending > 0 ? "var(--warning)" : "var(--text-muted)" }}>{pending}</td>}
                                     {!hideStatus && (
-                                        <td style={styles.td}>
+                                        <td style={{ ...styles.td, ...styles.tdCenter }}>
                                             <span style={{ ...styles.badge, ...STATUS_STYLE[shift.status] }}>
                                                 {STATUS_LABEL[shift.status]}
                                             </span>
                                         </td>
                                     )}
                                     {!readOnly && (
-                                        <td style={styles.td}>
+                                        <td style={{ ...styles.td, ...styles.tdCenter }}>
                                             {editingShiftId === shift.id ? (
                                                 <div style={styles.slotsEditor}>
                                                     <button style={styles.slotBtn} onClick={() => setEditSlots((v) => Math.max(1, v - 1))}>−</button>
@@ -218,24 +222,30 @@ function ShiftsTable({
                                                 </div>
                                             ) : (
                                                 <div style={styles.actionBtns}>
-                                                    <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
-                                                    {canAssign && (
-                                                        <button
-                                                            style={{ ...styles.assignBtn, ...(approved >= shift.totalSlots ? styles.assignBtnDisabled : {}) }}
-                                                            onClick={() => onAssign(shift.id, shift.title)}
-                                                            disabled={approved >= shift.totalSlots}
-                                                        >
-                                                            Asignar
-                                                        </button>
-                                                    )}
-                                                    {["admin", "lead"].includes(userRole) && (
-                                                        <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
-                                                    )}
-                                                    {onViewAssigned && approved > 0 && (
-                                                        <button style={styles.viewAssignedBtn} onClick={() => onViewAssigned(shift)}>
-                                                            Ver ({approved})
-                                                        </button>
-                                                    )}
+                                                    {/* Spacer izquierdo — mismo ancho que Ver para mantener centrado */}
+                                                    <div style={{ width: "66px", flexShrink: 0 }} />
+                                                    <div style={styles.actionBtnsMain}>
+                                                        <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
+                                                        {canAssign && (
+                                                            <button
+                                                                style={{ ...styles.assignBtn, ...(approved >= shift.totalSlots ? styles.assignBtnDisabled : {}) }}
+                                                                onClick={() => onAssign(shift.id, shift.title)}
+                                                                disabled={approved >= shift.totalSlots}
+                                                            >
+                                                                Asignar
+                                                            </button>
+                                                        )}
+                                                        {["admin", "lead"].includes(userRole) && (
+                                                            <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ width: "66px", flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
+                                                        {onViewAssigned && approved > 0 && (
+                                                            <button style={styles.viewAssignedBtn} onClick={() => onViewAssigned(shift)}>
+                                                                Ver ({approved})
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
                                         </td>
@@ -254,6 +264,7 @@ function AdminPage() {
     const navigate = useNavigate();
     const { user, token, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { show: showTutorial, complete: completeTutorial } = useAdminTutorial();
     const [shifts, setShifts] = useState([]);
     const [shiftsUpdatedAt, setShiftsUpdatedAt] = useState(0);
     const [requests, setRequests] = useState([]);
@@ -607,6 +618,8 @@ function AdminPage() {
 
     return (
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
+            {showTutorial && <AdminPublishTutorial onComplete={completeTutorial} />}
+
             {toast && (
                 <div className="anim-slide-right" style={styles.toast}>
                     <strong>{toast.title}</strong>
@@ -1420,16 +1433,21 @@ const styles = {
     tableWrapper: { overflowX: "auto", marginTop: "4px" },
     table: { width: "100%", borderCollapse: "collapse" },
     th: {
-        textAlign: "left", padding: "10px 12px", borderBottom: "1px solid var(--border-color)",
-        color: "var(--text-muted)", background: "transparent", fontSize: "0.85rem", fontWeight: "700",
+        textAlign: "left", padding: "8px 12px", borderBottom: "1px solid var(--border-color)",
+        color: "var(--text-muted)", background: "var(--hover-overlay)", fontSize: "0.78rem",
+        fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em",
+    },
+    thCenter: {
+        textAlign: "center",
     },
     tr: { borderBottom: "1px solid var(--card-border)" },
-    td: { padding: "12px", color: "var(--text-main)", fontSize: "0.9rem" },
+    td: { padding: "10px 12px", color: "var(--text-main)", fontSize: "0.88rem" },
+    tdCenter: { textAlign: "center" },
     badge: {
         padding: "4px 10px", borderRadius: "999px", fontSize: "0.8rem", fontWeight: "bold", whiteSpace: "nowrap",
     },
     weekActions: {
-        background: "var(--warning-bg)", border: "1px solid var(--warning)", borderRadius: "12px",
+        background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "12px",
         padding: "12px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap",
     },
     weekActionsLabel: {
@@ -1437,8 +1455,8 @@ const styles = {
     },
     weekBtns: { display: "flex", gap: "8px", flexWrap: "wrap", },
     closeWeekBtn: {
-        background: "var(--card-bg)", color: "var(--text-main)", border: "1px solid var(--border-color)",
-        padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem",
+        background: "var(--primary)", color: "#fff", border: "none",
+        padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem",
     },
     exportBtnDisabled: { background: "var(--border-color)", cursor: "not-allowed", },
     historyToggleRow: { display: "flex", justifyContent: "flex-end", marginBottom: "12px", },
@@ -1449,7 +1467,8 @@ const styles = {
     historyToggleActive: {
         background: "var(--primary-light)", border: "1.5px solid var(--primary)", color: "var(--primary)",
     },
-    actionBtns: { display: "flex", gap: "6px", flexWrap: "wrap", },
+    actionBtns: { display: "flex", alignItems: "center", justifyContent: "center", gap: "12px" },
+    actionBtnsMain: { display: "flex", gap: "5px", alignItems: "center" },
     transferCard: {
         background: "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: "12px",
         padding: "14px 16px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap",
@@ -1466,12 +1485,12 @@ const styles = {
     },
     assignBtn: {
         background: "var(--primary)", color: "#fff", border: "none",
-        padding: "5px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: "600",
+        padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
     },
     assignBtnDisabled: { background: "var(--border-color)", cursor: "not-allowed", },
     viewAssignedBtn: {
         background: "var(--primary-light)", color: "var(--primary)", border: "none",
-        padding: "5px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: "600",
+        padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
     },
     assignedRow: {
         display: "flex", alignItems: "center", gap: "12px",
@@ -1490,17 +1509,17 @@ const styles = {
     },
     editBtn: {
         background: "var(--primary-light)", color: "var(--primary)", border: "none",
-        padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600",
+        padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
     },
     deleteBtn: {
         background: "var(--danger-bg)", color: "var(--danger)", border: "none",
-        padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600",
+        padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
     },
     warnBtn: {
         background: "var(--warning-bg)", color: "var(--warning)", border: "none",
         padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600",
     },
-    slotsEditor: { display: "flex", alignItems: "center", gap: "4px", },
+    slotsEditor: { display: "flex", alignItems: "center", gap: "4px", justifyContent: "center" },
     slotBtn: {
         background: "var(--card-bg)", color: "var(--text-main)", border: "1px solid var(--border-color)",
         width: "26px", height: "26px", borderRadius: "6px", cursor: "pointer", fontWeight: "700", fontSize: "1rem", lineHeight: 1,

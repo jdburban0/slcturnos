@@ -293,6 +293,13 @@ export async function getColleagues(token) {
     return handle(await fetch(`${BASE}/api/users/colleagues`, { headers: headers(token) }));
 }
 
+export async function completeTutorial(token) {
+    return handle(await fetch(`${BASE}/api/users/me/tutorial`, {
+        method: "PATCH",
+        headers: headers(token),
+    }));
+}
+
 export async function requestWithdrawal(token, requestId) {
     return handle(
         await fetch(`${BASE}/api/requests/${requestId}/withdraw`, {

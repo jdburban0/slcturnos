@@ -31,8 +31,16 @@ export function AuthProvider({ children }) {
         setUser(null);
     };
 
+    const updateUser = (fields) => {
+        setUser((prev) => {
+            const updated = { ...prev, ...fields };
+            sessionStorage.setItem("slc_user", JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, loading, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -44,7 +44,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
         res.json({
             token: signToken(user),
-            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+            user: { id: user.id, name: user.name, email: user.email, role: user.role, tutorialDone: user.tutorialDone },
         });
     } catch (err) {
         console.error(err);
@@ -111,7 +111,7 @@ router.post("/register", async (req, res) => {
 
         res.status(201).json({
             token: signToken(user),
-            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+            user: { id: user.id, name: user.name, email: user.email, role: user.role, tutorialDone: user.tutorialDone },
         });
     } catch (err) {
         console.error(err);

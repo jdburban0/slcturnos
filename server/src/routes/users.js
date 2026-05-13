@@ -20,6 +20,20 @@ router.get("/colleagues", requireAuth, async (req, res) => {
     }
 });
 
+// PATCH /me/tutorial — marcar tutorial como completado
+router.patch("/me/tutorial", requireAuth, async (req, res) => {
+    try {
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { tutorialDone: true },
+        });
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al guardar estado del tutorial" });
+    }
+});
+
 // GET all users (admin/lead)
 router.get("/", requireAuth, requireRole("admin", "lead"), async (req, res) => {
     try {
