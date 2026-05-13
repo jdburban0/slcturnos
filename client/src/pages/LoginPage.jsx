@@ -569,12 +569,10 @@ const styles = {
     },
     successMsg: {
         textAlign: "center",
-        color: "var(--success, #16a34a)",
-        fontSize: "0.9rem",
-        padding: "12px",
-        background: "rgba(22,163,74,0.1)",
-        borderRadius: "10px",
-        border: "1px solid rgba(22,163,74,0.2)",
+        color: "var(--text-muted)",
+        fontSize: "0.88rem",
+        padding: "0",
+        margin: "4px 0",
     },
     codeNotice: {
         display: "flex",
