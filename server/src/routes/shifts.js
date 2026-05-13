@@ -89,24 +89,69 @@ router.post("/", requireAuth, requireRole("admin", "lead"), async (req, res) => 
         });
         const inheritedPublished = !!sibling;
 
-        const shift = await prisma.shift.create({
-            data: {
-                title,
-                date: new Date(date + "T12:00:00"),
+        // Verificar si ya existe un turno con el mismo horario y tipo
+        const existingShift = await prisma.shift.findFirst({
+            where: {
+                date: shiftDate,
                 startTime,
                 endTime,
                 type,
-                totalSlots: parseInt(totalSlots),
-                createdBy: req.user.id,
-                published: inheritedPublished,
-            },
-            include: { requests: true },
+            }
         });
+
+        let shift;
+
+        if (existingShift) {
+            // Ya existe: sumar los cupos nuevos al total actual
+            const newTotalSlots = existingShift.totalSlots + parseInt(totalSlots);
+            const added = parseInt(totalSlots);
+
+            shift = await prisma.shift.update({
+                where: { id: existingShift.id },
+                data: {
+                    totalSlots: newTotalSlots,
+                    ...(existingShift.status === "FULL" ? { status: "OPEN" } : {}),
+                },
+                include: { requests: true },
+            });
+
+            // Notificar a operadores que hay cupos nuevos (igual que en el PATCH)
+            prisma.user.findMany({
+                where: { role: "operator", active: true },
+                select: { id: true, name: true, email: true },
+            }).then((operators) => {
+                sendNewShiftEmail({
+                    operators,
+                    shiftTitle: shift.title,
+                    shiftDate: new Date(shift.date).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+                    startTime: shift.startTime,
+                    endTime: shift.endTime,
+                    totalSlots: added,
+                    extraMsg: `Se ${added === 1 ? "abrió 1 cupo nuevo" : `abrieron ${added} cupos nuevos`} en este turno.`,
+                });
+            }).catch((err) => console.error("[Mailer] Error notificando cupos nuevos:", err.message));
+        } else {
+            // No existe: crear el turno normalmente
+            shift = await prisma.shift.create({
+                data: {
+                    title,
+                    date: shiftDate,
+                    startTime,
+                    endTime,
+                    type,
+                    totalSlots: parseInt(totalSlots),
+                    createdBy: req.user.id,
+                    published: inheritedPublished,
+                },
+                include: { requests: true },
+            });
+        }
 
         const io = req.app.get("io");
         io.emit("shifts:refresh");
 
-        res.status(201).json(shift);
+        // 200 si se actualizó un turno existente, 201 si se creó uno nuevo
+        res.status(existingShift ? 200 : 201).json(shift);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al crear turno" });
@@ -453,7 +498,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
             prisma.user.findMany({
                 where: { role: { in: ["admin", "lead"] }, active: true },
                 select: { name: true, email: true },
-            }).then((admins) => queueAdminPendingNotification(admins)).catch(() => {});
+            }).then((admins) => queueAdminPendingNotification(admins)).catch(() => { });
         }
 
         res.status(201).json(request);
