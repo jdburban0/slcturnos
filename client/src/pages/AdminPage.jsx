@@ -833,7 +833,7 @@ function AdminPage() {
                 </header>
 
                 {/* Barra de estadísticas */}
-                <div style={styles.statsBar}>
+                <div className="admin-stats-bar" style={styles.statsBar}>
                     {[
                         { value: nextWeekShifts.filter((s) => s.status === "OPEN").length, label: "Turnos abiertos" },
                         { value: requests.length, label: "Solicitudes pendientes" },

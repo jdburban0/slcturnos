@@ -442,6 +442,23 @@ button:active:not(:disabled) {
     font-size: 16px !important;
   }
 
+  /* Admin stats bar — grid 2x2 en móvil */
+  .admin-stats-bar {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .admin-stats-bar > div {
+    border-left: none !important;
+  }
+  .admin-stats-bar > div:nth-child(2),
+  .admin-stats-bar > div:nth-child(4) {
+    border-left: 1px solid var(--border-color) !important;
+  }
+  .admin-stats-bar > div:nth-child(3),
+  .admin-stats-bar > div:nth-child(4) {
+    border-top: 1px solid var(--border-color) !important;
+  }
+
   /* ShiftCard — reorganizar layout en móvil */
   .shift-row {
     flex-wrap: wrap !important;
