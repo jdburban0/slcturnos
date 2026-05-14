@@ -8,6 +8,7 @@ import ShiftCard from "../components/ShiftCard.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
 import OperatorTutorial, { useOperatorTutorial } from "../components/OperatorTutorial.jsx";
+import { usePushSubscription } from "../hooks/usePushSubscription.js";
 
 const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -115,6 +116,7 @@ function DashboardPage() {
     const [selectedColleague, setSelectedColleague] = useState(null);
     const [transferLoading, setTransferLoading] = useState(false);
     const { show: showTutorial, complete: completeTutorial } = useOperatorTutorial();
+    usePushSubscription(token);
     const [showMenu, setShowMenu] = useState(false);
     const [dashTab, setDashTab] = useState("upcoming");
     const [requestingShiftId, setRequestingShiftId] = useState(null);

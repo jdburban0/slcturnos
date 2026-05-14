@@ -39,6 +39,7 @@ import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
 import ShiftCreatorModal from "../components/ShiftCreatorModal.jsx";
 import AdminPublishTutorial, { useAdminTutorial } from "../components/AdminPublishTutorial.jsx";
+import { usePushSubscription } from "../hooks/usePushSubscription.js";
 
 const STATUS_LABEL = { OPEN: "Abierto", FULL: "Lleno", CLOSED: "Cerrado" };
 const STATUS_STYLE = {
@@ -265,6 +266,7 @@ function AdminPage() {
     const { user, token, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const { show: showTutorial, complete: completeTutorial } = useAdminTutorial();
+    usePushSubscription(token);
     const [shifts, setShifts] = useState([]);
     const [shiftsUpdatedAt, setShiftsUpdatedAt] = useState(0);
     const [requests, setRequests] = useState([]);

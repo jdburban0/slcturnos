@@ -8,6 +8,7 @@ import notificationsRouter from "./routes/notifications.js";
 import usersRouter from "./routes/users.js";
 import settingsRouter from "./routes/settings.js";
 import transfersRouter from "./routes/transfers.js";
+import pushRouter from "./routes/push.js";
 
 dotenv.config();
 
@@ -42,5 +43,6 @@ app.use("/api/notifications", notificationsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/transfers", transfersRouter);
+app.use("/api/push", pushRouter);
 
 export default app;
