@@ -788,7 +788,8 @@ function AdminPage() {
                         <NotificationBell token={token} refreshSignal={notifSignal} />
                         <div style={{ position: "relative" }}>
                             <button
-                                style={styles.menuButton}
+                                style={{ ...styles.menuButton, ...(showMenu ? styles.menuButtonActive : {}) }}
+                                className="icon-btn"
                                 onClick={() => setShowMenu((v) => !v)}
                                 title="Menú"
                             >
@@ -1402,9 +1403,14 @@ const styles = {
     subtitle: { margin: "6px 0 0", color: "var(--text-muted)", fontSize: "0.9rem" },
     headerActions: { display: "flex", gap: "10px", alignItems: "center" },
     menuButton: {
-        background: "var(--card-bg)", color: "var(--text-main)", border: "1px solid var(--border-color)",
+        background: "var(--card-bg)", color: "var(--text-main)", border: "none",
+        boxShadow: "0 0 0 1px var(--card-border)",
         width: "40px", height: "40px", borderRadius: "10px", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease",
+    },
+    menuButtonActive: {
+        background: "#3b82f6", boxShadow: "0 0 0 1px #3b82f6", color: "#fff",
     },
     menuBackdrop: { position: "fixed", inset: 0, zIndex: 99 },
     menuDropdown: {

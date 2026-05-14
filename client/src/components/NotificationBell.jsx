@@ -53,8 +53,11 @@ function NotificationBell({ token, refreshSignal }) {
 
     return (
         <div ref={ref} style={styles.wrapper}>
-            <button style={styles.bellBtn} onClick={() => setOpen((o) => !o)}>
-                🔔
+            <button className="icon-btn" style={{ ...styles.bellBtn, ...(open ? styles.bellBtnActive : {}) }} onClick={() => setOpen((o) => !o)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
                 {unread > 0 && <span style={styles.badge}>{unread}</span>}
             </button>
 
@@ -110,12 +113,22 @@ const styles = {
     bellBtn: {
         position: "relative",
         background: "var(--card-bg)",
-        border: "1px solid var(--border-color)",
+        border: "none",
+        boxShadow: "0 0 0 1px var(--card-border)",
         borderRadius: "10px",
-        padding: "8px 12px",
+        width: "40px",
+        height: "40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         cursor: "pointer",
-        fontSize: "1.2rem",
-        transition: "transform 0.15s ease, filter 0.15s ease",
+        color: "var(--text-main)",
+        transition: "background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease",
+    },
+    bellBtnActive: {
+        background: "#3b82f6",
+        boxShadow: "0 0 0 1px #3b82f6",
+        color: "#fff",
     },
     badge: {
         position: "absolute",

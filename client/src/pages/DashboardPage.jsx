@@ -391,7 +391,8 @@ function DashboardPage() {
                         <NotificationBell token={token} refreshSignal={notifSignal} />
                         <div style={{ position: "relative" }}>
                             <button
-                                style={styles.menuButton}
+                                className="icon-btn"
+                                style={{ ...styles.menuButton, ...(showMenu ? styles.menuButtonActive : {}) }}
                                 onClick={() => setShowMenu((v) => !v)}
                                 title="Menú"
                             >
@@ -726,7 +727,8 @@ const styles = {
     menuButton: {
         background: "var(--card-bg)",
         color: "var(--text-main)",
-        border: "1px solid var(--border-color)",
+        border: "none",
+        boxShadow: "0 0 0 1px var(--card-border)",
         width: "40px",
         height: "40px",
         borderRadius: "10px",
@@ -734,6 +736,12 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        transition: "background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease",
+    },
+    menuButtonActive: {
+        background: "#3b82f6",
+        boxShadow: "0 0 0 1px #3b82f6",
+        color: "#fff",
     },
     menuBackdrop: {
         position: "fixed",

@@ -218,6 +218,16 @@ button:active:not(:disabled) {
 /* Botones que ya tienen su propio hover no se ven afectados
    porque sus reglas tienen mayor especificidad */
 
+/* ─── Icon buttons (bell, hamburger) ─────────────────── */
+.icon-btn {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+.icon-btn:focus,
+.icon-btn:focus-visible {
+  outline: none !important;
+}
+
 /* ─── Tutorial buttons ────────────────────────────────── */
 .tutorial-btn {
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
