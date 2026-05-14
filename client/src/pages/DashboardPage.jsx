@@ -9,6 +9,7 @@ import NotificationBell from "../components/NotificationBell.jsx";
 import ScheduleTable from "../components/ScheduleTable.jsx";
 import OperatorTutorial, { useOperatorTutorial } from "../components/OperatorTutorial.jsx";
 import { usePushSubscription } from "../hooks/usePushSubscription.js";
+import PushPrompt from "../components/PushPrompt.jsx";
 
 const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -285,6 +286,7 @@ function DashboardPage() {
     return (
         <div className={`${leaving ? "anim-fade-out" : "anim-fade-in"} dash-page`} style={styles.page}>
             {showTutorial && <OperatorTutorial onComplete={completeTutorial} />}
+            <PushPrompt token={token} />
             {toast && (
                 <div className="anim-slide-right dash-toast" style={styles.toast}>
                     <strong>{toast.title}</strong>

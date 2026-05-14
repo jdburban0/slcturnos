@@ -40,6 +40,7 @@ import ScheduleTable from "../components/ScheduleTable.jsx";
 import ShiftCreatorModal from "../components/ShiftCreatorModal.jsx";
 import AdminPublishTutorial, { useAdminTutorial } from "../components/AdminPublishTutorial.jsx";
 import { usePushSubscription } from "../hooks/usePushSubscription.js";
+import PushPrompt from "../components/PushPrompt.jsx";
 
 const STATUS_LABEL = { OPEN: "Abierto", FULL: "Lleno", CLOSED: "Cerrado" };
 const STATUS_STYLE = {
@@ -622,6 +623,7 @@ function AdminPage() {
     return (
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
             {showTutorial && <AdminPublishTutorial onComplete={completeTutorial} />}
+            <PushPrompt token={token} />
 
             {toast && (
                 <div className="anim-slide-right" style={styles.toast}>
