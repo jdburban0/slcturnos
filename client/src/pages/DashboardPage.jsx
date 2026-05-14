@@ -70,7 +70,7 @@ function WeekStrip({ shifts, selectedDay, onSelectDay }) {
 }
 
 const stripStyles = {
-    row: { display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" },
+    row: { display: "flex", gap: "8px", marginBottom: "20px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none", paddingBottom: "2px" },
     btn: {
         display: "flex",
         flexDirection: "column",
@@ -82,6 +82,7 @@ const stripStyles = {
         background: "var(--card-bg)",
         cursor: "pointer",
         minWidth: "64px",
+        flexShrink: 0,
         color: "var(--text-muted)",
         transition: "all 0.2s ease"
     },
