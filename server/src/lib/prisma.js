@@ -4,24 +4,31 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
-export const prisma = new PrismaClient({ adapter });
+const baseClient = new PrismaClient({ adapter });
 
-// Envía push notification automáticamente cada vez que se crea una Notification
-prisma.$use(async (params, next) => {
-    const result = await next(params);
-
-    if (params.model === "Notification") {
-        // Import lazy para evitar dependencia circular
-        const { sendPushToUser } = await import("./pushService.js");
-
-        if (params.action === "create") {
-            sendPushToUser(result.userId, result.title, result.message).catch(() => {});
-        } else if (params.action === "createMany" && Array.isArray(params.args?.data)) {
-            for (const n of params.args.data) {
-                if (n.userId) sendPushToUser(n.userId, n.title, n.message).catch(() => {});
-            }
-        }
-    }
-
-    return result;
+// $extends intercepta notification.create/createMany para enviar push automáticamente
+// El import dinámico evita dependencia circular con pushService.js
+export const prisma = baseClient.$extends({
+    query: {
+        notification: {
+            async create({ args, query }) {
+                const result = await query(args);
+                import("./pushService.js").then(({ sendPushToUser }) => {
+                    sendPushToUser(result.userId, result.title, result.message).catch(() => {});
+                }).catch(() => {});
+                return result;
+            },
+            async createMany({ args, query }) {
+                const result = await query(args);
+                if (Array.isArray(args.data)) {
+                    import("./pushService.js").then(({ sendPushToUser }) => {
+                        for (const n of args.data) {
+                            if (n.userId) sendPushToUser(n.userId, n.title, n.message).catch(() => {});
+                        }
+                    }).catch(() => {});
+                }
+                return result;
+            },
+        },
+    },
 });
