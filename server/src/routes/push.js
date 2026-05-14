@@ -9,6 +9,16 @@ router.get("/vapid-public-key", (req, res) => {
     res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || "" });
 });
 
+// POST test — envía push de prueba al usuario actual
+router.post("/test", requireAuth, async (req, res) => {
+    const { sendPushToUser } = await import("../lib/pushService.js");
+    const subs = await prisma.pushSubscription.findMany({ where: { userId: req.user.id } });
+    console.log(`[Push TEST] userId=${req.user.id} suscripciones=${subs.length}`);
+    if (!subs.length) return res.status(404).json({ message: "No hay suscripciones guardadas para este usuario" });
+    await sendPushToUser(req.user.id, "🔔 Prueba SLC Turnos", "Las notificaciones funcionan correctamente");
+    res.json({ ok: true, subs: subs.length });
+});
+
 // POST subscribe
 router.post("/subscribe", requireAuth, async (req, res) => {
     const { endpoint, keys } = req.body;

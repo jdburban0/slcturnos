@@ -9,17 +9,33 @@ function urlBase64ToUint8Array(base64String) {
     return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
+export async function testPush(token) {
+    const res = await fetch(`${BASE}/api/push/test`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    console.log("[Push test]", data);
+    return data;
+}
+
 export default function PushPrompt({ token }) {
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const [testResult, setTestResult] = useState(null);
+
     useEffect(() => {
-        // Solo mostrar si el browser soporta push y el usuario no ha decidido antes
         if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
-        if (Notification.permission !== "default") return; // ya aceptó o rechazó
         const dismissed = localStorage.getItem("push-prompt-dismissed");
+
+        if (Notification.permission === "granted" && !dismissed) {
+            // Ya tiene permiso pero no ha confirmado suscripción — reenviar suscripción
+            setVisible(true);
+            return;
+        }
+        if (Notification.permission !== "default") return;
         if (dismissed) return;
-        // Esperar 3 segundos para no interrumpir la carga
         const t = setTimeout(() => setVisible(true), 3000);
         return () => clearTimeout(t);
     }, []);
@@ -71,9 +87,20 @@ export default function PushPrompt({ token }) {
                 <span style={styles.title}>Activar notificaciones</span>
                 <span style={styles.sub}>Recibe avisos aunque tengas la app cerrada</span>
             </div>
-            <button style={styles.activar} onClick={handleActivar} disabled={loading}>
-                {loading ? "..." : "Activar"}
-            </button>
+            {Notification.permission === "granted" ? (
+                <button style={styles.activar} onClick={async () => {
+                    setLoading(true);
+                    const r = await testPush(token);
+                    setTestResult(r?.ok ? "✓ Enviado" : r?.message || "Error");
+                    setLoading(false);
+                }} disabled={loading}>
+                    {loading ? "..." : testResult || "Probar"}
+                </button>
+            ) : (
+                <button style={styles.activar} onClick={handleActivar} disabled={loading}>
+                    {loading ? "..." : "Activar"}
+                </button>
+            )}
             <button style={styles.close} onClick={handleDismiss} aria-label="Cerrar">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
