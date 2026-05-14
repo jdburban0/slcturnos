@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail, sendAdminTransferAlertEmail, queueAdminPendingNotification } from "../lib/mailer.js";
+import { notifyMany } from "../lib/notify.js";
 
 const router = Router();
 
@@ -269,23 +270,17 @@ router.delete("/:id", requireAuth, requireRole("admin", "lead"), async (req, res
 
         // Notify affected users
         const affectedUserIds = [...new Set(shift.requests.map((r) => r.userId))];
-        if (affectedUserIds.length > 0) {
-            await prisma.notification.createMany({
-                data: affectedUserIds.map((userId) => ({
-                    userId,
-                    title: "Turno cancelado",
-                    message: `El turno "${shift.title}" fue eliminado por el administrador.`,
-                })),
-            });
-        }
-
         await prisma.shiftRequest.deleteMany({ where: { shiftId: id } });
         await prisma.shift.delete({ where: { id } });
 
         const io = req.app.get("io");
         io.emit("shifts:refresh");
-        for (const userId of affectedUserIds) {
-            io.to(`user:${userId}`).emit("notification:new");
+        if (affectedUserIds.length > 0) {
+            await notifyMany(io, affectedUserIds.map((userId) => ({
+                userId,
+                title: "Turno cancelado",
+                message: `El turno "${shift.title}" fue eliminado por el administrador.`,
+            })));
         }
 
         res.json({ message: "Turno eliminado" });
@@ -549,16 +544,6 @@ router.post("/close-week", requireAuth, requireRole("admin", "lead"), async (req
             });
         }
 
-        if (affectedUserIds.length > 0) {
-            await prisma.notification.createMany({
-                data: affectedUserIds.map((userId) => ({
-                    userId,
-                    title: "Semana archivada",
-                    message: `Los turnos de la semana del ${weekStart} fueron archivados por el supervisor.`,
-                })),
-            });
-        }
-
         // Close all shifts in the week
         await prisma.shift.updateMany({
             where: { id: { in: shifts.map((s) => s.id) } },
@@ -567,8 +552,12 @@ router.post("/close-week", requireAuth, requireRole("admin", "lead"), async (req
 
         const io = req.app.get("io");
         io.emit("shifts:refresh");
-        for (const userId of affectedUserIds) {
-            io.to(`user:${userId}`).emit("notification:new");
+        if (affectedUserIds.length > 0) {
+            await notifyMany(io, affectedUserIds.map((userId) => ({
+                userId,
+                title: "Semana archivada",
+                message: `Los turnos de la semana del ${weekStart} fueron archivados por el supervisor.`,
+            })));
         }
 
         res.json({ message: "Semana archivada", count: shifts.length });

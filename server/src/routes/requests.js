@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { queueShiftResultEmail, sendAdminTransferAlertEmail, resetAdminNotifCooldown } from "../lib/mailer.js";
+import { notifyUser, notifyMany } from "../lib/notify.js";
 
 const router = Router();
 
@@ -137,18 +138,14 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
                         },
                     });
 
-                    await prisma.notification.createMany({
-                        data: pendingRequests.map((r) => ({
-                            userId: r.userId,
-                            title: "Turno rechazado",
-                            message: `Tu solicitud para "${request.shift.title}" fue rechazada. Turno no disponible.`,
-                        })),
-                    });
-
                     const io = req.app.get("io");
                     const shiftDate = new Date(request.shift.date).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+                    await notifyMany(io, pendingRequests.map((r) => ({
+                        userId: r.userId,
+                        title: "Turno rechazado",
+                        message: `Tu solicitud para "${request.shift.title}" fue rechazada. Turno no disponible.`,
+                    })));
                     for (const r of pendingRequests) {
-                        io.to(`user:${r.userId}`).emit("notification:new");
                         queueShiftResultEmail({
                             userId: r.userId,
                             to: r.user.email,
@@ -165,20 +162,15 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
 
         // Create notification for the operator
         const isApproved = action === "approve";
-        const notification = await prisma.notification.create({
-            data: {
-                userId: request.userId,
-                title: isApproved ? "Turno aprobado" : "Turno rechazado",
-                message: isApproved
-                    ? `Tu solicitud para "${request.shift.title}" fue aprobada. ¡Listo para trabajar!`
-                    : `Tu solicitud para "${request.shift.title}" fue rechazada.${notes ? ` Nota: ${notes}` : ""}`,
-            },
-        });
-
         const io = req.app.get("io");
+        await notifyUser(io, request.userId,
+            isApproved ? "Turno aprobado" : "Turno rechazado",
+            isApproved
+                ? `Tu solicitud para "${request.shift.title}" fue aprobada. ¡Listo para trabajar!`
+                : `Tu solicitud para "${request.shift.title}" fue rechazada.${notes ? ` Nota: ${notes}` : ""}`
+        );
         io.to("admins").emit("requests:refresh");
         io.emit("shifts:refresh");
-        io.to(`user:${request.userId}`).emit("notification:new", notification);
 
         // Si ya no quedan pendientes, habilitar nueva notificación al próximo ciclo
         resetAdminNotifCooldown().catch(() => { });

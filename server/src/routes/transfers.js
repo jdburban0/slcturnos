@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { sendAssignmentEmail } from "../lib/mailer.js";
+import { notifyUser } from "../lib/notify.js";
 
 const router = Router();
 
@@ -110,15 +111,13 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
                 });
             }
         } else {
-            await prisma.notification.create({
-                data: {
-                    userId: transfer.fromUserId,
-                    title: isTransfer ? "Traspaso rechazado" : "Desistimiento rechazado",
-                    message: isTransfer
-                        ? `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue rechazado.${notes ? ` Motivo: ${notes}` : ""}`
-                        : `Tu solicitud para desistir del turno "${transfer.shift.title}" fue rechazada.${notes ? ` Motivo: ${notes}` : ""}`,
-                },
-            });
+            const io2 = req.app.get("io");
+            await notifyUser(io2, transfer.fromUserId,
+                isTransfer ? "Traspaso rechazado" : "Desistimiento rechazado",
+                isTransfer
+                    ? `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue rechazado.${notes ? ` Motivo: ${notes}` : ""}`
+                    : `Tu solicitud para desistir del turno "${transfer.shift.title}" fue rechazada.${notes ? ` Motivo: ${notes}` : ""}`
+            );
         }
 
         const updated = await prisma.shiftTransfer.update({
@@ -129,7 +128,17 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         const io = req.app.get("io");
         io.to("admins").emit("transfers:refresh");
         io.emit("shifts:refresh");
-        io.to(`user:${transfer.fromUserId}`).emit("notification:new");
+        // push para aprobados (la notif fue creada dentro de la tx)
+        if (action === "approve") {
+            const { sendPushToUser } = await import("../lib/pushService.js");
+            sendPushToUser(transfer.fromUserId,
+                isTransfer ? "Traspaso aprobado" : "Desistimiento aprobado",
+                isTransfer
+                    ? `Tu traspaso del turno "${transfer.shift.title}" a ${transfer.toName} fue aprobado.`
+                    : `Tu solicitud para desistir del turno "${transfer.shift.title}" fue aprobada.`
+            ).catch(() => {});
+            io.to(`user:${transfer.fromUserId}`).emit("notification:new");
+        }
 
         res.json(updated);
     } catch (err) {
