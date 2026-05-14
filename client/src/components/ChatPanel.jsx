@@ -372,13 +372,17 @@ const s = {
         background: "rgba(0,0,0,0.25)", backdropFilter: "blur(2px)",
     },
     panel: {
-        position: "fixed", top: 0, right: 0, bottom: 0,
+        position: "fixed", top: 0, right: 0,
+        bottom: 0,
         width: "min(400px, 100vw)",
+        height: "100%",
+        maxHeight: "-webkit-fill-available",
         background: "var(--bg-color)",
         borderLeft: "1px solid var(--card-border)",
         display: "flex", flexDirection: "column",
         boxShadow: "-8px 0 32px rgba(0,0,0,0.15)",
         animation: "slideInRight 0.22s ease",
+        overscrollBehavior: "contain",
     },
     header: {
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -416,7 +420,7 @@ const s = {
     },
     searchInput: {
         flex: 1, background: "none", border: "none", outline: "none",
-        color: "var(--text-main)", fontSize: "0.88rem",
+        color: "var(--text-main)", fontSize: "16px",
     },
     searchClear: {
         background: "none", border: "none", cursor: "pointer",
@@ -510,7 +514,9 @@ const s = {
     input: {
         flex: 1, background: "var(--input-bg)",
         border: "1px solid var(--border-color)", borderRadius: "10px",
-        padding: "9px 13px", color: "var(--text-main)", fontSize: "0.875rem", outline: "none",
+        padding: "9px 13px", color: "var(--text-main)",
+        fontSize: "16px", /* 16px mínimo para evitar zoom en iOS */
+        outline: "none",
     },
     sendBtn: {
         width: "40px", height: "40px", borderRadius: "10px",
