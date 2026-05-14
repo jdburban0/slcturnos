@@ -147,12 +147,22 @@ function DashboardPage() {
         "notification:new": (notif) => {
             setNotifSignal((s) => s + 1);
             showToast(notif?.title || "Nueva notificación", notif?.message || "");
+            loadShifts();
         },
         "force:logout": () => {
             logout();
             navigate("/login");
         },
     });
+
+    // Recargar turnos cuando el usuario vuelve a la app (background → foreground)
+    useEffect(() => {
+        function onVisibility() {
+            if (document.visibilityState === "visible") loadShifts();
+        }
+        document.addEventListener("visibilitychange", onVisibility);
+        return () => document.removeEventListener("visibilitychange", onVisibility);
+    }, [loadShifts]);
 
     useEffect(() => {
         if (!selectedDay) return;
