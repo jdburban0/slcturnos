@@ -8,6 +8,17 @@ function NotificationBell({ token, refreshSignal }) {
 
     const unread = notifications.filter((n) => !n.isRead).length;
 
+    // Sync app icon badge with unread count
+    useEffect(() => {
+        if ("setAppBadge" in navigator) {
+            if (unread > 0) {
+                navigator.setAppBadge(unread).catch(() => {});
+            } else {
+                navigator.clearAppBadge().catch(() => {});
+            }
+        }
+    }, [unread]);
+
     async function load() {
         try {
             const data = await getNotifications(token);
