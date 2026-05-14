@@ -42,7 +42,7 @@ function WeekStrip({ shifts, selectedDay, onSelectDay }) {
     if (days.length === 0) return null;
 
     return (
-        <div style={stripStyles.row}>
+        <div className="week-strip" style={stripStyles.row}>
             {days.map((iso) => {
                 const [y, m, d] = iso.split("-").map(Number);
                 const date = new Date(y, m - 1, d);
@@ -55,6 +55,7 @@ function WeekStrip({ shifts, selectedDay, onSelectDay }) {
                     <button
                         key={iso}
                         onClick={() => onSelectDay(isSelected ? null : iso)}
+                        className="week-strip-btn"
                         style={{
                             ...stripStyles.btn,
                             ...(isSelected ? stripStyles.btnSelected : {}),

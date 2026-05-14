@@ -471,3 +471,9 @@ button:active:not(:disabled) {
   /* El nombre del turno puede ocupar 2 líneas en móvil */
   .shift-name { white-space: normal !important; }
 }
+
+/* ─── Desktop: WeekStrip ocupa todo el ancho ─────────────── */
+@media (min-width: 640px) {
+  .week-strip { overflow: visible !important; }
+  .week-strip-btn { flex: 1 !important; flex-shrink: 1 !important; }
+}
