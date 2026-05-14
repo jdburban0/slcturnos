@@ -10,7 +10,17 @@ export function usePushSubscription(token) {
         attempted.current = true;
 
         if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/sw.js").catch(() => {});
+            navigator.serviceWorker.register("/sw.js").then((reg) => {
+                // Cuando hay una nueva versión del SW lista, recargar la app automáticamente
+                reg.addEventListener("updatefound", () => {
+                    const newWorker = reg.installing;
+                    newWorker?.addEventListener("statechange", () => {
+                        if (newWorker.state === "activated") {
+                            window.location.reload();
+                        }
+                    });
+                });
+            }).catch(() => {});
         }
     }, [token]);
 }

@@ -1,3 +1,18 @@
+// Activar inmediatamente sin esperar a que cierren las pestañas viejas
+self.addEventListener("install", () => self.skipWaiting());
+
+// Tomar control de todos los clientes abiertos al activarse
+self.addEventListener("activate", (event) => {
+    event.waitUntil(clients.claim());
+});
+
+// Navegación siempre desde la red (nunca caché vieja para index.html)
+self.addEventListener("fetch", (event) => {
+    if (event.request.mode === "navigate") {
+        event.respondWith(fetch(event.request).catch(() => caches.match("/index.html")));
+    }
+});
+
 self.addEventListener("push", (event) => {
     if (!event.data) return;
 
