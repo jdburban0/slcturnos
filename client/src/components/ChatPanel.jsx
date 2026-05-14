@@ -98,6 +98,13 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
     const inputRef = useRef(null);
     const searchRef = useRef(null);
 
+    // Bloquear scroll del fondo mientras el panel está abierto
+    useEffect(() => {
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = prev; };
+    }, []);
+
     useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
 
     const loadContacts = useCallback(async () => {
