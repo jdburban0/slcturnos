@@ -33,17 +33,47 @@ enum RequestStatus {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String
-  email         String          @unique
-  passwordHash  String
-  role          Role            @default(operator)
-  group         String?
-  active        Boolean         @default(true)
-  createdAt     DateTime        @default(now())
-  requests      ShiftRequest[]
-  notifications Notification[]
-  transfers     ShiftTransfer[]
+  id                String             @id @default(cuid())
+  name              String
+  email             String             @unique
+  passwordHash      String
+  role              Role               @default(operator)
+  group             String?
+  active            Boolean            @default(true)
+  tutorialDone      Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  requests          ShiftRequest[]
+  notifications     Notification[]
+  transfers         ShiftTransfer[]
+  pushSubscriptions PushSubscription[]
+  sentMessages      Message[]          @relation("MessageSender")
+  receivedMessages  Message[]          @relation("MessageRecipient")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  recipientId String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender    User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([recipientId, senderId, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Shift {

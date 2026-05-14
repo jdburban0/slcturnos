@@ -41,6 +41,7 @@ import ShiftCreatorModal from "../components/ShiftCreatorModal.jsx";
 import AdminPublishTutorial, { useAdminTutorial } from "../components/AdminPublishTutorial.jsx";
 import { usePushSubscription } from "../hooks/usePushSubscription.js";
 import PushPrompt from "../components/PushPrompt.jsx";
+import ChatPanel from "../components/ChatPanel.jsx";
 
 const STATUS_LABEL = { OPEN: "Abierto", FULL: "Lleno", CLOSED: "Cerrado" };
 const STATUS_STYLE = {
@@ -285,6 +286,9 @@ function AdminPage() {
     const [adminCodeLoading, setAdminCodeLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const [notifSignal, setNotifSignal] = useState(0);
+    const [showChat, setShowChat] = useState(false);
+    const [chatUnread, setChatUnread] = useState(0);
+    const [lastChatMessage, setLastChatMessage] = useState(null);
     const [showCreatorModal, setShowCreatorModal] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [editingShiftId, setEditingShiftId] = useState(null);
@@ -343,6 +347,15 @@ function AdminPage() {
         "requests:refresh": () => loadRequests(),
         "transfers:refresh": () => loadTransfers(),
         "notification:new": () => setNotifSignal((s) => s + 1),
+        "chat:message": (msg) => {
+            // Solo nos importan mensajes donde somos el destinatario
+            if (msg.recipientId !== user?.id) return;
+            setLastChatMessage(msg);
+            setShowChat((open) => {
+                if (!open) setChatUnread((n) => n + 1);
+                return open;
+            });
+        },
         "force:logout": () => {
             logout();
             navigate("/login");
@@ -624,6 +637,15 @@ function AdminPage() {
         <div className={leaving ? "anim-fade-out" : "anim-fade-in"} style={styles.page}>
             {showTutorial && <AdminPublishTutorial onComplete={completeTutorial} />}
             <PushPrompt token={token} />
+            {showChat && (
+                <ChatPanel
+                    token={token}
+                    user={user}
+                    onClose={() => setShowChat(false)}
+                    onUnreadChange={setChatUnread}
+                    incomingMessage={lastChatMessage}
+                />
+            )}
 
             {toast && (
                 <div className="anim-slide-right" style={styles.toast}>
@@ -789,6 +811,19 @@ function AdminPage() {
                         <p style={styles.subtitle}>{user?.name} · SLC Turnos</p>
                     </div>
                     <div style={styles.headerActions}>
+                        <button
+                            className="icon-btn"
+                            style={{ ...styles.menuButton, position: "relative" }}
+                            onClick={() => { setShowChat(true); setChatUnread(0); }}
+                            title="Mensajes"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            {chatUnread > 0 && (
+                                <span style={{ position: "absolute", top: "-3px", right: "-3px", width: "9px", height: "9px", background: "#ef4444", borderRadius: "50%", border: "2px solid var(--bg-color)" }} />
+                            )}
+                        </button>
                         <NotificationBell token={token} refreshSignal={notifSignal} />
                         <div style={{ position: "relative" }}>
                             <button

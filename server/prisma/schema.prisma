@@ -46,6 +46,23 @@ model User {
   notifications     Notification[]
   transfers         ShiftTransfer[]
   pushSubscriptions PushSubscription[]
+  sentMessages      Message[]          @relation("MessageSender")
+  receivedMessages  Message[]          @relation("MessageRecipient")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  recipientId String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender    User @relation("MessageSender",    fields: [senderId],    references: [id], onDelete: Cascade)
+  recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([recipientId, senderId, createdAt])
 }
 
 model PushSubscription {

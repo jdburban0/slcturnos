@@ -128,6 +128,25 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   group: 'group',
   active: 'active',
+  tutorialDone: 'tutorialDone',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.MessageScalarFieldEnum = {
+  id: 'id',
+  senderId: 'senderId',
+  recipientId: 'recipientId',
+  content: 'content',
+  isRead: 'isRead',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
   createdAt: 'createdAt'
 };
 
@@ -245,6 +264,8 @@ exports.RequestStatus = exports.$Enums.RequestStatus = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Message: 'Message',
+  PushSubscription: 'PushSubscription',
   Shift: 'Shift',
   ManualAssignment: 'ManualAssignment',
   ShiftRequest: 'ShiftRequest',

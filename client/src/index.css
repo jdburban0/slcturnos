@@ -472,6 +472,12 @@ button:active:not(:disabled) {
   .shift-name { white-space: normal !important; }
 }
 
+/* ─── Chat panel slide-in ─────────────────────────────────── */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
 /* ─── Desktop: WeekStrip ocupa todo el ancho ─────────────── */
 @media (min-width: 640px) {
   .week-strip { overflow: visible !important; }

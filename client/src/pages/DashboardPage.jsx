@@ -10,6 +10,7 @@ import ScheduleTable from "../components/ScheduleTable.jsx";
 import OperatorTutorial, { useOperatorTutorial } from "../components/OperatorTutorial.jsx";
 import { usePushSubscription } from "../hooks/usePushSubscription.js";
 import PushPrompt from "../components/PushPrompt.jsx";
+import ChatPanel from "../components/ChatPanel.jsx";
 
 const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -122,6 +123,9 @@ function DashboardPage() {
     const [showMenu, setShowMenu] = useState(false);
     const [dashTab, setDashTab] = useState("upcoming");
     const [requestingShiftId, setRequestingShiftId] = useState(null);
+    const [showChat, setShowChat] = useState(false);
+    const [chatUnread, setChatUnread] = useState(0);
+    const [lastChatMessage, setLastChatMessage] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
     const [history, setHistory] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
@@ -149,6 +153,15 @@ function DashboardPage() {
             setNotifSignal((s) => s + 1);
             showToast(notif?.title || "Nueva notificación", notif?.message || "");
             loadShifts();
+        },
+        "chat:message": (msg) => {
+            // Solo nos importan mensajes donde somos el destinatario
+            if (msg.recipientId !== user?.id) return;
+            setLastChatMessage(msg);
+            setShowChat((open) => {
+                if (!open) setChatUnread((n) => n + 1);
+                return open;
+            });
         },
         "force:logout": () => {
             logout();
@@ -298,6 +311,15 @@ function DashboardPage() {
         <div className={`${leaving ? "anim-fade-out" : "anim-fade-in"} dash-page`} style={styles.page}>
             {showTutorial && <OperatorTutorial onComplete={completeTutorial} />}
             <PushPrompt token={token} />
+            {showChat && (
+                <ChatPanel
+                    token={token}
+                    user={user}
+                    onClose={() => setShowChat(false)}
+                    onUnreadChange={setChatUnread}
+                    incomingMessage={lastChatMessage}
+                />
+            )}
             {toast && (
                 <div className="anim-slide-right dash-toast" style={styles.toast}>
                     <strong>{toast.title}</strong>
@@ -404,6 +426,19 @@ function DashboardPage() {
                         <p style={styles.subtitle}>Bienvenido, {user?.name}</p>
                     </div>
                     <div className="dash-actions" style={styles.headerActions}>
+                        <button
+                            className="icon-btn"
+                            style={{ ...styles.menuButton, position: "relative" }}
+                            onClick={() => setShowChat(true)}
+                            title="Mensajes"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            {chatUnread > 0 && (
+                                <span style={{ position: "absolute", top: "-3px", right: "-3px", width: "9px", height: "9px", background: "#ef4444", borderRadius: "50%", border: "2px solid var(--bg-color)" }} />
+                            )}
+                        </button>
                         <NotificationBell token={token} refreshSignal={notifSignal} />
                         <div style={{ position: "relative" }}>
                             <button

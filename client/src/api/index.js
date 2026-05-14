@@ -358,6 +358,30 @@ export async function forgotPassword(email) {
     }));
 }
 
+// Chat
+export async function getChatContacts(token) {
+    return handle(await fetch(`${BASE}/api/chat/contacts`, { headers: headers(token) }));
+}
+
+export async function getChatMessages(token, userId) {
+    return handle(await fetch(`${BASE}/api/chat/${userId}`, { headers: headers(token) }));
+}
+
+export async function sendChatMessage(token, content, recipientId) {
+    return handle(await fetch(`${BASE}/api/chat`, {
+        method: "POST",
+        headers: headers(token),
+        body: JSON.stringify({ content, recipientId }),
+    }));
+}
+
+export async function markChatRead(token, userId) {
+    return handle(await fetch(`${BASE}/api/chat/${userId}/read`, {
+        method: "PATCH",
+        headers: headers(token),
+    }));
+}
+
 export async function resetPassword(email, code, newPassword) {
     return handle(await fetch(`${BASE}/api/auth/reset-password`, {
         method: "POST", headers: { "Content-Type": "application/json" },
