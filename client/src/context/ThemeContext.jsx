@@ -12,6 +12,12 @@ export function ThemeProvider({ children }) {
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
         localStorage.setItem("app-theme", theme);
+
+        // Actualiza theme-color para PWA (status bar en iOS)
+        const color = theme === "dark" ? "#0f172a" : "#f1f4f8";
+        document.querySelectorAll('meta[name="theme-color"]').forEach((el) => {
+            el.setAttribute("content", color);
+        });
     }, [theme]);
 
     const toggleTheme = () => {
