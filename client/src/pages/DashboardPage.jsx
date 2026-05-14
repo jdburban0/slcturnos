@@ -399,7 +399,7 @@ function DashboardPage() {
             <div style={styles.container}>
                 <header className="dash-header" style={styles.header}>
                     <div>
-                        <h1 style={styles.title}>SLC Turnos</h1>
+                        <h1 style={styles.title}>SLC Turno</h1>
                         <p style={styles.subtitle}>Bienvenido, {user?.name}</p>
                     </div>
                     <div className="dash-actions" style={styles.headerActions}>
