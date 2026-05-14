@@ -382,10 +382,11 @@ export async function markChatRead(token, userId) {
     }));
 }
 
-export async function deleteChatMessage(token, messageId) {
+export async function deleteChatMessage(token, messageId, scope = "me") {
     return handle(await fetch(`${BASE}/api/chat/message/${messageId}`, {
         method: "DELETE",
         headers: headers(token),
+        body: JSON.stringify({ scope }),
     }));
 }
 

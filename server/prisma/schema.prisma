@@ -51,12 +51,15 @@ model User {
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  senderId    String
-  recipientId String
-  content     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id                 String   @id @default(cuid())
+  senderId           String
+  recipientId        String
+  content            String
+  isRead             Boolean  @default(false)
+  deletedBySender    Boolean  @default(false)
+  deletedByRecipient Boolean  @default(false)
+  deletedForAll      Boolean  @default(false)
+  createdAt          DateTime @default(now())
 
   sender    User @relation("MessageSender",    fields: [senderId],    references: [id], onDelete: Cascade)
   recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)

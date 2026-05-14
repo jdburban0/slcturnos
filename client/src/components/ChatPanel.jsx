@@ -163,7 +163,15 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
     // Mensaje eliminado por el otro usuario (socket via padre)
     useEffect(() => {
         if (!deletedMessageEvent) return;
-        setMessages((prev) => prev.filter((m) => m.id !== deletedMessageEvent.messageId));
+        const { messageId, deletedForAll } = deletedMessageEvent;
+        if (deletedForAll) {
+            // Mostrar placeholder "Mensaje eliminado"
+            setMessages((prev) => prev.map((m) =>
+                m.id === messageId ? { ...m, deletedForAll: true, content: "" } : m
+            ));
+        } else {
+            setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        }
         loadContacts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [deletedMessageEvent]);
@@ -196,8 +204,16 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
     async function handleCtxAction(action) {
         if (action.type === "deleteMessage") {
             try {
-                await deleteChatMessage(token, action.msgId);
-                setMessages((prev) => prev.filter((m) => m.id !== action.msgId));
+                await deleteChatMessage(token, action.msgId, action.scope);
+                if (action.scope === "all") {
+                    // Reemplazar con placeholder visible para ambos
+                    setMessages((prev) => prev.map((m) =>
+                        m.id === action.msgId ? { ...m, deletedForAll: true, content: "" } : m
+                    ));
+                } else {
+                    // Solo quitar de mi vista
+                    setMessages((prev) => prev.filter((m) => m.id !== action.msgId));
+                }
                 loadContacts();
             } catch {}
         } else if (action.type === "deleteConversation") {
@@ -259,9 +275,10 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
         { label: "Eliminar conversación", icon: <IconTrash />, action: { type: "deleteConversation", contactId }, danger: true },
     ];
 
-    const messageMenuOptions = (msgId, content) => [
+    const messageMenuOptions = (msgId, content, isMine) => [
         { label: "Copiar texto", icon: <IconCopy />, action: { type: "copyMessage", content }, danger: false },
-        { label: "Eliminar mensaje", icon: <IconTrash />, action: { type: "deleteMessage", msgId }, danger: true },
+        { label: "Eliminar para mí", icon: <IconTrash />, action: { type: "deleteMessage", msgId, scope: "me" }, danger: false },
+        ...(isMine ? [{ label: "Eliminar para todos", icon: <IconTrash />, action: { type: "deleteMessage", msgId, scope: "all" }, danger: true }] : []),
     ];
 
     return (
@@ -404,7 +421,7 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
                                         msg={item.msg}
                                         isMine={item.msg.senderId === user.id}
                                         timeLabel={fullTimeLabel}
-                                        onLongPress={(e) => openCtxMenu(e, messageMenuOptions(item.msg.id, item.msg.content))}
+                                        onLongPress={(e) => openCtxMenu(e, messageMenuOptions(item.msg.id, item.msg.content, item.msg.senderId === user.id))}
                                     />
                                 )
                             )}
@@ -508,7 +525,9 @@ function ContactRow({ contact, unread, lastMsg, userId, timeLabel, onSelect, onL
                 </div>
                 <span style={{ ...s.contactPreview, ...(unread > 0 ? { color: "var(--text-main)", fontWeight: "600" } : {}) }}>
                     {lastMsg
-                        ? (lastMsg.senderId === userId ? "Tú: " : "") + lastMsg.content
+                        ? lastMsg.deletedForAll
+                            ? <em style={{ opacity: 0.6 }}>Mensaje eliminado</em>
+                            : (lastMsg.senderId === userId ? "Tú: " : "") + lastMsg.content
                         : <em style={{ opacity: 0.6 }}>Iniciar conversación</em>
                     }
                 </span>
@@ -522,8 +541,10 @@ function MessageBubble({ msg, isMine, timeLabel, onLongPress }) {
     const [hovered, setHovered] = useState(false);
     const lpFired = useRef(false);
     const lpTimer = useRef(null);
+    const isDeleted = msg.deletedForAll;
 
     function startLongPress(e) {
+        if (isDeleted) return;
         lpFired.current = false;
         const x = e.touches[0]?.clientX ?? 0;
         const y = e.touches[0]?.clientY ?? 0;
@@ -550,18 +571,28 @@ function MessageBubble({ msg, isMine, timeLabel, onLongPress }) {
             )}
             <div style={{ maxWidth: "72%", display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
                 <div
-                    style={{ ...s.bubble, ...(isMine ? s.bubbleMine : s.bubbleOther) }}
+                    style={{
+                        ...s.bubble,
+                        ...(isDeleted ? s.bubbleDeleted : (isMine ? s.bubbleMine : s.bubbleOther)),
+                    }}
                     onTouchStart={startLongPress}
                     onTouchEnd={cancelLongPress}
                     onTouchMove={cancelLongPress}
-                    onContextMenu={(e) => { e.preventDefault(); onLongPress(e); }}
+                    onContextMenu={isDeleted ? undefined : (e) => { e.preventDefault(); onLongPress(e); }}
                 >
-                    {msg.content}
+                    {isDeleted ? (
+                        <span style={{ display: "flex", alignItems: "center", gap: "6px", fontStyle: "italic", opacity: 0.75 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                            </svg>
+                            Mensaje eliminado
+                        </span>
+                    ) : msg.content}
                 </div>
                 <span style={s.msgTime}>{timeLabel(msg.createdAt)}</span>
             </div>
-            {/* Botón de opciones — aparece al hacer hover, fuera de la burbuja */}
-            {hovered && (
+            {/* Botón de opciones — solo si no está eliminado */}
+            {hovered && !isDeleted && (
                 <button
                     style={s.msgActionBtn}
                     onClick={(e) => { e.stopPropagation(); onLongPress(e); }}
@@ -714,6 +745,12 @@ const s = {
     bubbleOther: {
         background: "var(--card-bg)", color: "var(--text-main)",
         border: "1px solid var(--card-border)", borderBottomLeftRadius: "4px",
+    },
+    bubbleDeleted: {
+        background: "transparent",
+        border: "1px dashed var(--border-color)",
+        color: "var(--text-muted)",
+        borderRadius: "16px",
     },
     msgTime: { fontSize: "0.68rem", color: "var(--text-muted)", marginTop: "3px", paddingLeft: "2px" },
     sendErrorBar: {
