@@ -5,8 +5,18 @@ const ROLE_LABEL = { admin: "Admin", lead: "Lead", operator: "Operador" };
 const ROLE_COLOR = {
     admin:    { bg: "#dbeafe", color: "#1d4ed8" },
     lead:     { bg: "#ede9fe", color: "#6d28d9" },
-    operator: { bg: "#f0fdf4", color: "#15803d" },
+    operator: { bg: "#dcfce7", color: "#15803d" },
 };
+
+// Color del avatar basado en la inicial — más variedad visual
+const AVATAR_COLORS = [
+    "#2563eb","#7c3aed","#db2777","#059669","#d97706",
+    "#dc2626","#0891b2","#65a30d","#9333ea","#ea580c",
+];
+function avatarColor(name) {
+    const code = (name || "?").charCodeAt(0);
+    return AVATAR_COLORS[code % AVATAR_COLORS.length];
+}
 
 export default function ChatPanel({ token, user, onClose, onUnreadChange, incomingMessage }) {
     const isAdmin = ["admin", "lead"].includes(user?.role);
@@ -231,9 +241,9 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
                             {withMessages.length > 0 && (
                                 <>
                                     <div style={s.sectionLabel}>Recientes</div>
-                                    {withMessages.map(({ contact, unread, lastMsg }) => (
+                                    {withMessages.map(({ contact, unread, lastMsg }, i) => (
                                         <ContactRow key={contact.id} contact={contact} unread={unread} lastMsg={lastMsg}
-                                            userId={user.id} timeLabel={timeLabel} onSelect={selectContact} />
+                                            userId={user.id} timeLabel={timeLabel} onSelect={selectContact} index={i} />
                                     ))}
                                 </>
                             )}
@@ -244,9 +254,9 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
                                     <div style={s.sectionLabel}>
                                         {withMessages.length > 0 ? "Otros contactos" : (isAdmin ? "Operadores" : "Equipo")}
                                     </div>
-                                    {withoutMessages.map(({ contact, unread, lastMsg }) => (
+                                    {withoutMessages.map(({ contact, unread, lastMsg }, i) => (
                                         <ContactRow key={contact.id} contact={contact} unread={unread} lastMsg={lastMsg}
-                                            userId={user.id} timeLabel={timeLabel} onSelect={selectContact} />
+                                            userId={user.id} timeLabel={timeLabel} onSelect={selectContact} index={withMessages.length + i} />
                                     ))}
                                 </>
                             )}
@@ -312,20 +322,26 @@ export default function ChatPanel({ token, user, onClose, onUnreadChange, incomi
     );
 }
 
-function ContactRow({ contact, unread, lastMsg, userId, timeLabel, onSelect }) {
+function ContactRow({ contact, unread, lastMsg, userId, timeLabel, onSelect, index }) {
     const rc = ROLE_COLOR[contact.role];
+    const ac = avatarColor(contact.name);
     return (
         <button
-            style={{ ...s.contactItem, ...(unread > 0 ? s.contactItemUnread : {}) }}
+            className={`chat-contact${unread > 0 ? " has-unread" : ""}`}
+            style={{
+                ...s.contactItem,
+                ...(unread > 0 ? s.contactItemUnread : {}),
+                animationDelay: `${index * 0.04}s`,
+            }}
             onClick={() => onSelect(contact.id)}
         >
-            <div style={{ ...s.avatar, background: rc.color }}>
+            <div style={{ ...s.avatar, background: ac }}>
                 {contact.name.charAt(0).toUpperCase()}
             </div>
             <div style={s.contactInfo}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
-                        <span style={{ ...s.contactName, ...(unread > 0 ? { fontWeight: "800", color: "var(--text-main)" } : {}) }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0, overflow: "hidden" }}>
+                        <span style={{ ...s.contactName, ...(unread > 0 ? { fontWeight: "800", color: "var(--text-main)" } : {}), overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {contact.name}
                         </span>
                         <span style={{ ...s.roleBadge, ...rc, flexShrink: 0 }}>
@@ -334,13 +350,13 @@ function ContactRow({ contact, unread, lastMsg, userId, timeLabel, onSelect }) {
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                         {lastMsg && <span style={s.contactTime}>{timeLabel(lastMsg.createdAt)}</span>}
-                        {unread > 0 && <span style={s.unreadBadge}>{unread}</span>}
+                        {unread > 0 && <span className="chat-unread-badge" style={s.unreadBadge}>{unread}</span>}
                     </div>
                 </div>
                 <span style={{ ...s.contactPreview, ...(unread > 0 ? { color: "var(--text-main)", fontWeight: "600" } : {}) }}>
                     {lastMsg
                         ? (lastMsg.senderId === userId ? "Tú: " : "") + lastMsg.content
-                        : <span style={{ fontStyle: "italic" }}>Iniciar conversación</span>
+                        : <em style={{ opacity: 0.6 }}>Iniciar conversación</em>
                     }
                 </span>
             </div>
