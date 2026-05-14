@@ -466,6 +466,7 @@ function ContactRow({ contact, unread, lastMsg, userId, timeLabel, onSelect, onL
 
     function startLongPress(e) {
         if (!onLongPress) return;
+        e.preventDefault(); // bloquea selección de texto y callout nativo del navegador
         lpFired.current = false;
         const x = e.touches[0]?.clientX ?? 0;
         const y = e.touches[0]?.clientY ?? 0;
@@ -492,7 +493,7 @@ function ContactRow({ contact, unread, lastMsg, userId, timeLabel, onSelect, onL
             onTouchStart={startLongPress}
             onTouchEnd={cancelLongPress}
             onTouchMove={cancelLongPress}
-            onContextMenu={onLongPress ? (e) => { e.preventDefault(); onLongPress(e); } : undefined}
+            onContextMenu={(e) => { e.preventDefault(); if (onLongPress) onLongPress(e); }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
@@ -545,6 +546,7 @@ function MessageBubble({ msg, isMine, timeLabel, onLongPress }) {
 
     function startLongPress(e) {
         if (isDeleted) return;
+        e.preventDefault(); // bloquea selección de texto y callout nativo
         lpFired.current = false;
         const x = e.touches[0]?.clientX ?? 0;
         const y = e.touches[0]?.clientY ?? 0;
@@ -674,6 +676,8 @@ const s = {
         width: "100%", padding: "11px 18px",
         background: "none", border: "none", borderBottom: "1px solid var(--border-color)",
         cursor: "pointer", textAlign: "left", transition: "background 0.12s",
+        userSelect: "none", WebkitUserSelect: "none",
+        WebkitTouchCallout: "none", touchAction: "manipulation",
     },
     contactItemUnread: { background: "var(--primary-light)" },
     contactMenuBtn: {
@@ -740,6 +744,8 @@ const s = {
     bubble: {
         padding: "8px 13px", borderRadius: "16px",
         fontSize: "0.875rem", lineHeight: 1.5, wordBreak: "break-word",
+        userSelect: "none", WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
     },
     bubbleMine: { background: "var(--primary)", color: "#fff", borderBottomRightRadius: "4px" },
     bubbleOther: {
