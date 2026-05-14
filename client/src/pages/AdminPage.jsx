@@ -841,8 +841,8 @@ function AdminPage() {
                         { value: users.filter((u) => u.role === "operator" && u.active).length, label: "Operadores activos" },
                     ].map(({ value, label }, i) => (
                         <div key={label} style={{ ...styles.statItem, ...(i > 0 ? styles.statItemBorder : {}) }}>
-                            <span style={styles.statNum}>{value}</span>
-                            <span style={styles.statLabel}>{label}</span>
+                            <span className="stat-num" style={styles.statNum}>{value}</span>
+                            <span className="stat-label" style={styles.statLabel}>{label}</span>
                         </div>
                     ))}
                 </div>
