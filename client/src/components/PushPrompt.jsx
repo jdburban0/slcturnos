@@ -9,58 +9,57 @@ function urlBase64ToUint8Array(base64String) {
     return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
-export async function testPush(token) {
+async function subscribeAndSave(token) {
+    const registration = await navigator.serviceWorker.ready;
+    const res = await fetch(`${BASE}/api/push/vapid-public-key`);
+    const { publicKey } = await res.json();
+    const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+    const { endpoint, keys } = subscription.toJSON();
+    await fetch(`${BASE}/api/push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ endpoint, keys }),
+    });
+}
+
+async function testPush(token) {
     const res = await fetch(`${BASE}/api/push/test`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
     });
-    const data = await res.json();
-    console.log("[Push test]", data);
-    return data;
+    return res.json();
 }
 
 export default function PushPrompt({ token }) {
-    const [visible, setVisible] = useState(false);
+    // "idle" | "activar" | "probar" | "hidden"
+    const [mode, setMode] = useState("hidden");
     const [loading, setLoading] = useState(false);
-
     const [testResult, setTestResult] = useState(null);
 
     useEffect(() => {
         if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
-        const dismissed = localStorage.getItem("push-prompt-dismissed");
 
-        if (Notification.permission === "granted" && !dismissed) {
-            // Ya tiene permiso pero no ha confirmado suscripción — reenviar suscripción
-            setVisible(true);
-            return;
-        }
-        if (Notification.permission !== "default") return;
+        const dismissed = localStorage.getItem("push-prompt-dismissed");
         if (dismissed) return;
-        const t = setTimeout(() => setVisible(true), 3000);
-        return () => clearTimeout(t);
+
+        if (Notification.permission === "granted") {
+            // Ya tiene permiso — mostrar botón Probar para confirmar suscripción
+            setTimeout(() => setMode("probar"), 2000);
+        } else if (Notification.permission === "default") {
+            setTimeout(() => setMode("activar"), 3000);
+        }
     }, []);
 
     async function handleActivar() {
         setLoading(true);
         try {
             const permission = await Notification.requestPermission();
-            if (permission !== "granted") { setVisible(false); return; }
-
-            const registration = await navigator.serviceWorker.ready;
-            const res = await fetch(`${BASE}/api/push/vapid-public-key`);
-            const { publicKey } = await res.json();
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(publicKey),
-            });
-            const { endpoint, keys } = subscription.toJSON();
-            await fetch(`${BASE}/api/push/subscribe`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ endpoint, keys }),
-            });
-            localStorage.setItem("push-prompt-dismissed", "1");
-            setVisible(false);
+            if (permission !== "granted") { setMode("hidden"); return; }
+            await subscribeAndSave(token);
+            setMode("probar");
         } catch (err) {
             console.error("[Push] Error al activar:", err);
         } finally {
@@ -68,12 +67,32 @@ export default function PushPrompt({ token }) {
         }
     }
 
-    function handleDismiss() {
-        localStorage.setItem("push-prompt-dismissed", "1");
-        setVisible(false);
+    async function handleProbar() {
+        setLoading(true);
+        try {
+            await subscribeAndSave(token); // re-guardar por si acaso
+            const r = await testPush(token);
+            setTestResult(r?.ok ? "✓ Listo" : r?.message || "Error");
+            if (r?.ok) {
+                setTimeout(() => {
+                    localStorage.setItem("push-prompt-dismissed", "1");
+                    setMode("hidden");
+                }, 2000);
+            }
+        } catch (err) {
+            console.error("[Push] Error al probar:", err);
+            setTestResult("Error");
+        } finally {
+            setLoading(false);
+        }
     }
 
-    if (!visible) return null;
+    function handleDismiss() {
+        localStorage.setItem("push-prompt-dismissed", "1");
+        setMode("hidden");
+    }
+
+    if (mode === "hidden") return null;
 
     return (
         <div className="anim-slide-right" style={styles.banner}>
@@ -84,23 +103,16 @@ export default function PushPrompt({ token }) {
                 </svg>
             </div>
             <div style={styles.text}>
-                <span style={styles.title}>Activar notificaciones</span>
-                <span style={styles.sub}>Recibe avisos aunque tengas la app cerrada</span>
+                <span style={styles.title}>
+                    {mode === "probar" ? "Notificaciones activadas" : "Activar notificaciones"}
+                </span>
+                <span style={styles.sub}>
+                    {mode === "probar" ? "Toca Probar para verificar que funciona" : "Recibe avisos aunque tengas la app cerrada"}
+                </span>
             </div>
-            {Notification.permission === "granted" ? (
-                <button style={styles.activar} onClick={async () => {
-                    setLoading(true);
-                    const r = await testPush(token);
-                    setTestResult(r?.ok ? "✓ Enviado" : r?.message || "Error");
-                    setLoading(false);
-                }} disabled={loading}>
-                    {loading ? "..." : testResult || "Probar"}
-                </button>
-            ) : (
-                <button style={styles.activar} onClick={handleActivar} disabled={loading}>
-                    {loading ? "..." : "Activar"}
-                </button>
-            )}
+            <button style={styles.activar} onClick={mode === "probar" ? handleProbar : handleActivar} disabled={loading}>
+                {loading ? "..." : testResult || (mode === "probar" ? "Probar" : "Activar")}
+            </button>
             <button style={styles.close} onClick={handleDismiss} aria-label="Cerrar">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -114,20 +126,19 @@ const styles = {
     banner: {
         position: "fixed",
         bottom: "24px",
-        left: "50%",
-        transform: "translateX(-50%)",
+        left: "16px",
+        right: "16px",
         display: "flex",
         alignItems: "center",
         gap: "12px",
         background: "var(--card-bg)",
         border: "1px solid var(--card-border)",
         borderRadius: "14px",
-        boxShadow: "var(--card-shadow)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
         backdropFilter: "blur(16px)",
-        padding: "12px 16px",
+        WebkitBackdropFilter: "blur(16px)",
+        padding: "12px 14px",
         zIndex: 400,
-        maxWidth: "calc(100vw - 32px)",
-        width: "360px",
     },
     icon: {
         width: "36px",
@@ -148,12 +159,12 @@ const styles = {
         minWidth: 0,
     },
     title: {
-        fontSize: "0.88rem",
+        fontSize: "0.85rem",
         fontWeight: "700",
         color: "var(--text-main)",
     },
     sub: {
-        fontSize: "0.75rem",
+        fontSize: "0.72rem",
         color: "var(--text-muted)",
     },
     activar: {
@@ -166,6 +177,7 @@ const styles = {
         fontWeight: "700",
         cursor: "pointer",
         flexShrink: 0,
+        whiteSpace: "nowrap",
     },
     close: {
         background: "none",
