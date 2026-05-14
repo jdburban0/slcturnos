@@ -834,22 +834,17 @@ function AdminPage() {
 
                 {/* Barra de estadísticas */}
                 <div style={styles.statsBar}>
-                    <div style={styles.statCard}>
-                        <span style={styles.statNum}>{nextWeekShifts.filter((s) => s.status === "OPEN").length}</span>
-                        <span style={styles.statLabel}>Turnos abiertos</span>
-                    </div>
-                    <div style={styles.statCard}>
-                        <span style={{ ...styles.statNum, color: "var(--warning)" }}>{requests.length}</span>
-                        <span style={styles.statLabel}>Solicitudes pendientes</span>
-                    </div>
-                    <div style={styles.statCard}>
-                        <span style={{ ...styles.statNum, color: "var(--success)" }}>{totalApprovedSlotsNext}</span>
-                        <span style={styles.statLabel}>Cupos aprobados</span>
-                    </div>
-                    <div style={styles.statCard}>
-                        <span style={styles.statNum}>{users.filter((u) => u.role === "operator" && u.active).length}</span>
-                        <span style={styles.statLabel}>Operadores activos</span>
-                    </div>
+                    {[
+                        { value: nextWeekShifts.filter((s) => s.status === "OPEN").length, label: "Turnos abiertos" },
+                        { value: requests.length, label: "Solicitudes pendientes" },
+                        { value: totalApprovedSlotsNext, label: "Cupos aprobados" },
+                        { value: users.filter((u) => u.role === "operator" && u.active).length, label: "Operadores activos" },
+                    ].map(({ value, label }, i) => (
+                        <div key={label} style={{ ...styles.statItem, ...(i > 0 ? styles.statItemBorder : {}) }}>
+                            <span style={styles.statNum}>{value}</span>
+                            <span style={styles.statLabel}>{label}</span>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Pestañas de navegación */}
@@ -1427,15 +1422,28 @@ const styles = {
     },
     menuDivider: { height: "1px", background: "var(--border-color)", margin: "4px 0" },
     statsBar: {
-        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "16px",
+        display: "flex",
+        background: "var(--card-bg)",
+        border: "1px solid var(--card-border)",
+        borderRadius: "14px",
+        boxShadow: "var(--card-shadow)",
+        backdropFilter: "blur(16px)",
+        marginBottom: "16px",
+        overflow: "hidden",
     },
-    statCard: {
-        background: "var(--card-bg)", border: "1px solid var(--border-color)",
-        borderRadius: "12px", padding: "16px 8px", display: "flex",
-        flexDirection: "column", gap: "4px", alignItems: "center", backdropFilter: "blur(16px)"
+    statItem: {
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "4px",
+        padding: "18px 12px",
     },
-    statNum: { fontSize: "1.5rem", fontWeight: "800", color: "var(--text-main)" },
-    statLabel: { fontSize: "0.68rem", color: "var(--text-muted)", textAlign: "center", lineHeight: "1.2" },
+    statItemBorder: {
+        borderLeft: "1px solid var(--border-color)",
+    },
+    statNum: { fontSize: "1.8rem", fontWeight: "800", color: "var(--text-main)", lineHeight: 1 },
+    statLabel: { fontSize: "0.75rem", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: "center" },
     tabs: { display: "flex", gap: "6px", marginBottom: "20px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" },
     tab: {
         padding: "10px 18px", borderRadius: "10px", border: "1.5px solid transparent",

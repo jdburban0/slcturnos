@@ -436,21 +436,17 @@ function DashboardPage() {
                 </header>
 
                 {/* Stats */}
-                <div className="dash-stats" style={styles.statsRow}>
-                    <div className="dash-stat-card" style={styles.statCard}>
-                        <span className="stat-val" style={{ ...styles.statValue, color: "var(--success)" }}>{myApprovedShifts.length}</span>
-                        <span className="stat-lbl" style={styles.statLabel}>Aprobados</span>
-                    </div>
-                    <div className="dash-stat-card" style={styles.statCard}>
-                        <span className="stat-val" style={{ ...styles.statValue, color: "var(--warning)" }}>{myPendingCount}</span>
-                        <span className="stat-lbl" style={styles.statLabel}>Pendientes</span>
-                    </div>
-                    <div className="dash-stat-card" style={styles.statCard}>
-                        <span className="stat-val" style={{ ...styles.statValue, color: "var(--primary)" }}>
-                            {dashTab === "current" ? currentWeekShifts.length : openShiftsCount}
-                        </span>
-                        <span className="stat-lbl" style={styles.statLabel}>{dashTab === "current" ? "En curso" : "Disponibles"}</span>
-                    </div>
+                <div style={styles.statsCard}>
+                    {[
+                        { value: myApprovedShifts.length, label: "Aprobados" },
+                        { value: myPendingCount, label: "Pendientes" },
+                        { value: dashTab === "current" ? currentWeekShifts.length : openShiftsCount, label: dashTab === "current" ? "En curso" : "Disponibles" },
+                    ].map(({ value, label }, i) => (
+                        <div key={label} style={{ ...styles.statItem, ...(i > 0 ? styles.statItemBorder : {}) }}>
+                            <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--text-main)", lineHeight: 1 }}>{value}</span>
+                            <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Tabs semana actual / próxima */}
@@ -782,35 +778,26 @@ const styles = {
         background: "var(--border-color)",
         margin: "4px 0",
     },
-    statsRow: {
+    statsCard: {
         display: "flex",
-        gap: "10px",
-        marginBottom: "16px",
-    },
-    statCard: {
         background: "var(--card-bg)",
-        borderRadius: "12px",
-        padding: "16px 18px",
+        border: "1px solid var(--card-border)",
+        borderRadius: "14px",
+        boxShadow: "var(--card-shadow)",
+        backdropFilter: "blur(16px)",
+        marginBottom: "16px",
+        overflow: "hidden",
+    },
+    statItem: {
+        flex: 1,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         gap: "4px",
-        border: "1px solid var(--card-border)",
-        boxShadow: "var(--card-shadow)",
-        flex: 1,
-        backdropFilter: "blur(16px)",
+        padding: "18px 20px",
     },
-    statValue: {
-        fontSize: "1.5rem",
-        fontWeight: "800",
-        lineHeight: 1,
-    },
-    statLabel: {
-        fontSize: "0.65rem",
-        color: "var(--text-muted)",
-        fontWeight: "700",
-        textTransform: "uppercase",
-        letterSpacing: "0.04em",
+    statItemBorder: {
+        borderLeft: "1px solid var(--border-color)",
     },
     cardsGrid: {
         display: "grid",
