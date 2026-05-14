@@ -731,9 +731,14 @@ function AdminPage() {
                 const shift = assignedModal.shift;
                 const approved = (shift.requests ?? [])
                     .filter((r) => r.status === "APPROVED")
-                    .map((r) => ({ id: r.id, name: r.user?.name ?? "—", email: r.user?.email ?? "", type: "request" }));
+                    .map((r) => ({
+                        id: r.id, name: r.user?.name ?? "—", email: r.user?.email ?? "",
+                        type: "request",
+                        approvedBy: r.reviewedByUser?.name ?? null,
+                        approvedAt: r.reviewedAt ?? null,
+                    }));
                 const manual = (shift.manualAssignments ?? [])
-                    .map((a) => ({ id: a.id, name: a.name, email: a.email, type: "manual" }));
+                    .map((a) => ({ id: a.id, name: a.name, email: a.email, type: "manual", approvedBy: null, approvedAt: null }));
                 const all = [...approved, ...manual].sort((a, b) => a.name.localeCompare(b.name, "es"));
                 return (
                     <div className="modal-overlay-anim" style={styles.modalOverlay}>
@@ -763,6 +768,21 @@ function AdminPage() {
                                                         {op.type === "manual" ? "Manual" : "Solicitud"}
                                                     </span>
                                                 </p>
+                                                {op.approvedBy && (
+                                                    <p style={{ margin: "3px 0 0", fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                                        </svg>
+                                                        Aprobado por <strong style={{ color: "var(--text-main)", marginLeft: "3px" }}>{op.approvedBy}</strong>
+                                                        {op.approvedAt && (
+                                                            <span style={{ marginLeft: "6px", opacity: 0.7 }}>
+                                                                · {new Date(op.approvedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
+                                                                {" a las "}
+                                                                {new Date(op.approvedAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                                                            </span>
+                                                        )}
+                                                    </p>
+                                                )}
                                             </div>
                                             <button
                                                 style={styles.removeBtn}

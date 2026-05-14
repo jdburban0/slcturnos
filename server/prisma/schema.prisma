@@ -48,6 +48,7 @@ model User {
   pushSubscriptions PushSubscription[]
   sentMessages      Message[]          @relation("MessageSender")
   receivedMessages  Message[]          @relation("MessageRecipient")
+  reviewedRequests  ShiftRequest[]     @relation("RequestReviewer")
 }
 
 model Message {
@@ -118,9 +119,10 @@ model ShiftRequest {
   notes         String?
   createdAt     DateTime       @default(now())
 
-  shift    Shift          @relation(fields: [shiftId], references: [id])
-  user     User           @relation(fields: [userId], references: [id])
-  transfer ShiftTransfer?
+  shift          Shift          @relation(fields: [shiftId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+  reviewedByUser User?          @relation("RequestReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  transfer       ShiftTransfer?
 
   @@index([shiftId, status])
   @@index([userId, status])

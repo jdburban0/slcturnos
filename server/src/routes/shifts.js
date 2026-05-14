@@ -40,6 +40,7 @@ router.get("/", requireAuth, async (req, res) => {
                     include: {
                         user: { select: { id: true, name: true, email: true } },
                         transfer: { select: { status: true } },
+                        reviewedByUser: { select: { id: true, name: true } },
                     },
                 },
                 manualAssignments: { select: { id: true, name: true, email: true, createdAt: true } },
