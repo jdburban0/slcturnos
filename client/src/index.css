@@ -281,7 +281,7 @@ button:active:not(:disabled) {
   border: 1.5px solid var(--border-color);
   background: var(--input-bg);
   color: var(--text-main);
-  font-size: 0.95rem;
+  font-size: 1rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .input-field:focus {

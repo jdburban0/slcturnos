@@ -877,7 +877,7 @@ const styles = {
     modalForm: { display: "flex", flexDirection: "column", gap: "12px" },
     modalInput: {
         background: "var(--input-bg)", border: "1px solid var(--border-color)", borderRadius: "8px",
-        padding: "10px 14px", color: "var(--text-main)", fontSize: "0.9rem", width: "100%", outline: "none",
+        padding: "10px 14px", color: "var(--text-main)", fontSize: "1rem", width: "100%", outline: "none",
     },
     modalError: { margin: 0, color: "var(--danger)", fontSize: "0.85rem" },
     modalSuccess: { margin: 0, color: "var(--success)", fontSize: "0.85rem" },
