@@ -119,6 +119,42 @@ router.post("/", requireAuth, async (req, res) => {
     }
 });
 
+// DELETE /api/chat/message/:messageId — eliminar un mensaje individual
+router.delete("/message/:messageId", requireAuth, async (req, res) => {
+    try {
+        const msg = await prisma.message.findUnique({ where: { id: req.params.messageId } });
+        if (!msg) return res.status(404).json({ message: "Mensaje no encontrado" });
+        if (msg.senderId !== req.user.id && msg.recipientId !== req.user.id)
+            return res.status(403).json({ message: "No autorizado" });
+        await prisma.message.delete({ where: { id: req.params.messageId } });
+        const otherId = msg.senderId === req.user.id ? msg.recipientId : msg.senderId;
+        const io = req.app.get("io");
+        io.to(`user:${otherId}`).emit("chat:messageDeleted", { messageId: req.params.messageId });
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al eliminar mensaje" });
+    }
+});
+
+// DELETE /api/chat/conversation/:userId — eliminar todos los mensajes con userId
+router.delete("/conversation/:userId", requireAuth, async (req, res) => {
+    try {
+        await prisma.message.deleteMany({
+            where: {
+                OR: [
+                    { senderId: req.user.id, recipientId: req.params.userId },
+                    { senderId: req.params.userId, recipientId: req.user.id },
+                ],
+            },
+        });
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al eliminar conversación" });
+    }
+});
+
 // PATCH /api/chat/:userId/read — marcar mensajes de userId como leídos
 router.patch("/:userId/read", requireAuth, async (req, res) => {
     try {

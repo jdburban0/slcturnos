@@ -289,6 +289,7 @@ function AdminPage() {
     const [showChat, setShowChat] = useState(false);
     const [chatUnread, setChatUnread] = useState(0);
     const [lastChatMessage, setLastChatMessage] = useState(null);
+    const [deletedMessageEvent, setDeletedMessageEvent] = useState(null);
     const [showCreatorModal, setShowCreatorModal] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [editingShiftId, setEditingShiftId] = useState(null);
@@ -356,6 +357,7 @@ function AdminPage() {
                 return open;
             });
         },
+        "chat:messageDeleted": (data) => setDeletedMessageEvent(data),
         "force:logout": () => {
             logout();
             navigate("/login");
@@ -644,6 +646,7 @@ function AdminPage() {
                     onClose={() => setShowChat(false)}
                     onUnreadChange={setChatUnread}
                     incomingMessage={lastChatMessage}
+                    deletedMessageEvent={deletedMessageEvent}
                 />
             )}
 

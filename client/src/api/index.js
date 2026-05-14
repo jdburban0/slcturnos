@@ -382,6 +382,20 @@ export async function markChatRead(token, userId) {
     }));
 }
 
+export async function deleteChatMessage(token, messageId) {
+    return handle(await fetch(`${BASE}/api/chat/message/${messageId}`, {
+        method: "DELETE",
+        headers: headers(token),
+    }));
+}
+
+export async function deleteChatConversation(token, userId) {
+    return handle(await fetch(`${BASE}/api/chat/conversation/${userId}`, {
+        method: "DELETE",
+        headers: headers(token),
+    }));
+}
+
 export async function resetPassword(email, code, newPassword) {
     return handle(await fetch(`${BASE}/api/auth/reset-password`, {
         method: "POST", headers: { "Content-Type": "application/json" },

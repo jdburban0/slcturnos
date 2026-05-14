@@ -126,6 +126,7 @@ function DashboardPage() {
     const [showChat, setShowChat] = useState(false);
     const [chatUnread, setChatUnread] = useState(0);
     const [lastChatMessage, setLastChatMessage] = useState(null);
+    const [deletedMessageEvent, setDeletedMessageEvent] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
     const [history, setHistory] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
@@ -163,6 +164,7 @@ function DashboardPage() {
                 return open;
             });
         },
+        "chat:messageDeleted": (data) => setDeletedMessageEvent(data),
         "force:logout": () => {
             logout();
             navigate("/login");
@@ -318,6 +320,7 @@ function DashboardPage() {
                     onClose={() => setShowChat(false)}
                     onUnreadChange={setChatUnread}
                     incomingMessage={lastChatMessage}
+                    deletedMessageEvent={deletedMessageEvent}
                 />
             )}
             {toast && (
