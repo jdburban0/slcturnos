@@ -397,6 +397,13 @@ export async function deleteChatConversation(token, userId) {
     }));
 }
 
+export async function toggleHideFromChat(token, userId) {
+    return handle(await fetch(`${BASE}/api/users/${userId}/hide-from-chat`, {
+        method: "PATCH",
+        headers: headers(token),
+    }));
+}
+
 export async function resetPassword(email, code, newPassword) {
     return handle(await fetch(`${BASE}/api/auth/reset-password`, {
         method: "POST", headers: { "Content-Type": "application/json" },

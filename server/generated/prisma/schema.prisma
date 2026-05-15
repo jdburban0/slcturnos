@@ -40,6 +40,7 @@ model User {
   role              Role               @default(operator)
   group             String?
   active            Boolean            @default(true)
+  hideFromChat      Boolean            @default(false)
   tutorialDone      Boolean            @default(false)
   createdAt         DateTime           @default(now())
   requests          ShiftRequest[]
@@ -48,15 +49,19 @@ model User {
   pushSubscriptions PushSubscription[]
   sentMessages      Message[]          @relation("MessageSender")
   receivedMessages  Message[]          @relation("MessageRecipient")
+  reviewedRequests  ShiftRequest[]     @relation("RequestReviewer")
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  senderId    String
-  recipientId String
-  content     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id                 String   @id @default(cuid())
+  senderId           String
+  recipientId        String
+  content            String
+  isRead             Boolean  @default(false)
+  deletedBySender    Boolean  @default(false)
+  deletedByRecipient Boolean  @default(false)
+  deletedForAll      Boolean  @default(false)
+  createdAt          DateTime @default(now())
 
   sender    User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
@@ -115,9 +120,10 @@ model ShiftRequest {
   notes         String?
   createdAt     DateTime      @default(now())
 
-  shift    Shift          @relation(fields: [shiftId], references: [id])
-  user     User           @relation(fields: [userId], references: [id])
-  transfer ShiftTransfer?
+  shift          Shift          @relation(fields: [shiftId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+  reviewedByUser User?          @relation("RequestReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  transfer       ShiftTransfer?
 
   @@index([shiftId, status])
   @@index([userId, status])

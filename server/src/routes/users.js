@@ -38,7 +38,7 @@ router.patch("/me/tutorial", requireAuth, async (req, res) => {
 router.get("/", requireAuth, requireRole("admin", "lead"), async (req, res) => {
     try {
         const users = await prisma.user.findMany({
-            select: { id: true, name: true, email: true, role: true, active: true, group: true, createdAt: true },
+            select: { id: true, name: true, email: true, role: true, active: true, group: true, createdAt: true, hideFromChat: true },
             orderBy: { name: "asc" },
         });
         res.json(users);
@@ -105,6 +105,24 @@ router.patch("/:id/toggle", requireAuth, requireRole("admin", "lead"), async (re
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al actualizar usuario" });
+    }
+});
+
+// PATCH toggle hideFromChat (admin only)
+router.patch("/:id/hide-from-chat", requireAuth, requireRole("admin"), async (req, res) => {
+    try {
+        const current = await prisma.user.findUnique({ where: { id: req.params.id } });
+        if (!current) return res.status(404).json({ message: "Usuario no encontrado" });
+
+        const user = await prisma.user.update({
+            where: { id: req.params.id },
+            data: { hideFromChat: !current.hideFromChat },
+            select: { id: true, name: true, hideFromChat: true },
+        });
+        res.json(user);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error al actualizar visibilidad en chat" });
     }
 });
 

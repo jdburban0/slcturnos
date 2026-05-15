@@ -1749,6 +1749,7 @@ export namespace Prisma {
     pushSubscriptions: number
     sentMessages: number
     receivedMessages: number
+    reviewedRequests: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1758,6 +1759,7 @@ export namespace Prisma {
     pushSubscriptions?: boolean | UserCountOutputTypeCountPushSubscriptionsArgs
     sentMessages?: boolean | UserCountOutputTypeCountSentMessagesArgs
     receivedMessages?: boolean | UserCountOutputTypeCountReceivedMessagesArgs
+    reviewedRequests?: boolean | UserCountOutputTypeCountReviewedRequestsArgs
   }
 
   // Custom InputTypes
@@ -1811,6 +1813,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountReceivedMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MessageWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReviewedRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShiftRequestWhereInput
   }
 
 
@@ -1885,6 +1894,7 @@ export namespace Prisma {
     role: $Enums.Role | null
     group: string | null
     active: boolean | null
+    hideFromChat: boolean | null
     tutorialDone: boolean | null
     createdAt: Date | null
   }
@@ -1897,6 +1907,7 @@ export namespace Prisma {
     role: $Enums.Role | null
     group: string | null
     active: boolean | null
+    hideFromChat: boolean | null
     tutorialDone: boolean | null
     createdAt: Date | null
   }
@@ -1909,6 +1920,7 @@ export namespace Prisma {
     role: number
     group: number
     active: number
+    hideFromChat: number
     tutorialDone: number
     createdAt: number
     _all: number
@@ -1923,6 +1935,7 @@ export namespace Prisma {
     role?: true
     group?: true
     active?: true
+    hideFromChat?: true
     tutorialDone?: true
     createdAt?: true
   }
@@ -1935,6 +1948,7 @@ export namespace Prisma {
     role?: true
     group?: true
     active?: true
+    hideFromChat?: true
     tutorialDone?: true
     createdAt?: true
   }
@@ -1947,6 +1961,7 @@ export namespace Prisma {
     role?: true
     group?: true
     active?: true
+    hideFromChat?: true
     tutorialDone?: true
     createdAt?: true
     _all?: true
@@ -2032,6 +2047,7 @@ export namespace Prisma {
     role: $Enums.Role
     group: string | null
     active: boolean
+    hideFromChat: boolean
     tutorialDone: boolean
     createdAt: Date
     _count: UserCountAggregateOutputType | null
@@ -2061,6 +2077,7 @@ export namespace Prisma {
     role?: boolean
     group?: boolean
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: boolean
     requests?: boolean | User$requestsArgs<ExtArgs>
@@ -2069,6 +2086,7 @@ export namespace Prisma {
     pushSubscriptions?: boolean | User$pushSubscriptionsArgs<ExtArgs>
     sentMessages?: boolean | User$sentMessagesArgs<ExtArgs>
     receivedMessages?: boolean | User$receivedMessagesArgs<ExtArgs>
+    reviewedRequests?: boolean | User$reviewedRequestsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2080,6 +2098,7 @@ export namespace Prisma {
     role?: boolean
     group?: boolean
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -2092,6 +2111,7 @@ export namespace Prisma {
     role?: boolean
     group?: boolean
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -2104,11 +2124,12 @@ export namespace Prisma {
     role?: boolean
     group?: boolean
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "group" | "active" | "tutorialDone" | "createdAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "group" | "active" | "hideFromChat" | "tutorialDone" | "createdAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     requests?: boolean | User$requestsArgs<ExtArgs>
     notifications?: boolean | User$notificationsArgs<ExtArgs>
@@ -2116,6 +2137,7 @@ export namespace Prisma {
     pushSubscriptions?: boolean | User$pushSubscriptionsArgs<ExtArgs>
     sentMessages?: boolean | User$sentMessagesArgs<ExtArgs>
     receivedMessages?: boolean | User$receivedMessagesArgs<ExtArgs>
+    reviewedRequests?: boolean | User$reviewedRequestsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -2130,6 +2152,7 @@ export namespace Prisma {
       pushSubscriptions: Prisma.$PushSubscriptionPayload<ExtArgs>[]
       sentMessages: Prisma.$MessagePayload<ExtArgs>[]
       receivedMessages: Prisma.$MessagePayload<ExtArgs>[]
+      reviewedRequests: Prisma.$ShiftRequestPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2139,6 +2162,7 @@ export namespace Prisma {
       role: $Enums.Role
       group: string | null
       active: boolean
+      hideFromChat: boolean
       tutorialDone: boolean
       createdAt: Date
     }, ExtArgs["result"]["user"]>
@@ -2541,6 +2565,7 @@ export namespace Prisma {
     pushSubscriptions<T extends User$pushSubscriptionsArgs<ExtArgs> = {}>(args?: Subset<T, User$pushSubscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PushSubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sentMessages<T extends User$sentMessagesArgs<ExtArgs> = {}>(args?: Subset<T, User$sentMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     receivedMessages<T extends User$receivedMessagesArgs<ExtArgs> = {}>(args?: Subset<T, User$receivedMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    reviewedRequests<T extends User$reviewedRequestsArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewedRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShiftRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2577,6 +2602,7 @@ export namespace Prisma {
     readonly role: FieldRef<"User", 'Role'>
     readonly group: FieldRef<"User", 'String'>
     readonly active: FieldRef<"User", 'Boolean'>
+    readonly hideFromChat: FieldRef<"User", 'Boolean'>
     readonly tutorialDone: FieldRef<"User", 'Boolean'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
   }
@@ -3116,6 +3142,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.reviewedRequests
+   */
+  export type User$reviewedRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftRequest
+     */
+    select?: ShiftRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftRequest
+     */
+    omit?: ShiftRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftRequestInclude<ExtArgs> | null
+    where?: ShiftRequestWhereInput
+    orderBy?: ShiftRequestOrderByWithRelationInput | ShiftRequestOrderByWithRelationInput[]
+    cursor?: ShiftRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ShiftRequestScalarFieldEnum | ShiftRequestScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3150,6 +3200,9 @@ export namespace Prisma {
     recipientId: string | null
     content: string | null
     isRead: boolean | null
+    deletedBySender: boolean | null
+    deletedByRecipient: boolean | null
+    deletedForAll: boolean | null
     createdAt: Date | null
   }
 
@@ -3159,6 +3212,9 @@ export namespace Prisma {
     recipientId: string | null
     content: string | null
     isRead: boolean | null
+    deletedBySender: boolean | null
+    deletedByRecipient: boolean | null
+    deletedForAll: boolean | null
     createdAt: Date | null
   }
 
@@ -3168,6 +3224,9 @@ export namespace Prisma {
     recipientId: number
     content: number
     isRead: number
+    deletedBySender: number
+    deletedByRecipient: number
+    deletedForAll: number
     createdAt: number
     _all: number
   }
@@ -3179,6 +3238,9 @@ export namespace Prisma {
     recipientId?: true
     content?: true
     isRead?: true
+    deletedBySender?: true
+    deletedByRecipient?: true
+    deletedForAll?: true
     createdAt?: true
   }
 
@@ -3188,6 +3250,9 @@ export namespace Prisma {
     recipientId?: true
     content?: true
     isRead?: true
+    deletedBySender?: true
+    deletedByRecipient?: true
+    deletedForAll?: true
     createdAt?: true
   }
 
@@ -3197,6 +3262,9 @@ export namespace Prisma {
     recipientId?: true
     content?: true
     isRead?: true
+    deletedBySender?: true
+    deletedByRecipient?: true
+    deletedForAll?: true
     createdAt?: true
     _all?: true
   }
@@ -3279,6 +3347,9 @@ export namespace Prisma {
     recipientId: string
     content: string
     isRead: boolean
+    deletedBySender: boolean
+    deletedByRecipient: boolean
+    deletedForAll: boolean
     createdAt: Date
     _count: MessageCountAggregateOutputType | null
     _min: MessageMinAggregateOutputType | null
@@ -3305,6 +3376,9 @@ export namespace Prisma {
     recipientId?: boolean
     content?: boolean
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: boolean
     sender?: boolean | UserDefaultArgs<ExtArgs>
     recipient?: boolean | UserDefaultArgs<ExtArgs>
@@ -3316,6 +3390,9 @@ export namespace Prisma {
     recipientId?: boolean
     content?: boolean
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: boolean
     sender?: boolean | UserDefaultArgs<ExtArgs>
     recipient?: boolean | UserDefaultArgs<ExtArgs>
@@ -3327,6 +3404,9 @@ export namespace Prisma {
     recipientId?: boolean
     content?: boolean
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: boolean
     sender?: boolean | UserDefaultArgs<ExtArgs>
     recipient?: boolean | UserDefaultArgs<ExtArgs>
@@ -3338,10 +3418,13 @@ export namespace Prisma {
     recipientId?: boolean
     content?: boolean
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: boolean
   }
 
-  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "senderId" | "recipientId" | "content" | "isRead" | "createdAt", ExtArgs["result"]["message"]>
+  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "senderId" | "recipientId" | "content" | "isRead" | "deletedBySender" | "deletedByRecipient" | "deletedForAll" | "createdAt", ExtArgs["result"]["message"]>
   export type MessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
     recipient?: boolean | UserDefaultArgs<ExtArgs>
@@ -3367,6 +3450,9 @@ export namespace Prisma {
       recipientId: string
       content: string
       isRead: boolean
+      deletedBySender: boolean
+      deletedByRecipient: boolean
+      deletedForAll: boolean
       createdAt: Date
     }, ExtArgs["result"]["message"]>
     composites: {}
@@ -3798,6 +3884,9 @@ export namespace Prisma {
     readonly recipientId: FieldRef<"Message", 'String'>
     readonly content: FieldRef<"Message", 'String'>
     readonly isRead: FieldRef<"Message", 'Boolean'>
+    readonly deletedBySender: FieldRef<"Message", 'Boolean'>
+    readonly deletedByRecipient: FieldRef<"Message", 'Boolean'>
+    readonly deletedForAll: FieldRef<"Message", 'Boolean'>
     readonly createdAt: FieldRef<"Message", 'DateTime'>
   }
     
@@ -7811,6 +7900,7 @@ export namespace Prisma {
     createdAt?: boolean
     shift?: boolean | ShiftDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reviewedByUser?: boolean | ShiftRequest$reviewedByUserArgs<ExtArgs>
     transfer?: boolean | ShiftRequest$transferArgs<ExtArgs>
   }, ExtArgs["result"]["shiftRequest"]>
 
@@ -7826,6 +7916,7 @@ export namespace Prisma {
     createdAt?: boolean
     shift?: boolean | ShiftDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reviewedByUser?: boolean | ShiftRequest$reviewedByUserArgs<ExtArgs>
   }, ExtArgs["result"]["shiftRequest"]>
 
   export type ShiftRequestSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -7840,6 +7931,7 @@ export namespace Prisma {
     createdAt?: boolean
     shift?: boolean | ShiftDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reviewedByUser?: boolean | ShiftRequest$reviewedByUserArgs<ExtArgs>
   }, ExtArgs["result"]["shiftRequest"]>
 
   export type ShiftRequestSelectScalar = {
@@ -7858,15 +7950,18 @@ export namespace Prisma {
   export type ShiftRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shift?: boolean | ShiftDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reviewedByUser?: boolean | ShiftRequest$reviewedByUserArgs<ExtArgs>
     transfer?: boolean | ShiftRequest$transferArgs<ExtArgs>
   }
   export type ShiftRequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shift?: boolean | ShiftDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reviewedByUser?: boolean | ShiftRequest$reviewedByUserArgs<ExtArgs>
   }
   export type ShiftRequestIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shift?: boolean | ShiftDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reviewedByUser?: boolean | ShiftRequest$reviewedByUserArgs<ExtArgs>
   }
 
   export type $ShiftRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7874,6 +7969,7 @@ export namespace Prisma {
     objects: {
       shift: Prisma.$ShiftPayload<ExtArgs>
       user: Prisma.$UserPayload<ExtArgs>
+      reviewedByUser: Prisma.$UserPayload<ExtArgs> | null
       transfer: Prisma.$ShiftTransferPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -8282,6 +8378,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     shift<T extends ShiftDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ShiftDefaultArgs<ExtArgs>>): Prisma__ShiftClient<$Result.GetResult<Prisma.$ShiftPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    reviewedByUser<T extends ShiftRequest$reviewedByUserArgs<ExtArgs> = {}>(args?: Subset<T, ShiftRequest$reviewedByUserArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     transfer<T extends ShiftRequest$transferArgs<ExtArgs> = {}>(args?: Subset<T, ShiftRequest$transferArgs<ExtArgs>>): Prisma__ShiftTransferClient<$Result.GetResult<Prisma.$ShiftTransferPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -8719,6 +8816,25 @@ export namespace Prisma {
      * Limit how many ShiftRequests to delete.
      */
     limit?: number
+  }
+
+  /**
+   * ShiftRequest.reviewedByUser
+   */
+  export type ShiftRequest$reviewedByUserArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
   }
 
   /**
@@ -13020,6 +13136,7 @@ export namespace Prisma {
     role: 'role',
     group: 'group',
     active: 'active',
+    hideFromChat: 'hideFromChat',
     tutorialDone: 'tutorialDone',
     createdAt: 'createdAt'
   };
@@ -13033,6 +13150,9 @@ export namespace Prisma {
     recipientId: 'recipientId',
     content: 'content',
     isRead: 'isRead',
+    deletedBySender: 'deletedBySender',
+    deletedByRecipient: 'deletedByRecipient',
+    deletedForAll: 'deletedForAll',
     createdAt: 'createdAt'
   };
 
@@ -13307,6 +13427,7 @@ export namespace Prisma {
     role?: EnumRoleFilter<"User"> | $Enums.Role
     group?: StringNullableFilter<"User"> | string | null
     active?: BoolFilter<"User"> | boolean
+    hideFromChat?: BoolFilter<"User"> | boolean
     tutorialDone?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     requests?: ShiftRequestListRelationFilter
@@ -13315,6 +13436,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionListRelationFilter
     sentMessages?: MessageListRelationFilter
     receivedMessages?: MessageListRelationFilter
+    reviewedRequests?: ShiftRequestListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -13325,6 +13447,7 @@ export namespace Prisma {
     role?: SortOrder
     group?: SortOrderInput | SortOrder
     active?: SortOrder
+    hideFromChat?: SortOrder
     tutorialDone?: SortOrder
     createdAt?: SortOrder
     requests?: ShiftRequestOrderByRelationAggregateInput
@@ -13333,6 +13456,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionOrderByRelationAggregateInput
     sentMessages?: MessageOrderByRelationAggregateInput
     receivedMessages?: MessageOrderByRelationAggregateInput
+    reviewedRequests?: ShiftRequestOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -13346,6 +13470,7 @@ export namespace Prisma {
     role?: EnumRoleFilter<"User"> | $Enums.Role
     group?: StringNullableFilter<"User"> | string | null
     active?: BoolFilter<"User"> | boolean
+    hideFromChat?: BoolFilter<"User"> | boolean
     tutorialDone?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     requests?: ShiftRequestListRelationFilter
@@ -13354,6 +13479,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionListRelationFilter
     sentMessages?: MessageListRelationFilter
     receivedMessages?: MessageListRelationFilter
+    reviewedRequests?: ShiftRequestListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -13364,6 +13490,7 @@ export namespace Prisma {
     role?: SortOrder
     group?: SortOrderInput | SortOrder
     active?: SortOrder
+    hideFromChat?: SortOrder
     tutorialDone?: SortOrder
     createdAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -13382,6 +13509,7 @@ export namespace Prisma {
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
     group?: StringNullableWithAggregatesFilter<"User"> | string | null
     active?: BoolWithAggregatesFilter<"User"> | boolean
+    hideFromChat?: BoolWithAggregatesFilter<"User"> | boolean
     tutorialDone?: BoolWithAggregatesFilter<"User"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -13395,6 +13523,9 @@ export namespace Prisma {
     recipientId?: StringFilter<"Message"> | string
     content?: StringFilter<"Message"> | string
     isRead?: BoolFilter<"Message"> | boolean
+    deletedBySender?: BoolFilter<"Message"> | boolean
+    deletedByRecipient?: BoolFilter<"Message"> | boolean
+    deletedForAll?: BoolFilter<"Message"> | boolean
     createdAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<UserScalarRelationFilter, UserWhereInput>
     recipient?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -13406,6 +13537,9 @@ export namespace Prisma {
     recipientId?: SortOrder
     content?: SortOrder
     isRead?: SortOrder
+    deletedBySender?: SortOrder
+    deletedByRecipient?: SortOrder
+    deletedForAll?: SortOrder
     createdAt?: SortOrder
     sender?: UserOrderByWithRelationInput
     recipient?: UserOrderByWithRelationInput
@@ -13420,6 +13554,9 @@ export namespace Prisma {
     recipientId?: StringFilter<"Message"> | string
     content?: StringFilter<"Message"> | string
     isRead?: BoolFilter<"Message"> | boolean
+    deletedBySender?: BoolFilter<"Message"> | boolean
+    deletedByRecipient?: BoolFilter<"Message"> | boolean
+    deletedForAll?: BoolFilter<"Message"> | boolean
     createdAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<UserScalarRelationFilter, UserWhereInput>
     recipient?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -13431,6 +13568,9 @@ export namespace Prisma {
     recipientId?: SortOrder
     content?: SortOrder
     isRead?: SortOrder
+    deletedBySender?: SortOrder
+    deletedByRecipient?: SortOrder
+    deletedForAll?: SortOrder
     createdAt?: SortOrder
     _count?: MessageCountOrderByAggregateInput
     _max?: MessageMaxOrderByAggregateInput
@@ -13446,6 +13586,9 @@ export namespace Prisma {
     recipientId?: StringWithAggregatesFilter<"Message"> | string
     content?: StringWithAggregatesFilter<"Message"> | string
     isRead?: BoolWithAggregatesFilter<"Message"> | boolean
+    deletedBySender?: BoolWithAggregatesFilter<"Message"> | boolean
+    deletedByRecipient?: BoolWithAggregatesFilter<"Message"> | boolean
+    deletedForAll?: BoolWithAggregatesFilter<"Message"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Message"> | Date | string
   }
 
@@ -13677,6 +13820,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ShiftRequest"> | Date | string
     shift?: XOR<ShiftScalarRelationFilter, ShiftWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    reviewedByUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     transfer?: XOR<ShiftTransferNullableScalarRelationFilter, ShiftTransferWhereInput> | null
   }
 
@@ -13692,6 +13836,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     shift?: ShiftOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
+    reviewedByUser?: UserOrderByWithRelationInput
     transfer?: ShiftTransferOrderByWithRelationInput
   }
 
@@ -13710,6 +13855,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ShiftRequest"> | Date | string
     shift?: XOR<ShiftScalarRelationFilter, ShiftWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    reviewedByUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     transfer?: XOR<ShiftTransferNullableScalarRelationFilter, ShiftTransferWhereInput> | null
   }, "id">
 
@@ -14001,6 +14147,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestCreateNestedManyWithoutUserInput
@@ -14009,6 +14156,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionCreateNestedManyWithoutUserInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -14019,6 +14167,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestUncheckedCreateNestedManyWithoutUserInput
@@ -14027,6 +14176,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUpdateInput = {
@@ -14037,6 +14187,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUpdateManyWithoutUserNestedInput
@@ -14045,6 +14196,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -14055,6 +14207,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUncheckedUpdateManyWithoutUserNestedInput
@@ -14063,6 +14216,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -14073,6 +14227,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
   }
@@ -14085,6 +14240,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14097,6 +14253,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14105,6 +14262,9 @@ export namespace Prisma {
     id?: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
     sender: UserCreateNestedOneWithoutSentMessagesInput
     recipient: UserCreateNestedOneWithoutReceivedMessagesInput
@@ -14116,6 +14276,9 @@ export namespace Prisma {
     recipientId: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
   }
 
@@ -14123,6 +14286,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: UserUpdateOneRequiredWithoutSentMessagesNestedInput
     recipient?: UserUpdateOneRequiredWithoutReceivedMessagesNestedInput
@@ -14134,6 +14300,9 @@ export namespace Prisma {
     recipientId?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -14143,6 +14312,9 @@ export namespace Prisma {
     recipientId: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
   }
 
@@ -14150,6 +14322,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -14159,6 +14334,9 @@ export namespace Prisma {
     recipientId?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -14400,12 +14578,12 @@ export namespace Prisma {
     id?: string
     status?: $Enums.RequestStatus
     holdExpiresAt?: Date | string | null
-    reviewedBy?: string | null
     reviewedAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
     shift: ShiftCreateNestedOneWithoutRequestsInput
     user: UserCreateNestedOneWithoutRequestsInput
+    reviewedByUser?: UserCreateNestedOneWithoutReviewedRequestsInput
     transfer?: ShiftTransferCreateNestedOneWithoutRequestInput
   }
 
@@ -14426,12 +14604,12 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     shift?: ShiftUpdateOneRequiredWithoutRequestsNestedInput
     user?: UserUpdateOneRequiredWithoutRequestsNestedInput
+    reviewedByUser?: UserUpdateOneWithoutReviewedRequestsNestedInput
     transfer?: ShiftTransferUpdateOneWithoutRequestNestedInput
   }
 
@@ -14464,7 +14642,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14860,6 +15037,7 @@ export namespace Prisma {
     role?: SortOrder
     group?: SortOrder
     active?: SortOrder
+    hideFromChat?: SortOrder
     tutorialDone?: SortOrder
     createdAt?: SortOrder
   }
@@ -14872,6 +15050,7 @@ export namespace Prisma {
     role?: SortOrder
     group?: SortOrder
     active?: SortOrder
+    hideFromChat?: SortOrder
     tutorialDone?: SortOrder
     createdAt?: SortOrder
   }
@@ -14884,6 +15063,7 @@ export namespace Prisma {
     role?: SortOrder
     group?: SortOrder
     active?: SortOrder
+    hideFromChat?: SortOrder
     tutorialDone?: SortOrder
     createdAt?: SortOrder
   }
@@ -14967,6 +15147,9 @@ export namespace Prisma {
     recipientId?: SortOrder
     content?: SortOrder
     isRead?: SortOrder
+    deletedBySender?: SortOrder
+    deletedByRecipient?: SortOrder
+    deletedForAll?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -14976,6 +15159,9 @@ export namespace Prisma {
     recipientId?: SortOrder
     content?: SortOrder
     isRead?: SortOrder
+    deletedBySender?: SortOrder
+    deletedByRecipient?: SortOrder
+    deletedForAll?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -14985,6 +15171,9 @@ export namespace Prisma {
     recipientId?: SortOrder
     content?: SortOrder
     isRead?: SortOrder
+    deletedBySender?: SortOrder
+    deletedByRecipient?: SortOrder
+    deletedForAll?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -15184,6 +15373,11 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
   }
 
   export type ShiftTransferNullableScalarRelationFilter = {
@@ -15412,6 +15606,13 @@ export namespace Prisma {
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
   }
 
+  export type ShiftRequestCreateNestedManyWithoutReviewedByUserInput = {
+    create?: XOR<ShiftRequestCreateWithoutReviewedByUserInput, ShiftRequestUncheckedCreateWithoutReviewedByUserInput> | ShiftRequestCreateWithoutReviewedByUserInput[] | ShiftRequestUncheckedCreateWithoutReviewedByUserInput[]
+    connectOrCreate?: ShiftRequestCreateOrConnectWithoutReviewedByUserInput | ShiftRequestCreateOrConnectWithoutReviewedByUserInput[]
+    createMany?: ShiftRequestCreateManyReviewedByUserInputEnvelope
+    connect?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+  }
+
   export type ShiftRequestUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<ShiftRequestCreateWithoutUserInput, ShiftRequestUncheckedCreateWithoutUserInput> | ShiftRequestCreateWithoutUserInput[] | ShiftRequestUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ShiftRequestCreateOrConnectWithoutUserInput | ShiftRequestCreateOrConnectWithoutUserInput[]
@@ -15452,6 +15653,13 @@ export namespace Prisma {
     connectOrCreate?: MessageCreateOrConnectWithoutRecipientInput | MessageCreateOrConnectWithoutRecipientInput[]
     createMany?: MessageCreateManyRecipientInputEnvelope
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+  }
+
+  export type ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput = {
+    create?: XOR<ShiftRequestCreateWithoutReviewedByUserInput, ShiftRequestUncheckedCreateWithoutReviewedByUserInput> | ShiftRequestCreateWithoutReviewedByUserInput[] | ShiftRequestUncheckedCreateWithoutReviewedByUserInput[]
+    connectOrCreate?: ShiftRequestCreateOrConnectWithoutReviewedByUserInput | ShiftRequestCreateOrConnectWithoutReviewedByUserInput[]
+    createMany?: ShiftRequestCreateManyReviewedByUserInputEnvelope
+    connect?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -15558,6 +15766,20 @@ export namespace Prisma {
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
+  export type ShiftRequestUpdateManyWithoutReviewedByUserNestedInput = {
+    create?: XOR<ShiftRequestCreateWithoutReviewedByUserInput, ShiftRequestUncheckedCreateWithoutReviewedByUserInput> | ShiftRequestCreateWithoutReviewedByUserInput[] | ShiftRequestUncheckedCreateWithoutReviewedByUserInput[]
+    connectOrCreate?: ShiftRequestCreateOrConnectWithoutReviewedByUserInput | ShiftRequestCreateOrConnectWithoutReviewedByUserInput[]
+    upsert?: ShiftRequestUpsertWithWhereUniqueWithoutReviewedByUserInput | ShiftRequestUpsertWithWhereUniqueWithoutReviewedByUserInput[]
+    createMany?: ShiftRequestCreateManyReviewedByUserInputEnvelope
+    set?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    disconnect?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    delete?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    connect?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    update?: ShiftRequestUpdateWithWhereUniqueWithoutReviewedByUserInput | ShiftRequestUpdateWithWhereUniqueWithoutReviewedByUserInput[]
+    updateMany?: ShiftRequestUpdateManyWithWhereWithoutReviewedByUserInput | ShiftRequestUpdateManyWithWhereWithoutReviewedByUserInput[]
+    deleteMany?: ShiftRequestScalarWhereInput | ShiftRequestScalarWhereInput[]
+  }
+
   export type ShiftRequestUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<ShiftRequestCreateWithoutUserInput, ShiftRequestUncheckedCreateWithoutUserInput> | ShiftRequestCreateWithoutUserInput[] | ShiftRequestUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ShiftRequestCreateOrConnectWithoutUserInput | ShiftRequestCreateOrConnectWithoutUserInput[]
@@ -15640,6 +15862,20 @@ export namespace Prisma {
     update?: MessageUpdateWithWhereUniqueWithoutRecipientInput | MessageUpdateWithWhereUniqueWithoutRecipientInput[]
     updateMany?: MessageUpdateManyWithWhereWithoutRecipientInput | MessageUpdateManyWithWhereWithoutRecipientInput[]
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
+  }
+
+  export type ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput = {
+    create?: XOR<ShiftRequestCreateWithoutReviewedByUserInput, ShiftRequestUncheckedCreateWithoutReviewedByUserInput> | ShiftRequestCreateWithoutReviewedByUserInput[] | ShiftRequestUncheckedCreateWithoutReviewedByUserInput[]
+    connectOrCreate?: ShiftRequestCreateOrConnectWithoutReviewedByUserInput | ShiftRequestCreateOrConnectWithoutReviewedByUserInput[]
+    upsert?: ShiftRequestUpsertWithWhereUniqueWithoutReviewedByUserInput | ShiftRequestUpsertWithWhereUniqueWithoutReviewedByUserInput[]
+    createMany?: ShiftRequestCreateManyReviewedByUserInputEnvelope
+    set?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    disconnect?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    delete?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    connect?: ShiftRequestWhereUniqueInput | ShiftRequestWhereUniqueInput[]
+    update?: ShiftRequestUpdateWithWhereUniqueWithoutReviewedByUserInput | ShiftRequestUpdateWithWhereUniqueWithoutReviewedByUserInput[]
+    updateMany?: ShiftRequestUpdateManyWithWhereWithoutReviewedByUserInput | ShiftRequestUpdateManyWithWhereWithoutReviewedByUserInput[]
+    deleteMany?: ShiftRequestScalarWhereInput | ShiftRequestScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutSentMessagesInput = {
@@ -15852,6 +16088,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type UserCreateNestedOneWithoutReviewedRequestsInput = {
+    create?: XOR<UserCreateWithoutReviewedRequestsInput, UserUncheckedCreateWithoutReviewedRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReviewedRequestsInput
+    connect?: UserWhereUniqueInput
+  }
+
   export type ShiftTransferCreateNestedOneWithoutRequestInput = {
     create?: XOR<ShiftTransferCreateWithoutRequestInput, ShiftTransferUncheckedCreateWithoutRequestInput>
     connectOrCreate?: ShiftTransferCreateOrConnectWithoutRequestInput
@@ -15886,6 +16128,16 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutRequestsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutRequestsInput, UserUpdateWithoutRequestsInput>, UserUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type UserUpdateOneWithoutReviewedRequestsNestedInput = {
+    create?: XOR<UserCreateWithoutReviewedRequestsInput, UserUncheckedCreateWithoutReviewedRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReviewedRequestsInput
+    upsert?: UserUpsertWithoutReviewedRequestsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReviewedRequestsInput, UserUpdateWithoutReviewedRequestsInput>, UserUncheckedUpdateWithoutReviewedRequestsInput>
   }
 
   export type ShiftTransferUpdateOneWithoutRequestNestedInput = {
@@ -16212,11 +16464,11 @@ export namespace Prisma {
     id?: string
     status?: $Enums.RequestStatus
     holdExpiresAt?: Date | string | null
-    reviewedBy?: string | null
     reviewedAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
     shift: ShiftCreateNestedOneWithoutRequestsInput
+    reviewedByUser?: UserCreateNestedOneWithoutReviewedRequestsInput
     transfer?: ShiftTransferCreateNestedOneWithoutRequestInput
   }
 
@@ -16336,6 +16588,9 @@ export namespace Prisma {
     id?: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
     recipient: UserCreateNestedOneWithoutReceivedMessagesInput
   }
@@ -16345,6 +16600,9 @@ export namespace Prisma {
     recipientId: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
   }
 
@@ -16362,6 +16620,9 @@ export namespace Prisma {
     id?: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
     sender: UserCreateNestedOneWithoutSentMessagesInput
   }
@@ -16371,6 +16632,9 @@ export namespace Prisma {
     senderId: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
   }
 
@@ -16381,6 +16645,40 @@ export namespace Prisma {
 
   export type MessageCreateManyRecipientInputEnvelope = {
     data: MessageCreateManyRecipientInput | MessageCreateManyRecipientInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ShiftRequestCreateWithoutReviewedByUserInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    holdExpiresAt?: Date | string | null
+    reviewedAt?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    shift: ShiftCreateNestedOneWithoutRequestsInput
+    user: UserCreateNestedOneWithoutRequestsInput
+    transfer?: ShiftTransferCreateNestedOneWithoutRequestInput
+  }
+
+  export type ShiftRequestUncheckedCreateWithoutReviewedByUserInput = {
+    id?: string
+    shiftId: string
+    userId: string
+    status?: $Enums.RequestStatus
+    holdExpiresAt?: Date | string | null
+    reviewedAt?: Date | string | null
+    notes?: string | null
+    createdAt?: Date | string
+    transfer?: ShiftTransferUncheckedCreateNestedOneWithoutRequestInput
+  }
+
+  export type ShiftRequestCreateOrConnectWithoutReviewedByUserInput = {
+    where: ShiftRequestWhereUniqueInput
+    create: XOR<ShiftRequestCreateWithoutReviewedByUserInput, ShiftRequestUncheckedCreateWithoutReviewedByUserInput>
+  }
+
+  export type ShiftRequestCreateManyReviewedByUserInputEnvelope = {
+    data: ShiftRequestCreateManyReviewedByUserInput | ShiftRequestCreateManyReviewedByUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -16530,6 +16828,9 @@ export namespace Prisma {
     recipientId?: StringFilter<"Message"> | string
     content?: StringFilter<"Message"> | string
     isRead?: BoolFilter<"Message"> | boolean
+    deletedBySender?: BoolFilter<"Message"> | boolean
+    deletedByRecipient?: BoolFilter<"Message"> | boolean
+    deletedForAll?: BoolFilter<"Message"> | boolean
     createdAt?: DateTimeFilter<"Message"> | Date | string
   }
 
@@ -16549,6 +16850,22 @@ export namespace Prisma {
     data: XOR<MessageUpdateManyMutationInput, MessageUncheckedUpdateManyWithoutRecipientInput>
   }
 
+  export type ShiftRequestUpsertWithWhereUniqueWithoutReviewedByUserInput = {
+    where: ShiftRequestWhereUniqueInput
+    update: XOR<ShiftRequestUpdateWithoutReviewedByUserInput, ShiftRequestUncheckedUpdateWithoutReviewedByUserInput>
+    create: XOR<ShiftRequestCreateWithoutReviewedByUserInput, ShiftRequestUncheckedCreateWithoutReviewedByUserInput>
+  }
+
+  export type ShiftRequestUpdateWithWhereUniqueWithoutReviewedByUserInput = {
+    where: ShiftRequestWhereUniqueInput
+    data: XOR<ShiftRequestUpdateWithoutReviewedByUserInput, ShiftRequestUncheckedUpdateWithoutReviewedByUserInput>
+  }
+
+  export type ShiftRequestUpdateManyWithWhereWithoutReviewedByUserInput = {
+    where: ShiftRequestScalarWhereInput
+    data: XOR<ShiftRequestUpdateManyMutationInput, ShiftRequestUncheckedUpdateManyWithoutReviewedByUserInput>
+  }
+
   export type UserCreateWithoutSentMessagesInput = {
     id?: string
     name: string
@@ -16557,6 +16874,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestCreateNestedManyWithoutUserInput
@@ -16564,6 +16882,7 @@ export namespace Prisma {
     transfers?: ShiftTransferCreateNestedManyWithoutFromUserInput
     pushSubscriptions?: PushSubscriptionCreateNestedManyWithoutUserInput
     receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUncheckedCreateWithoutSentMessagesInput = {
@@ -16574,6 +16893,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestUncheckedCreateNestedManyWithoutUserInput
@@ -16581,6 +16901,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUncheckedCreateNestedManyWithoutFromUserInput
     pushSubscriptions?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserCreateOrConnectWithoutSentMessagesInput = {
@@ -16596,6 +16917,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestCreateNestedManyWithoutUserInput
@@ -16603,6 +16925,7 @@ export namespace Prisma {
     transfers?: ShiftTransferCreateNestedManyWithoutFromUserInput
     pushSubscriptions?: PushSubscriptionCreateNestedManyWithoutUserInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
+    reviewedRequests?: ShiftRequestCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUncheckedCreateWithoutReceivedMessagesInput = {
@@ -16613,6 +16936,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestUncheckedCreateNestedManyWithoutUserInput
@@ -16620,6 +16944,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUncheckedCreateNestedManyWithoutFromUserInput
     pushSubscriptions?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    reviewedRequests?: ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserCreateOrConnectWithoutReceivedMessagesInput = {
@@ -16646,6 +16971,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUpdateManyWithoutUserNestedInput
@@ -16653,6 +16979,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUpdateManyWithoutFromUserNestedInput
     pushSubscriptions?: PushSubscriptionUpdateManyWithoutUserNestedInput
     receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSentMessagesInput = {
@@ -16663,6 +16990,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUncheckedUpdateManyWithoutUserNestedInput
@@ -16670,6 +16998,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUncheckedUpdateManyWithoutFromUserNestedInput
     pushSubscriptions?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUpsertWithoutReceivedMessagesInput = {
@@ -16691,6 +17020,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUpdateManyWithoutUserNestedInput
@@ -16698,6 +17028,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUpdateManyWithoutFromUserNestedInput
     pushSubscriptions?: PushSubscriptionUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
+    reviewedRequests?: ShiftRequestUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReceivedMessagesInput = {
@@ -16708,6 +17039,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUncheckedUpdateManyWithoutUserNestedInput
@@ -16715,6 +17047,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUncheckedUpdateManyWithoutFromUserNestedInput
     pushSubscriptions?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    reviewedRequests?: ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserCreateWithoutPushSubscriptionsInput = {
@@ -16725,6 +17058,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestCreateNestedManyWithoutUserInput
@@ -16732,6 +17066,7 @@ export namespace Prisma {
     transfers?: ShiftTransferCreateNestedManyWithoutFromUserInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
@@ -16742,6 +17077,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestUncheckedCreateNestedManyWithoutUserInput
@@ -16749,6 +17085,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUncheckedCreateNestedManyWithoutFromUserInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
@@ -16775,6 +17112,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUpdateManyWithoutUserNestedInput
@@ -16782,6 +17120,7 @@ export namespace Prisma {
     transfers?: ShiftTransferUpdateManyWithoutFromUserNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
@@ -16792,6 +17131,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUncheckedUpdateManyWithoutUserNestedInput
@@ -16799,17 +17139,18 @@ export namespace Prisma {
     transfers?: ShiftTransferUncheckedUpdateManyWithoutFromUserNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type ShiftRequestCreateWithoutShiftInput = {
     id?: string
     status?: $Enums.RequestStatus
     holdExpiresAt?: Date | string | null
-    reviewedBy?: string | null
     reviewedAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutRequestsInput
+    reviewedByUser?: UserCreateNestedOneWithoutReviewedRequestsInput
     transfer?: ShiftTransferCreateNestedOneWithoutRequestInput
   }
 
@@ -17084,6 +17425,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     notifications?: NotificationCreateNestedManyWithoutUserInput
@@ -17091,6 +17433,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionCreateNestedManyWithoutUserInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUncheckedCreateWithoutRequestsInput = {
@@ -17101,6 +17444,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -17108,11 +17452,55 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserCreateOrConnectWithoutRequestsInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutRequestsInput, UserUncheckedCreateWithoutRequestsInput>
+  }
+
+  export type UserCreateWithoutReviewedRequestsInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash: string
+    role?: $Enums.Role
+    group?: string | null
+    active?: boolean
+    hideFromChat?: boolean
+    tutorialDone?: boolean
+    createdAt?: Date | string
+    requests?: ShiftRequestCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    transfers?: ShiftTransferCreateNestedManyWithoutFromUserInput
+    pushSubscriptions?: PushSubscriptionCreateNestedManyWithoutUserInput
+    sentMessages?: MessageCreateNestedManyWithoutSenderInput
+    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
+  }
+
+  export type UserUncheckedCreateWithoutReviewedRequestsInput = {
+    id?: string
+    name: string
+    email: string
+    passwordHash: string
+    role?: $Enums.Role
+    group?: string | null
+    active?: boolean
+    hideFromChat?: boolean
+    tutorialDone?: boolean
+    createdAt?: Date | string
+    requests?: ShiftRequestUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    transfers?: ShiftTransferUncheckedCreateNestedManyWithoutFromUserInput
+    pushSubscriptions?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
+  }
+
+  export type UserCreateOrConnectWithoutReviewedRequestsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReviewedRequestsInput, UserUncheckedCreateWithoutReviewedRequestsInput>
   }
 
   export type ShiftTransferCreateWithoutRequestInput = {
@@ -17210,6 +17598,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     notifications?: NotificationUpdateManyWithoutUserNestedInput
@@ -17217,6 +17606,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRequestsInput = {
@@ -17227,8 +17617,59 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    transfers?: ShiftTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    pushSubscriptions?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput
+  }
+
+  export type UserUpsertWithoutReviewedRequestsInput = {
+    update: XOR<UserUpdateWithoutReviewedRequestsInput, UserUncheckedUpdateWithoutReviewedRequestsInput>
+    create: XOR<UserCreateWithoutReviewedRequestsInput, UserUncheckedCreateWithoutReviewedRequestsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReviewedRequestsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReviewedRequestsInput, UserUncheckedUpdateWithoutReviewedRequestsInput>
+  }
+
+  export type UserUpdateWithoutReviewedRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    group?: NullableStringFieldUpdateOperationsInput | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
+    tutorialDone?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    requests?: ShiftRequestUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    transfers?: ShiftTransferUpdateManyWithoutFromUserNestedInput
+    pushSubscriptions?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    sentMessages?: MessageUpdateManyWithoutSenderNestedInput
+    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReviewedRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    group?: NullableStringFieldUpdateOperationsInput | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
+    tutorialDone?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    requests?: ShiftRequestUncheckedUpdateManyWithoutUserNestedInput
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     transfers?: ShiftTransferUncheckedUpdateManyWithoutFromUserNestedInput
     pushSubscriptions?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -17279,12 +17720,12 @@ export namespace Prisma {
     id?: string
     status?: $Enums.RequestStatus
     holdExpiresAt?: Date | string | null
-    reviewedBy?: string | null
     reviewedAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
     shift: ShiftCreateNestedOneWithoutRequestsInput
     user: UserCreateNestedOneWithoutRequestsInput
+    reviewedByUser?: UserCreateNestedOneWithoutReviewedRequestsInput
   }
 
   export type ShiftRequestUncheckedCreateWithoutTransferInput = {
@@ -17349,6 +17790,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestCreateNestedManyWithoutUserInput
@@ -17356,6 +17798,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionCreateNestedManyWithoutUserInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUncheckedCreateWithoutTransfersInput = {
@@ -17366,6 +17809,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestUncheckedCreateNestedManyWithoutUserInput
@@ -17373,6 +17817,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserCreateOrConnectWithoutTransfersInput = {
@@ -17395,12 +17840,12 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     shift?: ShiftUpdateOneRequiredWithoutRequestsNestedInput
     user?: UserUpdateOneRequiredWithoutRequestsNestedInput
+    reviewedByUser?: UserUpdateOneWithoutReviewedRequestsNestedInput
   }
 
   export type ShiftRequestUncheckedUpdateWithoutTransferInput = {
@@ -17477,6 +17922,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUpdateManyWithoutUserNestedInput
@@ -17484,6 +17930,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTransfersInput = {
@@ -17494,6 +17941,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUncheckedUpdateManyWithoutUserNestedInput
@@ -17501,6 +17949,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserCreateWithoutNotificationsInput = {
@@ -17511,6 +17960,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestCreateNestedManyWithoutUserInput
@@ -17518,6 +17968,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionCreateNestedManyWithoutUserInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -17528,6 +17979,7 @@ export namespace Prisma {
     role?: $Enums.Role
     group?: string | null
     active?: boolean
+    hideFromChat?: boolean
     tutorialDone?: boolean
     createdAt?: Date | string
     requests?: ShiftRequestUncheckedCreateNestedManyWithoutUserInput
@@ -17535,6 +17987,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
+    reviewedRequests?: ShiftRequestUncheckedCreateNestedManyWithoutReviewedByUserInput
   }
 
   export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -17561,6 +18014,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUpdateManyWithoutUserNestedInput
@@ -17568,6 +18022,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -17578,6 +18033,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     group?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
+    hideFromChat?: BoolFieldUpdateOperationsInput | boolean
     tutorialDone?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: ShiftRequestUncheckedUpdateManyWithoutUserNestedInput
@@ -17585,6 +18041,7 @@ export namespace Prisma {
     pushSubscriptions?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
+    reviewedRequests?: ShiftRequestUncheckedUpdateManyWithoutReviewedByUserNestedInput
   }
 
   export type ShiftRequestCreateManyUserInput = {
@@ -17633,6 +18090,9 @@ export namespace Prisma {
     recipientId: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
     createdAt?: Date | string
   }
 
@@ -17641,6 +18101,20 @@ export namespace Prisma {
     senderId: string
     content: string
     isRead?: boolean
+    deletedBySender?: boolean
+    deletedByRecipient?: boolean
+    deletedForAll?: boolean
+    createdAt?: Date | string
+  }
+
+  export type ShiftRequestCreateManyReviewedByUserInput = {
+    id?: string
+    shiftId: string
+    userId: string
+    status?: $Enums.RequestStatus
+    holdExpiresAt?: Date | string | null
+    reviewedAt?: Date | string | null
+    notes?: string | null
     createdAt?: Date | string
   }
 
@@ -17648,11 +18122,11 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     shift?: ShiftUpdateOneRequiredWithoutRequestsNestedInput
+    reviewedByUser?: UserUpdateOneWithoutReviewedRequestsNestedInput
     transfer?: ShiftTransferUpdateOneWithoutRequestNestedInput
   }
 
@@ -17773,6 +18247,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     recipient?: UserUpdateOneRequiredWithoutReceivedMessagesNestedInput
   }
@@ -17782,6 +18259,9 @@ export namespace Prisma {
     recipientId?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -17790,6 +18270,9 @@ export namespace Prisma {
     recipientId?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -17797,6 +18280,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: UserUpdateOneRequiredWithoutSentMessagesNestedInput
   }
@@ -17806,6 +18292,9 @@ export namespace Prisma {
     senderId?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -17814,6 +18303,44 @@ export namespace Prisma {
     senderId?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     isRead?: BoolFieldUpdateOperationsInput | boolean
+    deletedBySender?: BoolFieldUpdateOperationsInput | boolean
+    deletedByRecipient?: BoolFieldUpdateOperationsInput | boolean
+    deletedForAll?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftRequestUpdateWithoutReviewedByUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    shift?: ShiftUpdateOneRequiredWithoutRequestsNestedInput
+    user?: UserUpdateOneRequiredWithoutRequestsNestedInput
+    transfer?: ShiftTransferUpdateOneWithoutRequestNestedInput
+  }
+
+  export type ShiftRequestUncheckedUpdateWithoutReviewedByUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    shiftId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transfer?: ShiftTransferUncheckedUpdateOneWithoutRequestNestedInput
+  }
+
+  export type ShiftRequestUncheckedUpdateManyWithoutReviewedByUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    shiftId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -17854,11 +18381,11 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     holdExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutRequestsNestedInput
+    reviewedByUser?: UserUpdateOneWithoutReviewedRequestsNestedInput
     transfer?: ShiftTransferUpdateOneWithoutRequestNestedInput
   }
 

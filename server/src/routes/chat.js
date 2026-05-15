@@ -29,7 +29,7 @@ router.get("/contacts", requireAuth, async (req, res) => {
         const contacts = await prisma.user.findMany({
             where: isAdmin
                 ? { role: "operator", active: true }
-                : { role: { in: ["admin", "lead"] }, active: true },
+                : { role: { in: ["admin", "lead"] }, active: true, hideFromChat: false },
             select: { id: true, name: true, role: true },
             orderBy: { name: "asc" },
         });

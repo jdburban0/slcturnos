@@ -128,6 +128,7 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   group: 'group',
   active: 'active',
+  hideFromChat: 'hideFromChat',
   tutorialDone: 'tutorialDone',
   createdAt: 'createdAt'
 };
@@ -138,6 +139,9 @@ exports.Prisma.MessageScalarFieldEnum = {
   recipientId: 'recipientId',
   content: 'content',
   isRead: 'isRead',
+  deletedBySender: 'deletedBySender',
+  deletedByRecipient: 'deletedByRecipient',
+  deletedForAll: 'deletedForAll',
   createdAt: 'createdAt'
 };
 
