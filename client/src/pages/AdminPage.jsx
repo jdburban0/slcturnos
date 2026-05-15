@@ -8,7 +8,6 @@ import {
     getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode,
     getAdminRegisterCode, updateAdminRegisterCode, changePassword, assignShift,
     getTransfers, reviewTransfer, removeAssignedOperator, removeManualAssignment, publishWeek, unarchiveWeek,
-    toggleHideFromChat,
 } from "../api/index.js";
 
 function getMondayOfWeek(isoDate) {
@@ -483,12 +482,7 @@ function AdminPage() {
         } catch (err) { showToast("Error", err.message); }
     }
 
-    async function handleToggleHideFromChat(id) {
-        try {
-            const updated = await toggleHideFromChat(token, id);
-            setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, hideFromChat: updated.hideFromChat } : u)));
-        } catch (err) { showToast("Error", err.message); }
-    }
+
 
     async function handleSaveCode(e) {
         e.preventDefault();
@@ -1433,37 +1427,7 @@ function AdminPage() {
                             </form>
                         </div>
 
-                        <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
-                            <h3 style={styles.settingsLabel}>Visibilidad en chat</h3>
-                            <p style={styles.settingsHint}>
-                                Los operadores solo ven los admins/leads que tengan activa la visibilidad. Desactívala en cuentas de prueba o internas.
-                            </p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                                {users.filter((u) => u.role !== "operator").map((u) => (
-                                    <div key={u.id} style={{
-                                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                                        padding: "10px 14px", borderRadius: "10px",
-                                        border: "1px solid var(--card-border)", background: "var(--card-bg)",
-                                    }}>
-                                        <div>
-                                            <span style={{ fontWeight: 600, color: "var(--text-main)", fontSize: "0.9rem" }}>{u.name}</span>
-                                            <span style={{ marginLeft: "8px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase" }}>{u.role}</span>
-                                        </div>
-                                        <button
-                                            onClick={() => handleToggleHideFromChat(u.id)}
-                                            style={{
-                                                padding: "5px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: 600,
-                                                cursor: "pointer", border: "none",
-                                                background: u.hideFromChat ? "var(--danger-bg, #fee2e2)" : "var(--success-bg, #d1fae5)",
-                                                color: u.hideFromChat ? "var(--danger, #dc2626)" : "var(--success, #16a34a)",
-                                            }}
-                                        >
-                                            {u.hideFromChat ? "Oculto" : "Visible"}
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+
 
                     </section>
                 )}

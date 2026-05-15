@@ -108,24 +108,6 @@ router.patch("/:id/toggle", requireAuth, requireRole("admin", "lead"), async (re
     }
 });
 
-// PATCH toggle hideFromChat (admin only)
-router.patch("/:id/hide-from-chat", requireAuth, requireRole("admin"), async (req, res) => {
-    try {
-        const current = await prisma.user.findUnique({ where: { id: req.params.id } });
-        if (!current) return res.status(404).json({ message: "Usuario no encontrado" });
-
-        const user = await prisma.user.update({
-            where: { id: req.params.id },
-            data: { hideFromChat: !current.hideFromChat },
-            select: { id: true, name: true, hideFromChat: true },
-        });
-        res.json(user);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Error al actualizar visibilidad en chat" });
-    }
-});
-
 // DELETE user and all associated data (admin only)
 router.delete("/:id", requireAuth, requireRole("admin"), async (req, res) => {
     const { id } = req.params;
