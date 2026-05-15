@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail, sendAdminTransferAlertEmail, queueAdminPendingNotification } from "../lib/mailer.js";
 import { notifyMany } from "../lib/notify.js";
+import { queueAdminRequestPush, sendPushToAdmins, sendPushToUser } from "../lib/pushService.js";
 
 const router = Router();
 
@@ -496,6 +497,8 @@ router.post("/:id/request", requireAuth, async (req, res) => {
                 select: { name: true, email: true },
             }).then((admins) => queueAdminPendingNotification(admins)).catch(() => { });
         }
+        // Push a admins (debounce 1 min para agrupar solicitudes simultáneas)
+        queueAdminRequestPush();
 
         res.status(201).json(request);
     } catch (err) {
@@ -608,6 +611,11 @@ router.post("/:id/assign", requireAuth, requireRole("admin", "lead"), async (req
 
         sendAssignmentEmail({ name: name.trim(), email: email.trim(), shiftTitle: shift.title, shiftDate, startTime: shift.startTime, endTime: shift.endTime });
 
+        // Push al operador asignado si tiene cuenta en el sistema
+        prisma.user.findUnique({ where: { email: email.trim().toLowerCase() }, select: { id: true } })
+            .then((u) => { if (u) sendPushToUser(u.id, "Asignación de turno", `Fuiste asignado al turno "${shift.title}" (${shiftDate}).`).catch(() => {}); })
+            .catch(() => {});
+
         const io = req.app.get("io");
         io.emit("shifts:refresh");
 
@@ -656,6 +664,7 @@ router.post("/:id/assign/:assignmentId/withdraw", requireAuth, async (req, res) 
             shiftDate,
             type: "desist",
         });
+        sendPushToAdmins("Solicitud de desistimiento", `${user.name} quiere desistir del turno "${assignment.shift.title}".`).catch(() => {});
 
         const io = req.app.get("io");
         io.to("admins").emit("transfers:refresh");
@@ -731,6 +740,7 @@ router.post("/:id/assign/:assignmentId/transfer", requireAuth, async (req, res) 
             type: "transfer",
             toName,
         });
+        sendPushToAdmins("Solicitud de traspaso", `${user.name} quiere traspasar "${assignment.shift.title}" a ${toName}.`).catch(() => {});
 
         const io = req.app.get("io");
         io.to("admins").emit("transfers:refresh");

@@ -48,3 +48,43 @@ export async function sendPushToUser(userId, title, body) {
         })
     );
 }
+
+/**
+ * Envía una push notification a todos los admins/leads activos con suscripción.
+ */
+export async function sendPushToAdmins(title, body) {
+    let admins;
+    try {
+        admins = await prisma.user.findMany({
+            where: { role: { in: ["admin", "lead"] }, active: true },
+            select: { id: true },
+        });
+    } catch (err) {
+        console.error("[Push] Error buscando admins:", err.message);
+        return;
+    }
+    await Promise.allSettled(admins.map(({ id }) => sendPushToUser(id, title, body)));
+}
+
+// ─── Debounce push para solicitudes de turno (anti-spam) ─────────────────────
+const ADMIN_REQ_PUSH_DEBOUNCE_MS = 60_000; // 1 minuto
+const _adminReqPush = { timer: null };
+
+/**
+ * Encola una push para admins sobre solicitudes pendientes.
+ * Si llegan varias en el mismo minuto se agrupan en una sola notificación.
+ */
+export function queueAdminRequestPush() {
+    if (_adminReqPush.timer) clearTimeout(_adminReqPush.timer);
+    _adminReqPush.timer = setTimeout(async () => {
+        _adminReqPush.timer = null;
+        try {
+            const count = await prisma.shiftRequest.count({ where: { status: "PENDING" } });
+            if (count === 0) return;
+            const title = `${count} solicitud${count !== 1 ? "es" : ""} pendiente${count !== 1 ? "s" : ""}`;
+            await sendPushToAdmins(title, "Hay solicitudes de turno esperando revisión.");
+        } catch (err) {
+            console.error("[Push] Error en queueAdminRequestPush:", err.message);
+        }
+    }, ADMIN_REQ_PUSH_DEBOUNCE_MS);
+}

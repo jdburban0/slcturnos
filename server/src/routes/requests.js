@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { queueShiftResultEmail, sendAdminTransferAlertEmail, resetAdminNotifCooldown } from "../lib/mailer.js";
 import { notifyUser, notifyMany } from "../lib/notify.js";
+import { sendPushToAdmins } from "../lib/pushService.js";
 
 const router = Router();
 
@@ -274,6 +275,7 @@ router.post("/:id/withdraw", requireAuth, async (req, res) => {
             shiftDate,
             type: "withdraw",
         });
+        sendPushToAdmins("Solicitud de desistimiento", `${req.user.name} quiere desistir del turno "${request.shift.title}".`).catch(() => {});
 
         const io = req.app.get("io");
         io.to("admins").emit("transfers:refresh");
@@ -349,6 +351,7 @@ router.post("/:id/transfer", requireAuth, async (req, res) => {
             type: "transfer",
             toName: toName.trim(),
         });
+        sendPushToAdmins("Solicitud de traspaso", `${req.user.name} quiere traspasar "${request.shift.title}" a ${toName.trim()}.`).catch(() => {});
 
         const io = req.app.get("io");
         io.to("admins").emit("transfers:refresh");
