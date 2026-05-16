@@ -61,11 +61,17 @@
 </head>
 
 <body>
-  <!-- Splash visible antes de que React hidrate -->
+  <!-- Splash visible antes de que React hidrate — se oculta inmediatamente en recargas -->
   <div id="splash">
     <img src="/slcicon.png" alt="SLC Turnos" />
     <span>SLC Turnos</span>
   </div>
+  <script>
+    // Solo mostrar el splash en cold start, no en recargas
+    if (performance.getEntriesByType('navigation')[0]?.type === 'reload') {
+      document.getElementById('splash').style.display = 'none';
+    }
+  </script>
 
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
