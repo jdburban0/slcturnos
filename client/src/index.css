@@ -184,6 +184,11 @@ body {
 }
 .modal-overlay-anim { animation: overlayFadeIn 0.2s ease both; }
 .modal-box-anim     { animation: modalEnter 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+@keyframes modalExit {
+  from { opacity: 1; transform: scale(1)    translateY(0); }
+  to   { opacity: 0; transform: scale(0.93) translateY(8px); }
+}
+.modal-exit { animation: modalExit 0.22s ease forwards; pointer-events: none; }
 
 /* ─── Bottom sheet (passkey prompt) ──────────────────── */
 @keyframes sheetSlideUp {

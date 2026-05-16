@@ -81,13 +81,11 @@ export default function PasskeyPrompt({ token, onDone }) {
             style={{
                 ...styles.overlay,
                 animation: exiting
-                    ? "overlayFadeOut 0.32s ease forwards"
-                    : "overlayFadeIn 0.25s ease both",
+                    ? "overlayFadeOut 0.28s ease forwards"
+                    : "overlayFadeIn 0.22s ease both",
             }}
         >
-            <div className={exiting ? "sheet-exit" : "sheet-enter"} style={styles.sheet}>
-                {/* Handle */}
-                <div style={styles.handle} />
+            <div className={exiting ? "modal-exit" : "modal-box-anim"} style={styles.sheet}>
 
                 {/* Ícono */}
                 <div style={styles.iconWrap}>
@@ -135,25 +133,20 @@ const styles = {
     overlay: {
         position: "fixed", inset: 0, zIndex: 500,
         background: "rgba(0,0,0,0.5)",
-        display: "flex", alignItems: "flex-end", justifyContent: "center",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "24px",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
     },
     sheet: {
-        width: "100%", maxWidth: "480px",
+        width: "100%", maxWidth: "360px",
         background: "var(--card-bg)",
-        borderRadius: "24px 24px 0 0",
-        padding: "10px 28px 44px",
+        borderRadius: "24px",
+        padding: "32px 28px 28px",
         display: "flex", flexDirection: "column", alignItems: "center",
         gap: "14px",
-        boxShadow: "0 -12px 48px rgba(0,0,0,0.18)",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.28)",
         border: "1px solid var(--card-border)",
-        borderBottom: "none",
-    },
-    handle: {
-        width: "36px", height: "4px", borderRadius: "2px",
-        background: "var(--border-color)", margin: "6px 0 2px",
-        flexShrink: 0,
     },
     iconWrap: {
         width: "64px", height: "64px", borderRadius: "18px",
