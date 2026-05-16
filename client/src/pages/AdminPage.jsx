@@ -912,7 +912,7 @@ function AdminPage() {
                 </div>
 
                 {/* Pestañas de navegación */}
-                <div style={styles.tabs}>
+                <div style={styles.tabs} className="admin-tab-track">
                     {[
                         { id: "requests", label: `Solicitudes${requests.length + transfers.length > 0 ? ` (${requests.length + transfers.length})` : ""}` },
                         { id: "shifts", label: "Turnos" },
@@ -929,6 +929,10 @@ function AdminPage() {
                         </button>
                     ))}
                 </div>
+                <style>{`
+                    .admin-tab-track { scrollbar-width: none; -ms-overflow-style: none; }
+                    .admin-tab-track::-webkit-scrollbar { display: none; }
+                `}</style>
 
                 {activeTab === "requests" && (
                     <section style={styles.section}>
@@ -1527,14 +1531,39 @@ const styles = {
     },
     statNum: { fontSize: "1.8rem", fontWeight: "800", color: "var(--text-main)", lineHeight: 1 },
     statLabel: { fontSize: "0.75rem", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: "center" },
-    tabs: { display: "flex", gap: "6px", marginBottom: "20px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" },
+    tabs: {
+        display: "flex",
+        alignItems: "center",
+        background: "var(--card-bg)",
+        border: "1px solid var(--card-border)",
+        borderRadius: "14px",
+        padding: "5px",
+        marginBottom: "16px",
+        gap: "2px",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
+        boxShadow: "var(--card-shadow)",
+    },
     tab: {
-        padding: "10px 18px", borderRadius: "10px", border: "1.5px solid transparent",
-        background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer", fontWeight: "600", fontSize: "0.9rem",
-        transition: "all 0.18s ease", flexShrink: 0,
+        flex: 1,
+        minWidth: 0,
+        padding: "9px 10px",
+        borderRadius: "10px",
+        border: "none",
+        background: "transparent",
+        color: "var(--text-muted)",
+        cursor: "pointer",
+        fontWeight: "600",
+        fontSize: "0.88rem",
+        transition: "all 0.18s ease",
+        whiteSpace: "nowrap",
+        textAlign: "center",
+        flexShrink: 0,
     },
     tabActive: {
-        background: "var(--primary)", border: "1.5px solid var(--primary)", color: "#ffffff",
+        background: "var(--primary)",
+        color: "#ffffff",
+        boxShadow: "0 2px 8px rgba(37,99,235,0.35)",
     },
     section: {
         background: "var(--card-bg)", border: "1px solid var(--border-color)",
