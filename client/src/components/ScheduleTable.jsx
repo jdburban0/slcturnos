@@ -42,130 +42,6 @@ function getWeekKey(isoString) {
     return monday.toISOString().slice(0, 10);
 }
 
-function parseTimeToMinutes(t) {
-    const match = t.match(/(\d+):(\d+)(am|pm)/i);
-    if (!match) return 0;
-    let [, h, m, period] = match;
-    h = parseInt(h); m = parseInt(m);
-    if (period.toLowerCase() === "pm" && h !== 12) h += 12;
-    if (period.toLowerCase() === "am" && h === 12) h = 0;
-    return h * 60 + m;
-}
-
-function getCellDataFromShiftHelper(shift) {
-    if (!shift) return null;
-    const fromRequests = (shift.requests ?? [])
-        .filter((r) => r.status === "APPROVED")
-        .map((r) => ({ name: r.user?.name ?? "", time: new Date(r.reviewedAt ?? r.createdAt ?? 0) }));
-    const fromManual = (shift.manualAssignments ?? [])
-        .map((a) => ({ name: a.name, time: new Date(a.createdAt ?? 0) }));
-    const approved = [...fromRequests, ...fromManual]
-        .sort((a, b) => a.time - b.time)
-        .map((x) => x.name);
-    return { approved, totalSlots: shift.totalSlots, startTime: shift.startTime, endTime: shift.endTime };
-}
-
-function MobileDayCards({ dates, shifts, dateRange }) {
-    function getShiftsForDate(date) {
-        return shifts
-            .filter((s) => s.date.slice(0, 10) === date)
-            .sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
-    }
-
-    return (
-        <div style={{
-            background: "#ffffff",
-            borderRadius: "10px",
-            border: "1px solid #e2e8f0",
-            overflow: "hidden",
-        }}>
-            {/* Title bar */}
-            <div style={{
-                fontWeight: "800",
-                fontSize: "1rem",
-                color: "#0f172a",
-                textAlign: "center",
-                padding: "12px 16px",
-                background: "#ffffff",
-                borderBottom: "2px solid #1e3a5f",
-                letterSpacing: "0.01em",
-            }}>
-                Early &amp; Late Shifts — {dateRange}
-            </div>
-
-            {/* Day cards */}
-            {dates.map((date, idx) => {
-                const dayShifts = getShiftsForDate(date);
-                const isLast = idx === dates.length - 1;
-                return (
-                    <div key={date} style={{
-                        borderBottom: isLast ? "none" : "1px solid #e2e8f0",
-                    }}>
-                        {/* Day header */}
-                        <div style={{
-                            background: "#1e3a5f",
-                            color: "#ffffff",
-                            padding: "8px 14px",
-                            fontWeight: "700",
-                            fontStyle: "italic",
-                            fontSize: "0.88rem",
-                            borderBottom: "1px solid #2d4f7c",
-                        }}>
-                            {getDayName(date)} · {formatShortDate(date)}
-                        </div>
-
-                        {/* Day body */}
-                        <div style={{
-                            padding: "10px 14px",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "8px",
-                        }}>
-                            {dayShifts.length === 0 ? (
-                                <div style={{ color: "#94a3b8", fontSize: "0.82rem" }}>Sin turnos</div>
-                            ) : (
-                                dayShifts.map((shift) => {
-                                    const cell = getCellDataFromShiftHelper(shift);
-                                    if (!cell) return null;
-                                    return (
-                                        <div key={shift.id ?? `${date}-${shift.startTime}`} style={{
-                                            background: "#f8fafc",
-                                            borderRadius: "8px",
-                                            padding: "8px 12px",
-                                        }}>
-                                            {/* Time row */}
-                                            <div style={{
-                                                fontWeight: "700",
-                                                color: "#1e293b",
-                                                fontSize: "0.82rem",
-                                                marginBottom: "4px",
-                                            }}>
-                                                {cell.startTime} – {cell.endTime}
-                                            </div>
-                                            {/* Slots */}
-                                            {Array.from({ length: cell.totalSlots }, (_, i) =>
-                                                cell.approved[i] ? (
-                                                    <div key={i} style={{ color: "#1e293b", fontSize: "0.8rem", padding: "1px 0" }}>
-                                                        {cell.approved[i]}
-                                                    </div>
-                                                ) : (
-                                                    <div key={i} style={{ color: "#94a3b8", fontSize: "0.78rem", padding: "1px 0" }}>
-                                                        {i + 1}
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
-
 export default function ScheduleTable({ shifts, updatedAt, canExport, token, showAll, publishToggle }) {
     const [flash, setFlash] = useState(false);
     const [exporting, setExporting] = useState(false);
@@ -286,19 +162,20 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const [customMessage, setCustomMessage] = useState("");
     const [operators, setOperators] = useState([]);
     const [selectedIds, setSelectedIds] = useState(null); // null = not loaded yet
-    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
-
-    useEffect(() => {
-        function handleResize() {
-            setIsMobile(window.innerWidth < 640);
-        }
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
 
     const dates = [...new Set(shifts.map((s) => s.date.slice(0, 10)))].sort();
     const dayShifts = shifts.filter((s) => s.type === "DAY");
     const nightShifts = shifts.filter((s) => s.type === "NIGHT");
+
+    function parseTimeToMinutes(t) {
+        const match = t.match(/(\d+):(\d+)(am|pm)/i);
+        if (!match) return 0;
+        let [, h, m, period] = match;
+        h = parseInt(h); m = parseInt(m);
+        if (period.toLowerCase() === "pm" && h !== 12) h += 12;
+        if (period.toLowerCase() === "am" && h === 12) h = 0;
+        return h * 60 + m;
+    }
 
     function getShiftsByDateAndType(type, date) {
         return shifts
@@ -307,7 +184,16 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     }
 
     function getCellDataFromShift(shift) {
-        return getCellDataFromShiftHelper(shift);
+        if (!shift) return null;
+        const fromRequests = (shift.requests ?? [])
+            .filter((r) => r.status === "APPROVED")
+            .map((r) => ({ name: r.user?.name ?? "", time: new Date(r.reviewedAt ?? r.createdAt ?? 0) }));
+        const fromManual = (shift.manualAssignments ?? [])
+            .map((a) => ({ name: a.name, time: new Date(a.createdAt ?? 0) }));
+        const approved = [...fromRequests, ...fromManual]
+            .sort((a, b) => a.time - b.time)
+            .map((x) => x.name);
+        return { approved, totalSlots: shift.totalSlots, startTime: shift.startTime, endTime: shift.endTime };
     }
 
     const maxDayRows = Math.max(0, ...dates.map((d) => getShiftsByDateAndType("DAY", d).length));
@@ -361,7 +247,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
 </table>
 </body></html>`;
 
-        const blob = new Blob(["﻿" + html], { type: "application/vnd.ms-excel;charset=utf-8" });
+        const blob = new Blob(["\uFEFF" + html], { type: "application/vnd.ms-excel;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `SLC-Horario-${dates[0]}.xls`;
