@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
-import { getPasskeyRegisterOptions, verifyPasskeyRegistration, getMyPasskeys } from "../api/index.js";
+import { getPasskeyRegisterOptions, verifyPasskeyRegistration } from "../api/index.js";
 
 const DISMISSED_KEY = "passkey-prompt-dismissed-at";
 const ASK_AGAIN_DAYS = 14;
 
-function shouldShowLocally() {
+function shouldShow() {
     if (!window.PublicKeyCredential) return false;
     if (!window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) return false;
     const dismissedAt = localStorage.getItem(DISMISSED_KEY);
@@ -22,31 +22,18 @@ export default function PasskeyPrompt({ token, onDone }) {
     const [visible, setVisible] = useState(false);
     const [exiting, setExiting] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState(null); // null | "success" | "error"
+    const [status, setStatus] = useState(null); // null | "success" | "error" | "already"
 
     useEffect(() => {
-        if (!shouldShowLocally()) { onDone?.(); return; }
+        if (!shouldShow()) { onDone?.(); return; }
 
-        let cancelled = false;
-        (async () => {
-            try {
-                // Si ya tiene passkeys en el servidor, suprimir el pop-up en este dispositivo
-                const existing = await getMyPasskeys(token);
-                if (existing?.length > 0) {
-                    localStorage.setItem(DISMISSED_KEY, String(Date.now() + 9999 * 24 * 60 * 60 * 1000));
-                    if (!cancelled) onDone?.();
-                    return;
-                }
-                const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                if (!cancelled) {
-                    if (available) setTimeout(() => setVisible(true), 600);
-                    else onDone?.();
-                }
-            } catch {
-                if (!cancelled) onDone?.();
-            }
-        })();
-        return () => { cancelled = true; };
+        window.PublicKeyCredential
+            .isUserVerifyingPlatformAuthenticatorAvailable()
+            .then((available) => {
+                if (available) setTimeout(() => setVisible(true), 600);
+                else onDone?.();
+            })
+            .catch(() => onDone?.());
     }, []);
 
     // Bloquear scroll del fondo (iOS necesita position:fixed)
@@ -96,7 +83,13 @@ export default function PasskeyPrompt({ token, onDone }) {
             setTimeout(() => close(), 1600);
         } catch (err) {
             if (err?.name === "NotAllowedError") {
+                // Usuario canceló el diálogo del dispositivo
                 dismiss();
+            } else if (err?.name === "InvalidStateError") {
+                // Passkey ya existe en este dispositivo (ej: misma cuenta en Safari y PWA)
+                localStorage.setItem(DISMISSED_KEY, String(Date.now() + 9999 * 24 * 60 * 60 * 1000));
+                setStatus("already");
+                setTimeout(() => close(), 2000);
             } else {
                 setStatus("error");
                 setTimeout(() => setStatus(null), 2500);
@@ -138,6 +131,14 @@ export default function PasskeyPrompt({ token, onDone }) {
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
                         Passkey activada
+                    </div>
+                )}
+                {status === "already" && (
+                    <div style={styles.successBadge}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Ya está activa en este dispositivo
                     </div>
                 )}
                 {status === "error" && (
