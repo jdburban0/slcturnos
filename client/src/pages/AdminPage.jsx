@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
@@ -276,6 +276,12 @@ function AdminPage() {
     const [transfers, setTransfers] = useState([]);
     const [activeTab, setActiveTab] = useState("requests");
     const [reqTab, setReqTab] = useState("next"); // "next" | "current"
+    const tabRefs = useRef({});
+    const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0, ready: false });
+    useLayoutEffect(() => {
+        const el = tabRefs.current[activeTab];
+        if (el) setSliderStyle({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
+    }, [activeTab]);
     const [registerCode, setRegisterCode] = useState("");
     const [newCode, setNewCode] = useState("");
     const [codeVisible, setCodeVisible] = useState(false);
@@ -913,6 +919,21 @@ function AdminPage() {
 
                 {/* Pestañas de navegación */}
                 <div style={styles.tabs} className="admin-tab-track">
+                    {/* Slider animado */}
+                    {sliderStyle.ready && (
+                        <div style={{
+                            position: "absolute",
+                            top: "5px", bottom: "5px",
+                            left: sliderStyle.left,
+                            width: sliderStyle.width,
+                            background: "var(--primary)",
+                            borderRadius: "10px",
+                            boxShadow: "0 2px 10px rgba(37,99,235,0.4)",
+                            transition: "left 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1)",
+                            zIndex: 0,
+                            pointerEvents: "none",
+                        }} />
+                    )}
                     {[
                         { id: "requests", label: `Solicitudes${requests.length + transfers.length > 0 ? ` (${requests.length + transfers.length})` : ""}` },
                         { id: "shifts", label: "Turnos" },
@@ -922,6 +943,7 @@ function AdminPage() {
                     ].map((tab) => (
                         <button
                             key={tab.id}
+                            ref={el => { tabRefs.current[tab.id] = el; }}
                             style={{ ...styles.tab, ...(activeTab === tab.id ? styles.tabActive : {}) }}
                             onClick={() => setActiveTab(tab.id)}
                         >
@@ -1532,6 +1554,7 @@ const styles = {
     statNum: { fontSize: "1.8rem", fontWeight: "800", color: "var(--text-main)", lineHeight: 1 },
     statLabel: { fontSize: "0.75rem", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: "center" },
     tabs: {
+        position: "relative",
         display: "flex",
         alignItems: "center",
         background: "var(--card-bg)",
@@ -1545,6 +1568,8 @@ const styles = {
         boxShadow: "var(--card-shadow)",
     },
     tab: {
+        position: "relative",
+        zIndex: 1,
         flex: 1,
         minWidth: 0,
         padding: "9px 10px",
@@ -1555,15 +1580,13 @@ const styles = {
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "0.88rem",
-        transition: "all 0.18s ease",
+        transition: "color 0.2s ease",
         whiteSpace: "nowrap",
         textAlign: "center",
         flexShrink: 0,
     },
     tabActive: {
-        background: "var(--primary)",
         color: "#ffffff",
-        boxShadow: "0 2px 8px rgba(37,99,235,0.35)",
     },
     section: {
         background: "var(--card-bg)", border: "1px solid var(--border-color)",
