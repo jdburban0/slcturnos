@@ -1571,8 +1571,8 @@ const styles = {
         position: "relative",
         zIndex: 1,
         flex: 1,
-        minWidth: 0,
-        padding: "9px 10px",
+        minWidth: "max-content",
+        padding: "9px 14px",
         borderRadius: "10px",
         border: "none",
         background: "transparent",
@@ -1583,7 +1583,6 @@ const styles = {
         transition: "color 0.2s ease",
         whiteSpace: "nowrap",
         textAlign: "center",
-        flexShrink: 0,
     },
     tabActive: {
         color: "#ffffff",
