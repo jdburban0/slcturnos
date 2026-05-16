@@ -204,8 +204,7 @@ const styles = {
     },
     successBadge: {
         display: "flex", alignItems: "center", gap: "6px",
-        background: "var(--success-bg, #d1fae5)", color: "var(--success, #16a34a)",
-        padding: "8px 16px", borderRadius: "10px",
+        color: "var(--success, #16a34a)",
         fontSize: "0.9rem", fontWeight: "700",
     },
     errorMsg: {
