@@ -10,6 +10,7 @@ import settingsRouter from "./routes/settings.js";
 import transfersRouter from "./routes/transfers.js";
 import pushRouter from "./routes/push.js";
 import chatRouter from "./routes/chat.js";
+import passkeysRouter from "./routes/passkeys.js";
 
 dotenv.config();
 
@@ -46,5 +47,6 @@ app.use("/api/settings", settingsRouter);
 app.use("/api/transfers", transfersRouter);
 app.use("/api/push", pushRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/passkeys", passkeysRouter);
 
 export default app;

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { login, register, forgotPassword, resetPassword } from "../api/index.js";
+import { login, register, forgotPassword, resetPassword, getPasskeyLoginOptions, verifyPasskeyLogin } from "../api/index.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
+import { startAuthentication, WebAuthnAbortService } from "@simplewebauthn/browser";
+import PasskeyPrompt from "../components/PasskeyPrompt.jsx";
 
 function LoginPage() {
     const navigate = useNavigate();
@@ -27,6 +29,8 @@ function LoginPage() {
     const [resetConfirm, setResetConfirm] = useState("");
     const [resetSuccess, setResetSuccess] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+    const [pendingAuth, setPendingAuth] = useState(null); // { token, user } esperando PasskeyPrompt
 
     useEffect(() => {
         const base = import.meta.env.VITE_API_URL || "";
@@ -34,6 +38,34 @@ function LoginPage() {
             .then(() => setServerReady(true))
             .catch(() => setTimeout(ping, 3000));
         ping();
+    }, []);
+
+    // Conditional UI — passkey autofill en el campo de correo
+    useEffect(() => {
+        if (!window.PublicKeyCredential?.isConditionalMediationAvailable) return;
+        let cancelled = false;
+
+        window.PublicKeyCredential.isConditionalMediationAvailable().then(async (available) => {
+            if (!available || cancelled) return;
+            try {
+                const options = await getPasskeyLoginOptions();
+                const { _challengeKey, ...optionsJSON } = options;
+
+                const response = await startAuthentication({ optionsJSON, useBrowserAutofill: true });
+                if (cancelled) return;
+
+                const { token, user } = await verifyPasskeyLogin({ ...response, _challengeKey });
+                if (cancelled) return;
+                afterAuth(token, user);
+            } catch {
+                // Ignorar — el usuario eligió escribir contraseña o el navegador no lo soporta
+            }
+        }).catch(() => {});
+
+        return () => {
+            cancelled = true;
+            WebAuthnAbortService.cancelCeremony();
+        };
     }, []);
 
     function switchMode(newMode) {
@@ -57,16 +89,27 @@ function LoginPage() {
         }, 180);
     }
 
-    function afterAuth(token, user) {
-        setLeaving(true);
-        setTimeout(() => {
-            saveAuth(token, user);
-            if (user.role === "admin" || user.role === "lead") {
-                navigate("/admin");
-            } else {
-                navigate("/dashboard");
-            }
-        }, 320);
+    function navigate_after(token, user) {
+        saveAuth(token, user);
+        if (user.role === "admin" || user.role === "lead") {
+            navigate("/admin");
+        } else {
+            navigate("/dashboard");
+        }
+    }
+
+    function afterAuth(token, user, fromPasskey = false) {
+        // Abortar conditional UI si estaba activo
+        WebAuthnAbortService.cancelCeremony();
+
+        if (!fromPasskey && window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) {
+            // Mostrar prompt de passkey antes de navegar (si aplica)
+            setPendingAuth({ token, user });
+            setShowPasskeyPrompt(true);
+        } else {
+            setLeaving(true);
+            setTimeout(() => navigate_after(token, user), 320);
+        }
     }
 
     const handleSubmit = async (e) => {
@@ -100,6 +143,7 @@ function LoginPage() {
         setLoading(true);
         try {
             if (mode === "login") {
+                conditionalAbortRef.current?.abort();
                 const { token, user } = await login(email, password);
                 afterAuth(token, user);
             } else if (mode === "register") {
@@ -129,8 +173,19 @@ function LoginPage() {
     const isForgot = mode === "forgot";
     const isReset = mode === "reset";
 
+    function handlePasskeyPromptDone() {
+        setShowPasskeyPrompt(false);
+        if (pendingAuth) {
+            setLeaving(true);
+            setTimeout(() => navigate_after(pendingAuth.token, pendingAuth.user), 320);
+        }
+    }
+
     return (
         <div style={styles.page}>
+            {showPasskeyPrompt && pendingAuth && (
+                <PasskeyPrompt token={pendingAuth.token} onDone={handlePasskeyPromptDone} />
+            )}
             {/* Theme Toggle Button */}
             <div style={styles.themeToggleContainer}>
                 <button onClick={toggleTheme} className="theme-toggle icon-btn" title="Alternar tema">
@@ -291,6 +346,7 @@ function LoginPage() {
                                         className="input-field"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                        autoComplete="username webauthn"
                                         required
                                     />
                                 </div>

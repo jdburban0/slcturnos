@@ -397,6 +397,41 @@ export async function deleteChatConversation(token, userId) {
     }));
 }
 
+// Passkeys
+export async function getPasskeyRegisterOptions(token) {
+    return handle(await fetch(`${BASE}/api/passkeys/register/options`, {
+        method: "POST", headers: headers(token),
+    }));
+}
+
+export async function verifyPasskeyRegistration(token, response) {
+    return handle(await fetch(`${BASE}/api/passkeys/register/verify`, {
+        method: "POST", headers: headers(token), body: JSON.stringify(response),
+    }));
+}
+
+export async function getPasskeyLoginOptions() {
+    return handle(await fetch(`${BASE}/api/passkeys/login/options`));
+}
+
+export async function verifyPasskeyLogin(response) {
+    return handle(await fetch(`${BASE}/api/passkeys/login/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(response),
+    }));
+}
+
+export async function getMyPasskeys(token) {
+    return handle(await fetch(`${BASE}/api/passkeys`, { headers: headers(token) }));
+}
+
+export async function deletePasskey(token, id) {
+    return handle(await fetch(`${BASE}/api/passkeys/${id}`, {
+        method: "DELETE", headers: headers(token),
+    }));
+}
+
 export async function resetPassword(email, code, newPassword) {
     return handle(await fetch(`${BASE}/api/auth/reset-password`, {
         method: "POST", headers: { "Content-Type": "application/json" },
