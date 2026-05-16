@@ -572,30 +572,19 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                 </div>
             )}
 
-            {/* Mobile card layout */}
-            {isMobile && (
-                <MobileDayCards dates={dates} shifts={shifts} dateRange={dateRange} />
-            )}
-
-            {/* Captured area — always in DOM for html2canvas; hidden off-screen on mobile */}
-            <div
-                ref={tableRef}
-                style={isMobile
-                    ? { ...styles.captureArea, position: "absolute", left: "-9999px", top: 0, width: "900px", pointerEvents: "none" }
-                    : styles.captureArea
-                }
-            >
+            {/* Captured area */}
+            <div ref={tableRef} style={styles.captureArea}>
                 <div style={styles.tableTitle}>
                     Early &amp; Late Shifts — {dateRange}
                 </div>
-                <div style={styles.scrollWrapper}>
-                    <table style={styles.table}>
+                <div style={isMobile ? styles.scrollWrapperMobile : styles.scrollWrapper}>
+                    <table style={isMobile ? styles.tableMobile : styles.table}>
                         <thead>
                             <tr>
                                 {dates.map((date) => (
-                                    <th key={date} style={styles.thDay}>
-                                        <div style={styles.dayName}>{getDayName(date)}</div>
-                                        <div style={styles.dayDate}>{formatShortDate(date)}</div>
+                                    <th key={date} style={isMobile ? styles.thDayMobile : styles.thDay}>
+                                        <div style={isMobile ? styles.dayNameMobile : styles.dayName}>{getDayName(date)}</div>
+                                        <div style={isMobile ? styles.dayDateMobile : styles.dayDate}>{formatShortDate(date)}</div>
                                     </th>
                                 ))}
                             </tr>
@@ -607,19 +596,19 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                     {dates.map((date) => {
                                         const cell = getCellDataFromShift(getShiftsByDateAndType("DAY", date)[rowIdx]);
                                         return (
-                                            <td key={date} style={styles.tdCell}>
+                                            <td key={date} style={isMobile ? styles.tdCellMobile : styles.tdCell}>
                                                 {cell ? (
                                                     <>
-                                                        <div style={styles.timeInCell}>
+                                                        <div style={isMobile ? styles.timeInCellMobile : styles.timeInCell}>
                                                             {cell.startTime} - {cell.endTime}
                                                         </div>
                                                         {Array.from({ length: cell.totalSlots }, (_, i) =>
                                                             cell.approved[i] ? (
-                                                                <div key={i} style={styles.operatorName}>
+                                                                <div key={i} style={isMobile ? styles.operatorNameMobile : styles.operatorName}>
                                                                     {cell.approved[i]}
                                                                 </div>
                                                             ) : (
-                                                                <div key={i} style={styles.emptySlot}>
+                                                                <div key={i} style={isMobile ? styles.emptySlotMobile : styles.emptySlot}>
                                                                     {i + 1}
                                                                 </div>
                                                             )
@@ -645,19 +634,19 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                     {dates.map((date) => {
                                         const cell = getCellDataFromShift(getShiftsByDateAndType("NIGHT", date)[rowIdx]);
                                         return (
-                                            <td key={date} style={styles.tdCell}>
+                                            <td key={date} style={isMobile ? styles.tdCellMobile : styles.tdCell}>
                                                 {cell ? (
                                                     <>
-                                                        <div style={styles.timeInCell}>
+                                                        <div style={isMobile ? styles.timeInCellMobile : styles.timeInCell}>
                                                             {cell.startTime} - {cell.endTime}
                                                         </div>
                                                         {Array.from({ length: cell.totalSlots }, (_, i) =>
                                                             cell.approved[i] ? (
-                                                                <div key={i} style={styles.operatorName}>
+                                                                <div key={i} style={isMobile ? styles.operatorNameMobile : styles.operatorName}>
                                                                     {cell.approved[i]}
                                                                 </div>
                                                             ) : (
-                                                                <div key={i} style={styles.emptySlot}>
+                                                                <div key={i} style={isMobile ? styles.emptySlotMobile : styles.emptySlot}>
                                                                     {i + 1}
                                                                 </div>
                                                             )
@@ -920,11 +909,20 @@ const styles = {
     scrollWrapper: {
         overflowX: "auto",
     },
+    scrollWrapperMobile: {
+        overflowX: "visible",
+    },
     table: {
         width: "100%",
         borderCollapse: "collapse",
         fontSize: "0.82rem",
         minWidth: "480px",
+    },
+    tableMobile: {
+        width: "100%",
+        borderCollapse: "collapse",
+        fontSize: "0.62rem",
+        tableLayout: "fixed",
     },
     thDay: {
         padding: "8px 10px",
@@ -934,14 +932,31 @@ const styles = {
         borderRight: "1px solid #2d4f7c",
         minWidth: "120px",
     },
+    thDayMobile: {
+        padding: "5px 2px",
+        background: "#1e3a5f",
+        color: "#ffffff",
+        textAlign: "center",
+        borderRight: "1px solid #2d4f7c",
+    },
     dayName: {
         fontWeight: "700",
         fontSize: "0.85rem",
         fontStyle: "italic",
     },
+    dayNameMobile: {
+        fontWeight: "700",
+        fontSize: "0.65rem",
+        fontStyle: "italic",
+    },
     dayDate: {
         fontWeight: "700",
         fontSize: "0.82rem",
+        fontStyle: "italic",
+    },
+    dayDateMobile: {
+        fontWeight: "700",
+        fontSize: "0.6rem",
         fontStyle: "italic",
     },
     tdCell: {
@@ -953,12 +968,28 @@ const styles = {
         minWidth: "120px",
         textAlign: "center",
     },
+    tdCellMobile: {
+        padding: "4px 2px",
+        borderBottom: "1px solid #e2e8f0",
+        borderRight: "1px solid #e2e8f0",
+        verticalAlign: "top",
+        textAlign: "center",
+        wordBreak: "break-word",
+    },
     timeInCell: {
         fontWeight: "700",
         color: "#1e293b",
         fontSize: "0.8rem",
         marginBottom: "4px",
         whiteSpace: "nowrap",
+    },
+    timeInCellMobile: {
+        fontWeight: "700",
+        color: "#1e293b",
+        fontSize: "0.6rem",
+        marginBottom: "2px",
+        whiteSpace: "normal",
+        lineHeight: 1.2,
     },
     operatorName: {
         color: "#1e293b",
@@ -968,6 +999,17 @@ const styles = {
     emptySlot: {
         color: "#94a3b8",
         fontSize: "0.78rem",
+        padding: "1px 0",
+    },
+    operatorNameMobile: {
+        color: "#1e293b",
+        fontSize: "0.6rem",
+        padding: "1px 0",
+        wordBreak: "break-word",
+    },
+    emptySlotMobile: {
+        color: "#94a3b8",
+        fontSize: "0.58rem",
         padding: "1px 0",
     },
     separator: {
