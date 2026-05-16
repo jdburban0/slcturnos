@@ -16,31 +16,39 @@ function shouldShow() {
     return true;
 }
 
+const EXIT_MS = 320;
+
 export default function PasskeyPrompt({ token, onDone }) {
     const [visible, setVisible] = useState(false);
+    const [exiting, setExiting] = useState(false);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState(null); // null | "success" | "error"
 
     useEffect(() => {
         if (!shouldShow()) { onDone?.(); return; }
 
-        // Verificar que el dispositivo tiene autenticador biométrico
         window.PublicKeyCredential
             .isUserVerifyingPlatformAuthenticatorAvailable()
             .then((available) => {
-                if (available) {
-                    setTimeout(() => setVisible(true), 800);
-                } else {
-                    onDone?.();
-                }
+                if (available) setTimeout(() => setVisible(true), 600);
+                else onDone?.();
             })
             .catch(() => onDone?.());
     }, []);
 
+    function close(cb) {
+        setExiting(true);
+        setTimeout(() => {
+            setVisible(false);
+            setExiting(false);
+            cb?.();
+            onDone?.();
+        }, EXIT_MS);
+    }
+
     function dismiss() {
         localStorage.setItem(DISMISSED_KEY, String(Date.now()));
-        setVisible(false);
-        onDone?.();
+        close();
     }
 
     async function handleActivar() {
@@ -51,15 +59,15 @@ export default function PasskeyPrompt({ token, onDone }) {
             const response = await startRegistration({ optionsJSON: options });
             await verifyPasskeyRegistration(token, response);
             setStatus("success");
-            localStorage.setItem(DISMISSED_KEY, String(Date.now() + 9999 * 24 * 60 * 60 * 1000)); // no volver a preguntar
-            setTimeout(() => { setVisible(false); onDone?.(); }, 1800);
+            // No volver a preguntar
+            localStorage.setItem(DISMISSED_KEY, String(Date.now() + 9999 * 24 * 60 * 60 * 1000));
+            setTimeout(() => close(), 1600);
         } catch (err) {
-            // El usuario canceló el diálogo o algo falló — no mostrar error, solo cerrar
-            if (err?.name !== "NotAllowedError") {
+            if (err?.name === "NotAllowedError") {
+                dismiss();
+            } else {
                 setStatus("error");
                 setTimeout(() => setStatus(null), 2500);
-            } else {
-                dismiss();
             }
         } finally {
             setLoading(false);
@@ -69,38 +77,54 @@ export default function PasskeyPrompt({ token, onDone }) {
     if (!visible) return null;
 
     return (
-        <div style={styles.overlay}>
-            <div className="anim-slide-up" style={styles.sheet}>
+        <div
+            style={{
+                ...styles.overlay,
+                animation: exiting
+                    ? "overlayFadeOut 0.32s ease forwards"
+                    : "overlayFadeIn 0.25s ease both",
+            }}
+        >
+            <div className={exiting ? "sheet-exit" : "sheet-enter"} style={styles.sheet}>
+                {/* Handle */}
                 <div style={styles.handle} />
 
+                {/* Ícono */}
                 <div style={styles.iconWrap}>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         <path d="M9 12l2 2 4-4"/>
                     </svg>
                 </div>
 
-                <h3 style={styles.title}>Inicia sesión más rápido</h3>
+                <h3 style={styles.title}>Entra más rápido</h3>
                 <p style={styles.desc}>
-                    Activa Face ID, huella o Windows Hello para entrar a SLC Turnos sin escribir tu contraseña.
+                    Usa Face ID, huella dactilar o Windows Hello para iniciar sesión sin escribir tu contraseña.
                 </p>
 
                 {status === "success" && (
-                    <p style={styles.successMsg}>✓ Passkey activada correctamente</p>
+                    <div style={styles.successBadge}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Passkey activada
+                    </div>
                 )}
                 {status === "error" && (
                     <p style={styles.errorMsg}>Algo salió mal, intenta más tarde</p>
                 )}
 
                 {!status && (
-                    <>
+                    <div style={styles.actions}>
                         <button style={styles.btnPrimary} onClick={handleActivar} disabled={loading}>
-                            {loading ? "Activando…" : "Activar"}
+                            {loading
+                                ? <><span style={styles.spinner} />Activando…</>
+                                : "Activar"}
                         </button>
                         <button style={styles.btnSecondary} onClick={dismiss} disabled={loading}>
                             Ahora no
                         </button>
-                    </>
+                    </div>
                 )}
             </div>
         </div>
@@ -110,54 +134,78 @@ export default function PasskeyPrompt({ token, onDone }) {
 const styles = {
     overlay: {
         position: "fixed", inset: 0, zIndex: 500,
-        background: "rgba(0,0,0,0.45)",
+        background: "rgba(0,0,0,0.5)",
         display: "flex", alignItems: "flex-end", justifyContent: "center",
-        backdropFilter: "blur(4px)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
     },
     sheet: {
         width: "100%", maxWidth: "480px",
         background: "var(--card-bg)",
-        borderRadius: "20px 20px 0 0",
-        padding: "12px 28px 36px",
+        borderRadius: "24px 24px 0 0",
+        padding: "10px 28px 44px",
         display: "flex", flexDirection: "column", alignItems: "center",
-        gap: "12px",
-        boxShadow: "0 -8px 40px rgba(0,0,0,0.2)",
+        gap: "14px",
+        boxShadow: "0 -12px 48px rgba(0,0,0,0.18)",
+        border: "1px solid var(--card-border)",
+        borderBottom: "none",
     },
     handle: {
-        width: "40px", height: "4px", borderRadius: "2px",
-        background: "var(--border-color)", marginBottom: "8px",
+        width: "36px", height: "4px", borderRadius: "2px",
+        background: "var(--border-color)", margin: "6px 0 2px",
+        flexShrink: 0,
     },
     iconWrap: {
-        width: "60px", height: "60px", borderRadius: "16px",
-        background: "var(--primary-light)", color: "var(--primary)",
+        width: "64px", height: "64px", borderRadius: "18px",
+        background: "var(--primary-light, rgba(37,99,235,0.12))",
+        color: "var(--primary)",
         display: "flex", alignItems: "center", justifyContent: "center",
+        marginTop: "4px",
     },
     title: {
-        margin: 0, fontSize: "1.15rem", fontWeight: "800",
+        margin: 0, fontSize: "1.2rem", fontWeight: "800",
         color: "var(--text-main)", textAlign: "center",
+        letterSpacing: "-0.01em",
     },
     desc: {
         margin: 0, fontSize: "0.88rem", color: "var(--text-muted)",
-        textAlign: "center", lineHeight: 1.55, maxWidth: "320px",
+        textAlign: "center", lineHeight: 1.6, maxWidth: "300px",
+    },
+    actions: {
+        width: "100%", display: "flex", flexDirection: "column", gap: "8px",
+        marginTop: "6px",
     },
     btnPrimary: {
-        width: "100%", padding: "14px",
+        width: "100%", padding: "15px",
         background: "var(--primary)", color: "#fff",
-        border: "none", borderRadius: "12px",
-        fontSize: "0.95rem", fontWeight: "700", cursor: "pointer",
-        marginTop: "4px",
+        border: "none", borderRadius: "14px",
+        fontSize: "0.97rem", fontWeight: "700", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+        transition: "opacity 0.15s",
     },
     btnSecondary: {
-        width: "100%", padding: "12px",
+        width: "100%", padding: "13px",
         background: "transparent", color: "var(--text-muted)",
-        border: "none", borderRadius: "12px",
+        border: "none", borderRadius: "14px",
         fontSize: "0.88rem", fontWeight: "600", cursor: "pointer",
+        transition: "color 0.15s",
     },
-    successMsg: {
-        color: "var(--success, #16a34a)", fontSize: "0.9rem",
-        fontWeight: "600", margin: "4px 0",
+    successBadge: {
+        display: "flex", alignItems: "center", gap: "6px",
+        background: "var(--success-bg, #d1fae5)", color: "var(--success, #16a34a)",
+        padding: "8px 16px", borderRadius: "10px",
+        fontSize: "0.9rem", fontWeight: "700",
     },
     errorMsg: {
-        color: "var(--danger, #dc2626)", fontSize: "0.88rem", margin: "4px 0",
+        color: "var(--danger, #dc2626)", fontSize: "0.88rem",
+        margin: 0, textAlign: "center",
+    },
+    spinner: {
+        display: "inline-block",
+        width: "14px", height: "14px",
+        border: "2px solid rgba(255,255,255,0.3)",
+        borderTopColor: "#fff",
+        borderRadius: "50%",
+        animation: "spin 0.7s linear infinite",
     },
 };
