@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
-import { getPasskeyRegisterOptions, verifyPasskeyRegistration } from "../api/index.js";
+import { getPasskeyRegisterOptions, verifyPasskeyRegistration, getMyPasskeys } from "../api/index.js";
 
 const DISMISSED_KEY = "passkey-prompt-dismissed-at";
 const ASK_AGAIN_DAYS = 14;
 
-function shouldShow() {
+function shouldShowLocally() {
     if (!window.PublicKeyCredential) return false;
     if (!window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) return false;
     const dismissedAt = localStorage.getItem(DISMISSED_KEY);
@@ -25,15 +25,28 @@ export default function PasskeyPrompt({ token, onDone }) {
     const [status, setStatus] = useState(null); // null | "success" | "error"
 
     useEffect(() => {
-        if (!shouldShow()) { onDone?.(); return; }
+        if (!shouldShowLocally()) { onDone?.(); return; }
 
-        window.PublicKeyCredential
-            .isUserVerifyingPlatformAuthenticatorAvailable()
-            .then((available) => {
-                if (available) setTimeout(() => setVisible(true), 600);
-                else onDone?.();
-            })
-            .catch(() => onDone?.());
+        let cancelled = false;
+        (async () => {
+            try {
+                // Si ya tiene passkeys en el servidor, suprimir el pop-up en este dispositivo
+                const existing = await getMyPasskeys(token);
+                if (existing?.length > 0) {
+                    localStorage.setItem(DISMISSED_KEY, String(Date.now() + 9999 * 24 * 60 * 60 * 1000));
+                    if (!cancelled) onDone?.();
+                    return;
+                }
+                const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                if (!cancelled) {
+                    if (available) setTimeout(() => setVisible(true), 600);
+                    else onDone?.();
+                }
+            } catch {
+                if (!cancelled) onDone?.();
+            }
+        })();
+        return () => { cancelled = true; };
     }, []);
 
     // Bloquear scroll del fondo (iOS necesita position:fixed)
