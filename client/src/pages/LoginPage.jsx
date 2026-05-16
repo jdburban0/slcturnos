@@ -361,6 +361,7 @@ function LoginPage() {
                                             style={{ paddingRight: "42px" }}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
+                                            autoComplete="current-password"
                                             required
                                         />
                                         <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
