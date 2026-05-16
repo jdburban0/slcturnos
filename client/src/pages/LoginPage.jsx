@@ -143,7 +143,7 @@ function LoginPage() {
         setLoading(true);
         try {
             if (mode === "login") {
-                conditionalAbortRef.current?.abort();
+                WebAuthnAbortService.cancelCeremony();
                 const { token, user } = await login(email, password);
                 afterAuth(token, user);
             } else if (mode === "register") {
