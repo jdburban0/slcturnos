@@ -458,18 +458,9 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                 </div>
             )}
 
-            {/* Mobile card layout */}
-            {isMobile && (
-                <MobileDayCards dates={dates} shifts={shifts} dateRange={dateRange} />
-            )}
-
-            {/* Captured area — always in DOM for html2canvas; hidden off-screen on mobile */}
             <div
                 ref={tableRef}
-                style={isMobile
-                    ? { ...styles.captureArea, position: "absolute", left: "-9999px", top: 0, width: "900px", pointerEvents: "none" }
-                    : styles.captureArea
-                }
+                style={styles.captureArea}
             >
                 <div style={styles.tableTitle}>
                     Early &amp; Late Shifts — {dateRange}
