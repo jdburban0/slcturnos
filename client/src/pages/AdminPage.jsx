@@ -1395,83 +1395,127 @@ function AdminPage() {
                     <section style={styles.section}>
                         <h2 style={styles.sectionTitle}>Ajustes del sistema</h2>
 
-                        <div style={styles.settingsBlock}>
-                            <h3 style={styles.settingsLabel}>Código de acceso — operadores</h3>
-                            <p style={styles.settingsHint}>
-                                Los operadores usan este código al registrarse. Cámbialo para revocar el acceso a nuevos registros.
-                            </p>
-                            <form style={styles.settingsForm} onSubmit={handleSaveCode}>
-                                <div style={styles.codeRow}>
-                                    <input
-                                        type={codeVisible ? "text" : "password"}
-                                        style={styles.codeInput}
-                                        value={newCode}
-                                        onChange={(e) => setNewCode(e.target.value)}
-                                        required
-                                        minLength={4}
-                                        placeholder="Nuevo código"
-                                    />
-                                    <button
-                                        type="button"
-                                        style={styles.codeToggleBtn}
-                                        onClick={() => setCodeVisible((v) => !v)}
-                                    >
-                                        {codeVisible ? "Ocultar" : "Ver"}
-                                    </button>
+                        <div style={styles.settingsGrid}>
+
+                            {/* Código operadores */}
+                            <div style={styles.settingsCard}>
+                                <div style={styles.settingsCardHeader}>
+                                    <div style={styles.settingsIconWrap}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p style={styles.settingsCardTitle}>Operadores</p>
+                                        <p style={styles.settingsCardSub}>Código de registro</p>
+                                    </div>
                                 </div>
-                                <p style={styles.codeCurrentHint}>
-                                    Código actual: <strong>{codeVisible ? registerCode : "••••••••"}</strong>
+
+                                <p style={styles.settingsHint}>
+                                    Los operadores usan este código al registrarse. Cámbialo para revocar el acceso a nuevos registros.
                                 </p>
-                                <button
-                                    type="submit"
-                                    style={styles.createButton}
-                                    disabled={codeLoading || newCode === registerCode || newCode.length < 4}
-                                >
-                                    {codeLoading ? "Guardando..." : "Guardar nuevo código"}
-                                </button>
-                            </form>
-                        </div>
 
-                        <div style={{ marginTop: "24px", borderTop: "1px solid var(--card-border)", paddingTop: "24px" }}>
-                            <h3 style={styles.settingsLabel}>Código de acceso — leads</h3>
-
-                            <p style={styles.settingsHint}>
-                                Los leads usan este código al registrarse. No es necesario seleccionar grupo con este código.
-                            </p>
-                            <form style={styles.settingsForm} onSubmit={handleSaveAdminCode}>
-                                <div style={styles.codeRow}>
-                                    <input
-                                        type={adminCodeVisible ? "text" : "password"}
-                                        style={styles.codeInput}
-                                        value={newAdminCode}
-                                        onChange={(e) => setNewAdminCode(e.target.value)}
-                                        required
-                                        minLength={4}
-                                        placeholder="Nuevo código admin"
-                                    />
-                                    <button
-                                        type="button"
-                                        style={styles.codeToggleBtn}
-                                        onClick={() => setAdminCodeVisible((v) => !v)}
-                                    >
-                                        {adminCodeVisible ? "Ocultar" : "Ver"}
-                                    </button>
+                                <div style={styles.settingsCurrentRow}>
+                                    <span style={styles.settingsCurrentLabel}>Código activo</span>
+                                    <span style={styles.settingsCurrentCode}>
+                                        {codeVisible ? registerCode : "••••••••"}
+                                    </span>
                                 </div>
-                                <p style={styles.codeCurrentHint}>
-                                    Código actual: <strong>{adminCodeVisible ? adminRegisterCode : "••••••••"}</strong>
+
+                                <form style={styles.settingsForm} onSubmit={handleSaveCode}>
+                                    <div style={styles.codeRow}>
+                                        <input
+                                            type={codeVisible ? "text" : "password"}
+                                            style={styles.codeInput}
+                                            value={newCode}
+                                            onChange={(e) => setNewCode(e.target.value)}
+                                            required
+                                            minLength={4}
+                                            placeholder="Nuevo código"
+                                        />
+                                        <button type="button" style={styles.codeToggleBtn} onClick={() => setCodeVisible((v) => !v)}>
+                                            {codeVisible ? (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                                                </svg>
+                                            ) : (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        style={{ ...styles.settingsSaveBtn, ...(codeLoading || newCode === registerCode || newCode.length < 4 ? styles.settingsSaveBtnDisabled : {}) }}
+                                        disabled={codeLoading || newCode === registerCode || newCode.length < 4}
+                                    >
+                                        {codeLoading ? "Guardando…" : "Guardar cambios"}
+                                    </button>
+                                </form>
+                            </div>
+
+                            {/* Código leads */}
+                            <div style={styles.settingsCard}>
+                                <div style={styles.settingsCardHeader}>
+                                    <div style={{ ...styles.settingsIconWrap, background: "rgba(139,92,246,0.12)", color: "#7c3aed" }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>
+                                            <path d="M16 11l2 2 4-4"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p style={styles.settingsCardTitle}>Leads</p>
+                                        <p style={styles.settingsCardSub}>Código de registro</p>
+                                    </div>
+                                </div>
+
+                                <p style={styles.settingsHint}>
+                                    Los leads usan este código al registrarse. No es necesario seleccionar grupo con este código.
                                 </p>
-                                <button
-                                    type="submit"
-                                    style={styles.createButton}
-                                    disabled={adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4}
-                                >
-                                    {adminCodeLoading ? "Guardando..." : "Guardar nuevo código"}
-                                </button>
-                            </form>
+
+                                <div style={styles.settingsCurrentRow}>
+                                    <span style={styles.settingsCurrentLabel}>Código activo</span>
+                                    <span style={styles.settingsCurrentCode}>
+                                        {adminCodeVisible ? adminRegisterCode : "••••••••"}
+                                    </span>
+                                </div>
+
+                                <form style={styles.settingsForm} onSubmit={handleSaveAdminCode}>
+                                    <div style={styles.codeRow}>
+                                        <input
+                                            type={adminCodeVisible ? "text" : "password"}
+                                            style={styles.codeInput}
+                                            value={newAdminCode}
+                                            onChange={(e) => setNewAdminCode(e.target.value)}
+                                            required
+                                            minLength={4}
+                                            placeholder="Nuevo código"
+                                        />
+                                        <button type="button" style={styles.codeToggleBtn} onClick={() => setAdminCodeVisible((v) => !v)}>
+                                            {adminCodeVisible ? (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                                                </svg>
+                                            ) : (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        style={{ ...styles.settingsSaveBtn, ...(adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4 ? styles.settingsSaveBtnDisabled : {}) }}
+                                        disabled={adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4}
+                                    >
+                                        {adminCodeLoading ? "Guardando…" : "Guardar cambios"}
+                                    </button>
+                                </form>
+                            </div>
+
                         </div>
-
-
-
                     </section>
                 )}
             </div>
@@ -1735,11 +1779,64 @@ const styles = {
         padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600", whiteSpace: "nowrap",
         transition: "background 0.15s, color 0.15s",
     },
+    settingsGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gap: "16px",
+    },
+    settingsCard: {
+        background: "var(--card-bg)",
+        border: "1px solid var(--card-border)",
+        borderRadius: "16px",
+        padding: "22px 20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "14px",
+        boxShadow: "var(--card-shadow)",
+    },
+    settingsCardHeader: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+    },
+    settingsIconWrap: {
+        width: "42px", height: "42px", borderRadius: "12px",
+        background: "var(--primary-light)", color: "var(--primary)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0,
+    },
+    settingsCardTitle: {
+        margin: 0, fontWeight: "700", fontSize: "1rem", color: "var(--text-main)",
+    },
+    settingsCardSub: {
+        margin: 0, fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "1px",
+    },
+    settingsCurrentRow: {
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "var(--bg-color)", borderRadius: "10px", padding: "10px 14px",
+    },
+    settingsCurrentLabel: {
+        fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "600",
+    },
+    settingsCurrentCode: {
+        fontSize: "0.88rem", fontWeight: "700", color: "var(--text-main)",
+        fontFamily: "monospace", letterSpacing: "0.1em",
+    },
+    settingsSaveBtn: {
+        width: "100%", padding: "11px",
+        background: "var(--primary)", color: "#fff",
+        border: "none", borderRadius: "10px",
+        fontSize: "0.9rem", fontWeight: "700", cursor: "pointer",
+        transition: "opacity 0.15s",
+    },
+    settingsSaveBtnDisabled: {
+        opacity: 0.45, cursor: "not-allowed",
+    },
     settingsBlock: { maxWidth: "480px", },
     fieldGroup: { display: "flex", flexDirection: "column", gap: "6px", },
     settingsLabel: { margin: "0 0 6px", color: "var(--text-main)", fontSize: "1rem", fontWeight: "700", },
-    settingsHint: { margin: "0 0 20px", color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: "1.5", },
-    settingsForm: { display: "flex", flexDirection: "column", gap: "12px", },
+    settingsHint: { margin: 0, color: "var(--text-muted)", fontSize: "0.83rem", lineHeight: "1.55", },
+    settingsForm: { display: "flex", flexDirection: "column", gap: "10px", },
     codeRow: { display: "flex", gap: "8px", },
     codeInput: {
         flex: 1, padding: "11px 14px", border: "1.5px solid var(--border-color)", borderRadius: "10px",
@@ -1747,7 +1844,7 @@ const styles = {
     },
     codeToggleBtn: {
         background: "var(--card-bg)", color: "var(--text-muted)", border: "1.5px solid var(--border-color)",
-        padding: "0 16px", borderRadius: "10px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem",
+        padding: "0 14px", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center",
     },
     codeCurrentHint: { margin: 0, color: "var(--text-muted)", fontSize: "0.85rem", },
     nextWeekNotice: {
