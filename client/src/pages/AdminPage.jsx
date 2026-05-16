@@ -1793,6 +1793,7 @@ const styles = {
         flexDirection: "column",
         gap: "14px",
         boxShadow: "var(--card-shadow)",
+        overflow: "hidden",
     },
     settingsCardHeader: {
         display: "flex",
@@ -1839,12 +1840,13 @@ const styles = {
     settingsForm: { display: "flex", flexDirection: "column", gap: "10px", },
     codeRow: { display: "flex", gap: "8px", },
     codeInput: {
-        flex: 1, padding: "11px 14px", border: "1.5px solid var(--border-color)", borderRadius: "10px",
+        flex: 1, minWidth: 0, padding: "11px 14px", border: "1.5px solid var(--border-color)", borderRadius: "10px",
         fontSize: "1rem", background: "var(--input-bg)", color: "var(--text-main)", letterSpacing: "0.1em",
     },
     codeToggleBtn: {
         background: "var(--card-bg)", color: "var(--text-muted)", border: "1.5px solid var(--border-color)",
-        padding: "0 14px", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center",
+        width: "46px", minWidth: "46px", borderRadius: "10px", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
     },
     codeCurrentHint: { margin: 0, color: "var(--text-muted)", fontSize: "0.85rem", },
     nextWeekNotice: {
