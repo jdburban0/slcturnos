@@ -83,7 +83,7 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
                     background: "#fff7ed", border: "1px solid #fed7aa",
                     borderRadius: "8px", padding: "9px 14px", marginBottom: "12px",
                 }}>
-                    <span style={{ fontSize: "1rem" }}>⚠️</span>
+                    <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#c2410c" }}>!</span>
                     <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "#c2410c" }}>
                         El horario está sin publicar. Los operadores no podrán solicitar turnos hasta que lo hagas visible.
                     </span>
@@ -385,7 +385,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                             onClick={handleOpenSendForm}
                             disabled={sending}
                         >
-                            {sending ? "Enviando..." : "📧 Enviar a operadores"}
+                            {sending ? "Enviando..." : "Enviar a operadores"}
                         </button>
                         {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
                     </div>
@@ -393,7 +393,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                     {showMsgForm && createPortal(
                         <div data-theme={document.documentElement.getAttribute("data-theme")} style={styles.modalOverlay} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
                             <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-                                <h3 style={styles.modalTitle}>📧 Enviar horario</h3>
+                                <h3 style={styles.modalTitle}>Enviar horario</h3>
 
                                 <p style={styles.modalSub}>Selecciona los operadores que recibirán el correo</p>
 

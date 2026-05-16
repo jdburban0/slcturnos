@@ -36,10 +36,10 @@ async function flushShiftResultEmail({ to, name, shifts }) {
     const allRejected = shifts.every((s) => s.status === "REJECTED");
 
     const subject = single
-        ? (shifts[0].status === "APPROVED" ? `✅ Tu turno fue aprobado — ${shifts[0].shiftTitle}` : `❌ Tu turno fue rechazado — ${shifts[0].shiftTitle}`)
-        : allApproved ? `✅ Tus ${shifts.length} turnos fueron aprobados`
-        : allRejected ? `❌ Tus ${shifts.length} turnos fueron rechazados`
-        : `📋 Resultado de tus solicitudes de turno`;
+        ? (shifts[0].status === "APPROVED" ? `Tu turno fue aprobado — ${shifts[0].shiftTitle}` : `Tu turno fue rechazado — ${shifts[0].shiftTitle}`)
+        : allApproved ? `Tus ${shifts.length} turnos fueron aprobados`
+        : allRejected ? `Tus ${shifts.length} turnos fueron rechazados`
+        : `Resultado de tus solicitudes de turno`;
 
     const rows = shifts.map((s) => {
         const approved = s.status === "APPROVED";
@@ -48,11 +48,11 @@ async function flushShiftResultEmail({ to, name, shifts }) {
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
                     <div>
                         <p style="margin:0 0 2px;font-weight:700;color:#0f172a;font-size:0.9rem;">${s.shiftTitle}</p>
-                        <p style="margin:0;color:#64748b;font-size:0.82rem;">📅 ${s.shiftDate}</p>
+                        <p style="margin:0;color:#64748b;font-size:0.82rem;">${s.shiftDate}</p>
                         ${s.notes ? `<p style="margin:4px 0 0;color:#374151;font-size:0.82rem;">Nota: ${s.notes}</p>` : ""}
                     </div>
                     <span style="white-space:nowrap;font-weight:700;font-size:0.85rem;color:${approved ? "#15803d" : "#b91c1c"};">
-                        ${approved ? "✅ Aprobado" : "❌ Rechazado"}
+                        ${approved ? "Aprobado" : "Rechazado"}
                     </span>
                 </div>
             </div>
@@ -61,7 +61,7 @@ async function flushShiftResultEmail({ to, name, shifts }) {
 
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#eef4ff;border-radius:12px;">
-            <h2 style="color:#0f172a;margin:0 0 8px;">📋 Resultado de tus solicitudes</h2>
+            <h2 style="color:#0f172a;margin:0 0 8px;">Resultado de tus solicitudes</h2>
             <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, aquí está el resultado de tus solicitudes de turno.</p>
             ${rows}
             <p style="color:#94a3b8;font-size:0.78rem;margin:16px 0 0;">— SLC Turnos</p>
@@ -84,12 +84,12 @@ export async function sendAssignmentEmail({ name, email, shiftTitle, shiftDate, 
 
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#eef4ff;border-radius:12px;">
-            <h2 style="color:#0f172a;margin:0 0 8px;">📋 Asignación de turno</h2>
+            <h2 style="color:#0f172a;margin:0 0 8px;">Asignación de turno</h2>
             <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, has sido asignado al siguiente turno:</p>
             <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #bfdbfe;margin-bottom:20px;">
                 <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
-                <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">📅 ${shiftDate}</p>
-                <p style="margin:0;color:#475569;font-size:0.9rem;">🕐 ${startTime} – ${endTime}</p>
+                <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
+                <p style="margin:0;color:#475569;font-size:0.9rem;">${startTime} – ${endTime}</p>
             </div>
             <p style="color:#94a3b8;font-size:0.78rem;margin:0;">— SLC Turnos</p>
         </div>
@@ -99,7 +99,7 @@ export async function sendAssignmentEmail({ name, email, shiftTitle, shiftDate, 
         await getResend().emails.send({
             from: FROM,
             to: email,
-            subject: `📋 Asignación de turno — ${shiftTitle}`,
+            subject: `Asignación de turno — ${shiftTitle}`,
             html,
         });
         console.log(`[Mailer] Asignación enviada a ${email}`);
@@ -111,7 +111,7 @@ export async function sendAssignmentEmail({ name, email, shiftTitle, shiftDate, 
 export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabel, customMessage }) {
     if (!process.env.RESEND_API_KEY || !operators.length) return;
 
-    const subject = `📅 Horario de turnos — ${weekLabel}`;
+    const subject = `Horario de turnos — ${weekLabel}`;
     const bodyMsg = customMessage || `aquí está el horario de turnos para la semana de ${weekLabel}.`;
 
     // Construir todos los emails primero
@@ -164,7 +164,7 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
 export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, startTime, endTime, totalSlots, extraMsg }) {
     if (!process.env.RESEND_API_KEY || !operators.length) return;
 
-    const subject = `🆕 Nuevo cupo disponible — ${shiftTitle}`;
+    const subject = `Nuevo cupo disponible — ${shiftTitle}`;
 
     const emails = operators.map((op) => ({
         from: FROM,
@@ -172,13 +172,13 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
         subject,
         html: `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
-                <h2 style="color:#0f172a;margin:0 0 8px;">🆕 Nuevo cupo disponible</h2>
+                <h2 style="color:#0f172a;margin:0 0 8px;">Nuevo cupo disponible</h2>
                 <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, hay un cupo disponible para solicitar.</p>
                 <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
                     <p style="margin:0 0 4px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
-                    <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">📅 ${shiftDate}</p>
-                    <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">🕐 ${startTime} – ${endTime}</p>
-                    <p style="margin:0;color:#475569;font-size:0.9rem;">👥 ${extraMsg || `${totalSlots} cupo${totalSlots !== 1 ? "s" : ""} disponible${totalSlots !== 1 ? "s" : ""}`}</p>
+                    <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
+                    <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${startTime} – ${endTime}</p>
+                    <p style="margin:0;color:#475569;font-size:0.9rem;">${extraMsg || `${totalSlots} cupo${totalSlots !== 1 ? "s" : ""} disponible${totalSlots !== 1 ? "s" : ""}`}</p>
                 </div>
                 <p style="color:#94a3b8;font-size:0.78rem;margin:20px 0 0;">— SLC Turnos</p>
             </div>
@@ -207,7 +207,7 @@ export async function sendPasswordResetEmail({ email, name, code }) {
 
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
-            <h2 style="color:#0f172a;margin:0 0 8px;">🔑 Restablecer contraseña</h2>
+            <h2 style="color:#0f172a;margin:0 0 8px;">Restablecer contraseña</h2>
             <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, recibimos una solicitud para restablecer tu contraseña.</p>
             <div style="background:#ffffff;border-radius:8px;padding:24px;border:1px solid #e2e8f0;margin-bottom:20px;text-align:center;">
                 <p style="margin:0 0 8px;color:#475569;font-size:0.9rem;">Tu código de verificación es:</p>
@@ -275,7 +275,7 @@ async function _flushAdminPendingDigest(admins) {
     const count = await prisma.shiftRequest.count({ where: { status: "PENDING" } });
     if (count === 0) return;
 
-    const subject = `📋 ${count} solicitud${count !== 1 ? "es" : ""} pendiente${count !== 1 ? "s" : ""} — SLC Turnos`;
+    const subject = `${count} solicitud${count !== 1 ? "es" : ""} pendiente${count !== 1 ? "s" : ""} — SLC Turnos`;
 
     const emails = admins.map((admin) => ({
         from: FROM,
@@ -283,7 +283,7 @@ async function _flushAdminPendingDigest(admins) {
         subject,
         html: `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
-                <h2 style="color:#0f172a;margin:0 0 8px;">📋 Solicitudes pendientes</h2>
+                <h2 style="color:#0f172a;margin:0 0 8px;">Solicitudes pendientes</h2>
                 <p style="color:#475569;margin:0 0 20px;">
                     Hola <strong>${admin.name}</strong>, hay
                     <strong style="color:#2563eb;">${count} solicitud${count !== 1 ? "es" : ""} de turno</strong>
@@ -327,14 +327,14 @@ export async function sendAdminTransferAlertEmail({ admins, operatorName, shiftT
     for (const admin of admins) {
         const html = `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
-                <h2 style="color:#0f172a;margin:0 0 8px;">${isTransfer ? "🔄 Solicitud de traspaso" : "⚠️ Solicitud de desistimiento"}</h2>
+                <h2 style="color:#0f172a;margin:0 0 8px;">${isTransfer ? "Solicitud de traspaso" : "Solicitud de desistimiento"}</h2>
                 <p style="color:#475569;margin:0 0 20px;">Hola <strong>${admin.name}</strong>, hay una solicitud pendiente que requiere tu revisión.</p>
 
                 <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
-                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;">👤 <strong>Operador:</strong> ${operatorName}</p>
-                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;">📋 <strong>Turno:</strong> ${shiftTitle}</p>
-                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;">📅 <strong>Fecha:</strong> ${shiftDate}</p>
-                    ${isTransfer ? `<p style="margin:0;color:#0f172a;font-size:0.95rem;">➡️ <strong>Ceder a:</strong> ${toName}</p>` : ""}
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Operador:</strong> ${operatorName}</p>
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Turno:</strong> ${shiftTitle}</p>
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Fecha:</strong> ${shiftDate}</p>
+                    ${isTransfer ? `<p style="margin:0;color:#0f172a;font-size:0.95rem;"><strong>Ceder a:</strong> ${toName}</p>` : ""}
                 </div>
 
                 <p style="color:#475569;font-size:0.9rem;">Ingresa a SLC Turnos para aprobar o rechazar la solicitud.</p>

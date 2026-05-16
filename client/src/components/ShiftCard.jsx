@@ -99,9 +99,9 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
             <div style={styles.main}>
                 <span className="shift-name" style={styles.shiftName}>{shift.title}</span>
                 <div style={styles.meta}>
-                    <span style={styles.metaItem}>📅 {dateFormatted}</span>
+                    <span style={styles.metaItem}>{dateFormatted}</span>
                     <span style={styles.metaDot}>·</span>
-                    <span style={styles.metaItem}>🕐 {shift.startTime} – {shift.endTime}</span>
+                    <span style={styles.metaItem}>{shift.startTime} – {shift.endTime}</span>
                 </div>
             </div>
 

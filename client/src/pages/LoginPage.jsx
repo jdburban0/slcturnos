@@ -264,7 +264,7 @@ function LoginPage() {
                         {isReset && !resetSuccess && (
                             <>
                                 <div className="anim-field" style={styles.codeNotice}>
-                                    <span style={styles.codeNoticeIcon}>✉</span>
+                                    <span style={styles.codeNoticeIcon}>@</span>
                                     <span>Enviamos un código a <strong>{resetEmail}</strong>. Revisa tu bandeja de entrada.</span>
                                 </div>
                                 <div key={`reset-code-${fieldKey}`} className="anim-field" style={styles.field}>

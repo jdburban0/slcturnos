@@ -15,7 +15,7 @@ router.post("/test", requireAuth, async (req, res) => {
     const subs = await prisma.pushSubscription.findMany({ where: { userId: req.user.id } });
     console.log(`[Push TEST] userId=${req.user.id} suscripciones=${subs.length}`);
     if (!subs.length) return res.status(404).json({ message: "No hay suscripciones guardadas para este usuario" });
-    await sendPushToUser(req.user.id, "🔔 Prueba SLC Turnos", "Las notificaciones funcionan correctamente");
+    await sendPushToUser(req.user.id, "Prueba SLC Turnos", "Las notificaciones funcionan correctamente");
     res.json({ ok: true, subs: subs.length });
 });
 

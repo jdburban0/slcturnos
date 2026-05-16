@@ -918,7 +918,7 @@ function AdminPage() {
                         { id: "shifts", label: "Turnos" },
                         { id: "users", label: "Operadores" },
                         ...(user?.role === "admin" ? [{ id: "leads", label: "Leads" }] : []),
-                        ...(user?.role === "admin" ? [{ id: "settings", label: "⚙ Ajustes" }] : []),
+                        ...(user?.role === "admin" ? [{ id: "settings", label: "Ajustes" }] : []),
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -1040,7 +1040,7 @@ function AdminPage() {
                         {/* Aviso: semana actual archivada, sin próxima semana creada */}
                         {isCwTrulyArchived && !hasActiveShifts && (
                             <div style={styles.nextWeekNotice}>
-                                <span style={{ fontSize: "1.1rem" }}>📅</span>
+                                <span style={{ fontSize: "1.1rem" }}>—</span>
                                 <div>
                                     <strong>La semana actual ya está archivada.</strong>
                                     <p style={{ margin: "2px 0 0", fontSize: "0.85rem", color: "var(--text-muted)" }}>
@@ -1113,7 +1113,7 @@ function AdminPage() {
                             return (
                                 <div style={styles.weekActions}>
                                     <span style={styles.weekActionsLabel}>
-                                        📁 {label} <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.82rem" }}>({count} turnos)</span>
+                                        {label} <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.82rem" }}>({count} turnos)</span>
                                     </span>
                                     {isOldest && (
                                         <div style={styles.weekBtns}>

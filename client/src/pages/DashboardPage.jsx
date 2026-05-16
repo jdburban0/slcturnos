@@ -551,7 +551,6 @@ function DashboardPage() {
 
                 {dashTab === "upcoming" && !loading && upcomingShifts.length === 0 && (
                     <div style={styles.emptyState}>
-                        <p style={styles.emptyIcon}>📋</p>
                         <p style={styles.emptyText}>No hay turnos disponibles esta semana.</p>
                         <p style={styles.emptySubtext}>El supervisor publicará los turnos pronto.</p>
                     </div>
@@ -559,7 +558,6 @@ function DashboardPage() {
 
                 {dashTab === "current" && !loading && currentWeekShifts.length === 0 && (
                     <div style={styles.emptyState}>
-                        <p style={styles.emptyIcon}>📋</p>
                         <p style={styles.emptyText}>No hay turnos de la semana actual.</p>
                     </div>
                 )}

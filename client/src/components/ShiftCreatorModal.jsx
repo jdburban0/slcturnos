@@ -179,17 +179,17 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                         style={{ ...s.modeTab, ...(mode === "week" ? s.modeTabActive : {}) }}
                         onClick={() => { setMode("week"); setError(""); }}
                     >
-                        📅 Por semana
+                        Por semana
                     </button>
                     <button
                         style={{ ...s.modeTab, ...(mode === "single" ? s.modeTabActive : {}) }}
                         onClick={() => { setMode("single"); setError(""); }}
                     >
-                        ➕ Individual
+                        Individual
                     </button>
                 </div>
 
-                {error && <div style={s.errorBox} className="modal-error">⚠️ {error}</div>}
+                {error && <div style={s.errorBox} className="modal-error">{error}</div>}
 
                 {/* Semana completa */}
                 {mode === "week" && (
@@ -246,7 +246,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                 {/* Turno diurno */}
                                 <div style={s.presetCard} className={dayPreset.enabled ? "preset-card-day" : ""}>
                                     <div style={s.presetHeader}>
-                                        <span style={s.presetIcon}>☀️</span>
+                                        <span style={s.presetIcon}>D</span>
                                         <span style={s.presetName}>Diurno</span>
                                         <ToggleSwitch
                                             checked={dayPreset.enabled}
@@ -288,7 +288,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                 {/* Turno nocturno */}
                                 <div style={s.presetCard} className={nightPreset.enabled ? "preset-card-night" : ""}>
                                     <div style={s.presetHeader}>
-                                        <span style={s.presetIcon}>🌙</span>
+                                        <span style={s.presetIcon}>N</span>
                                         <span style={s.presetName}>Nocturno</span>
                                         <ToggleSwitch
                                             checked={nightPreset.enabled}
@@ -337,7 +337,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                 </span>
                                 <span style={s.previewDesc}>
                                     {selectedDays.map((o) => WEEK_DAYS[o].short).join(" · ")}
-                                    {enabledTypeCount === 2 ? " · ☀️ + 🌙" : dayPreset.enabled ? " · ☀️" : " · 🌙"}
+                                    {enabledTypeCount === 2 ? " · D + N" : dayPreset.enabled ? " · D" : " · N"}
                                 </span>
                             </div>
                         ) : (
@@ -400,8 +400,8 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                     value={single.type}
                                     onChange={(e) => setSingle({ ...single, type: e.target.value })}
                                 >
-                                    <option value="DAY">☀️ Diurno</option>
-                                    <option value="NIGHT">🌙 Nocturno</option>
+                                    <option value="DAY">Diurno</option>
+                                    <option value="NIGHT">Nocturno</option>
                                 </select>
                             </div>
                             <div style={s.fieldGroup}>
