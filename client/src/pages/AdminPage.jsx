@@ -1283,12 +1283,29 @@ function AdminPage() {
                                                         style={u.active ? styles.warnBtn : styles.activateBtn}
                                                         onClick={() => handleToggleUser(u.id)}
                                                     >
-                                                        {u.active ? "Banear" : "Desbanear"}
+                                                        {u.active ? (
+                                                            <>
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                                                </svg>
+                                                                Banear
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                                                </svg>
+                                                                Desbanear
+                                                            </>
+                                                        )}
                                                     </button>
                                                     <button
                                                         style={styles.deleteBtn}
                                                         onClick={() => handleDeleteUser(u.id, u.name)}
                                                     >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                                        </svg>
                                                         Eliminar
                                                     </button>
                                                 </div>
@@ -1638,12 +1655,16 @@ const styles = {
         padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
     },
     deleteBtn: {
-        background: "var(--danger-bg)", color: "var(--danger)", border: "none",
-        padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
+        display: "inline-flex", alignItems: "center", gap: "5px",
+        background: "transparent", color: "var(--danger)", border: "1px solid var(--danger)",
+        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600", whiteSpace: "nowrap",
+        transition: "background 0.15s, color 0.15s",
     },
     warnBtn: {
-        background: "var(--warning-bg)", color: "var(--warning)", border: "none",
-        padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600",
+        display: "inline-flex", alignItems: "center", gap: "5px",
+        background: "transparent", color: "var(--warning)", border: "1px solid var(--warning)",
+        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600", whiteSpace: "nowrap",
+        transition: "background 0.15s, color 0.15s",
     },
     slotsEditor: { display: "flex", alignItems: "center", gap: "4px", justifyContent: "center" },
     slotBtn: {
@@ -1658,8 +1679,10 @@ const styles = {
         padding: "4px 8px", borderRadius: "6px", cursor: "pointer", fontWeight: "700", fontSize: "0.85rem",
     },
     activateBtn: {
-        background: "var(--success-bg)", color: "var(--success)", border: "none",
-        padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600",
+        display: "inline-flex", alignItems: "center", gap: "5px",
+        background: "transparent", color: "var(--success)", border: "1px solid var(--success)",
+        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600", whiteSpace: "nowrap",
+        transition: "background 0.15s, color 0.15s",
     },
     settingsBlock: { maxWidth: "480px", },
     fieldGroup: { display: "flex", flexDirection: "column", gap: "6px", },
