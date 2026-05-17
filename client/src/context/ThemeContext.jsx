@@ -13,11 +13,19 @@ export function ThemeProvider({ children }) {
         document.documentElement.setAttribute("data-theme", theme);
         localStorage.setItem("app-theme", theme);
 
-        // Actualiza theme-color para PWA (status bar en iOS)
-        const color = theme === "dark" ? "#0f172a" : "#f1f4f8";
+        const dark = theme === "dark";
+
+        // theme-color: controla la barra del navegador en Android/Chrome
         document.querySelectorAll('meta[name="theme-color"]').forEach((el) => {
-            el.setAttribute("content", color);
+            el.setAttribute("content", dark ? "#0f172a" : "#ffffff");
         });
+
+        // apple-mobile-web-app-status-bar-style:
+        //   default          → barra blanca opaca, iconos oscuros  (modo claro)
+        //   black-translucent → transparente, iconos blancos        (modo oscuro, bg oscuro se ve detrás)
+        // iOS lee esto al arrancar la app; el cambio mid-session aplica en iOS 16+.
+        const statusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        if (statusMeta) statusMeta.setAttribute("content", dark ? "black-translucent" : "default");
     }, [theme]);
 
     const toggleTheme = () => {
