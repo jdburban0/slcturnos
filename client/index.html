@@ -27,6 +27,15 @@
   <link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="/splashes/splash-1290x2796.png" />
   <link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)" href="/splashes/splash-1320x2868.png" />
 
+  <!-- Detecta el tema guardado antes de que el splash se pinte -->
+  <script>
+    try {
+      var t = localStorage.getItem('app-theme') ||
+              (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+    } catch(e) {}
+  </script>
+
   <!-- Splash screen inline: evita pantalla negra en iOS antes de que React cargue -->
   <style>
     #splash {
@@ -38,7 +47,10 @@
       align-items: center;
       justify-content: center;
       gap: 20px;
-      background: #2563eb;
+      background: #ffffff;
+    }
+    [data-theme="dark"] #splash {
+      background: #0f172a;
     }
     #splash img {
       width: 96px;
@@ -49,8 +61,11 @@
       font-family: Arial, sans-serif;
       font-size: 1.15rem;
       font-weight: 700;
-      color: #ffffff;
+      color: #2563eb;
       letter-spacing: 0.01em;
+    }
+    [data-theme="dark"] #splash span {
+      color: #ffffff;
     }
     #splash.hide {
       opacity: 0;
