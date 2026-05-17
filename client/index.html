@@ -7,31 +7,12 @@
   <link rel="apple-touch-icon" href="/slcicon.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#0f172a" />
 
   <!-- iOS: abre en modo app (sin barra de Safari) -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <!-- default = barra blanca opaca (modo claro) | black-translucent = transparente (modo oscuro, bg oscuro se ve detrás) -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="SLC Turnos" />
-
-  <!-- Detectar tema antes de que iOS lea los meta tags y antes de que React monte -->
-  <script>
-    (function () {
-      try {
-        var saved = localStorage.getItem('app-theme');
-        var dark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        // Marca el tema en <html> para que el CSS de variables funcione de inmediato
-        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-        // Barra de estado iOS: default (blanca) en claro, black-translucent (transparente/oscura) en oscuro
-        document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
-          .setAttribute('content', dark ? 'black-translucent' : 'default');
-        // theme-color para Android / navegadores
-        document.querySelector('meta[name="theme-color"]')
-          .setAttribute('content', dark ? '#0f172a' : '#ffffff');
-      } catch (e) {}
-    })();
-  </script>
 
   <title>SLC Turnos</title>
 
