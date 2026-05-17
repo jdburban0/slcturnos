@@ -77,11 +77,18 @@ html {
   background-color: var(--bg-color);
 }
 
+/* Dark mode: black-translucent hace que el viewport cubra el área de la status bar.
+   Empujamos el contenido hacia abajo con env(safe-area-inset-top) para que no quede tapado. */
+[data-theme="dark"] body {
+  padding-top: env(safe-area-inset-top);
+}
+
 body {
   margin: 0;
   padding: 0;
-  /* Respeta el safe-area de iOS (notch, barra inferior) */
-  padding-top: env(safe-area-inset-top);
+  /* Modo oscuro: black-translucent → viewport pasa detrás de la barra → necesita inset */
+  /* Modo claro:  default → viewport empieza debajo de la barra → inset ya es 0 */
+  padding-top: 0;
   padding-bottom: env(safe-area-inset-bottom);
   min-height: 100dvh;
   /* background-attachment: fixed no funciona en iOS Safari → usar scroll */
