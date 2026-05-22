@@ -109,72 +109,67 @@ export default function AdminPublishTutorial({ onComplete }) {
 /* ── Visuales ── */
 
 function ScheduleStyleVisual() {
-    return (
-        <div style={viz.card}>
-            <div style={{ display: "flex", gap: "10px" }}>
-                {/* Antes */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={sv.colLabel}>Antes</div>
-                    <div style={sv.table}>
-                        <div style={{ display: "flex" }}>
-                            <div style={{ ...sv.headerCell, flex: 1 }}>Lunes</div>
-                            <div style={{ ...sv.headerCell, flex: 1, borderLeft: "1px solid #2d4a6b" }}>Martes</div>
+    const tableContent = (isNew) => (
+        <div style={sv.table}>
+            <div style={{ display: "flex" }}>
+                <div style={{ ...sv.headerCell, flex: 1 }}>Lunes</div>
+                <div style={{ ...sv.headerCell, flex: 1, borderLeft: "1px solid #2d4a6b" }}>Martes</div>
+            </div>
+            <div style={{ display: "flex", borderTop: "1px solid #1e293b" }}>
+                {/* Lunes */}
+                <div style={{ ...(isNew ? sv.tdNew : sv.tdOld), flex: 1 }}>
+                    {isNew ? (
+                        <div style={sv.boxNew}>
+                            <div style={sv.timeNew}>7:30am - 4:30pm</div>
+                            <div style={sv.nameNew}>Isabella G.</div>
+                            <div style={sv.nameNew}>David Reyes</div>
+                            <div style={sv.nameNew}>Esteban T.</div>
+                            <div style={sv.slotNew}>4</div>
+                            <div style={sv.slotNew}>5</div>
                         </div>
-                        <div style={{ display: "flex", borderTop: "1px solid #1e293b" }}>
-                            {/* Lunes - antes */}
-                            <div style={{ ...sv.tdOld, flex: 1 }}>
-                                <div style={sv.timeOld}>7:30am - 4:30pm</div>
-                                <div style={sv.nameOld}>Isabella G.</div>
-                                <div style={sv.nameOld}>David Reyes</div>
-                                <div style={sv.nameOld}>Esteban T.</div>
-                                <div style={sv.slotOld}>4</div>
-                                <div style={sv.slotOld}>5</div>
-                            </div>
-                            {/* Martes - antes */}
-                            <div style={{ ...sv.tdOld, flex: 1, borderLeft: "1px solid #1e293b" }}>
-                                <div style={sv.timeOld}>7:30am - 4:30pm</div>
-                                <div style={sv.nameOld}>Nicolás C.</div>
-                            </div>
-                        </div>
-                    </div>
+                    ) : (
+                        <>
+                            <div style={sv.timeOld}>7:30am - 4:30pm</div>
+                            <div style={sv.nameOld}>Isabella G.</div>
+                            <div style={sv.nameOld}>David Reyes</div>
+                            <div style={sv.nameOld}>Esteban T.</div>
+                            <div style={sv.slotOld}>4</div>
+                            <div style={sv.slotOld}>5</div>
+                        </>
+                    )}
                 </div>
-                {/* Flecha */}
-                <div style={{ display: "flex", alignItems: "center", paddingTop: "18px", flexShrink: 0 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                </div>
-                {/* Ahora */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={sv.colLabel}>Ahora</div>
-                    <div style={sv.table}>
-                        <div style={{ display: "flex" }}>
-                            <div style={{ ...sv.headerCell, flex: 1 }}>Lunes</div>
-                            <div style={{ ...sv.headerCell, flex: 1, borderLeft: "1px solid #2d4a6b" }}>Martes</div>
+                {/* Martes */}
+                <div style={{ ...(isNew ? sv.tdNew : sv.tdOld), flex: 1, borderLeft: "1px solid #1e293b" }}>
+                    {isNew ? (
+                        <div style={sv.boxNew}>
+                            <div style={sv.timeNew}>7:30am - 4:30pm</div>
+                            <div style={sv.nameNew}>Nicolás C.</div>
                         </div>
-                        <div style={{ display: "flex", borderTop: "1px solid #1e293b" }}>
-                            {/* Lunes - ahora */}
-                            <div style={{ ...sv.tdNew, flex: 1 }}>
-                                <div style={sv.boxNew}>
-                                    <div style={sv.timeNew}>7:30am - 4:30pm</div>
-                                    <div style={sv.nameNew}>Isabella G.</div>
-                                    <div style={sv.nameNew}>David Reyes</div>
-                                    <div style={sv.nameNew}>Esteban T.</div>
-                                    <div style={sv.slotNew}>4</div>
-                                    <div style={sv.slotNew}>5</div>
-                                </div>
-                            </div>
-                            {/* Martes - ahora */}
-                            <div style={{ ...sv.tdNew, flex: 1, borderLeft: "1px solid #1e293b" }}>
-                                <div style={sv.boxNew}>
-                                    <div style={sv.timeNew}>7:30am - 4:30pm</div>
-                                    <div style={sv.nameNew}>Nicolás C.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    ) : (
+                        <>
+                            <div style={sv.timeOld}>7:30am - 4:30pm</div>
+                            <div style={sv.nameOld}>Nicolás C.</div>
+                        </>
+                    )}
                 </div>
             </div>
+        </div>
+    );
+
+    return (
+        <div style={viz.card}>
+            {/* Antes */}
+            <div style={sv.colLabel}>Antes</div>
+            {tableContent(false)}
+            {/* Flecha */}
+            <div style={{ display: "flex", justifyContent: "center" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/>
+                </svg>
+            </div>
+            {/* Ahora */}
+            <div style={sv.colLabel}>Ahora</div>
+            {tableContent(true)}
         </div>
     );
 }
@@ -379,7 +374,7 @@ const sv = {
     },
     timeNew: {
         fontSize: "0.58rem", fontWeight: "700", color: "#cbd5e1",
-        textAlign: "center", marginBottom: "3px", whiteSpace: "nowrap",
+        textAlign: "center", marginBottom: "3px",
     },
     nameNew: {
         fontSize: "0.57rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.4,
