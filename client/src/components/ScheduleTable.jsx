@@ -156,6 +156,8 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
 
 function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const tableRef = useRef(null);
+    const exportDropRef = useRef(null);
+    const [exportOpen, setExportOpen] = useState(false);
     const [sending, setSending] = useState(false);
     const [sendMsg, setSendMsg] = useState("");
     const [showMsgForm, setShowMsgForm] = useState(false);
@@ -166,6 +168,17 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
     const dates = [...new Set(shifts.map((s) => s.date.slice(0, 10)))].sort();
     const dayShifts = shifts.filter((s) => s.type === "DAY");
     const nightShifts = shifts.filter((s) => s.type === "NIGHT");
+
+    useEffect(() => {
+        if (!exportOpen) return;
+        function handleClick(e) {
+            if (exportDropRef.current && !exportDropRef.current.contains(e.target)) {
+                setExportOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, [exportOpen]);
 
     function parseTimeToMinutes(t) {
         const match = t.match(/(\d+):(\d+)(am|pm)/i);
@@ -367,24 +380,64 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
             {canExport && (
                 <div>
                     <div style={styles.exportRow}>
+                        <div ref={exportDropRef} style={styles.exportDropWrap}>
+                            <button
+                                className="export-btn export-btn-jpg"
+                                style={{ ...styles.exportBtn, ...styles.exportBtnJpg, ...(exporting ? styles.exportBtnDisabled : {}) }}
+                                onClick={() => !exporting && setExportOpen((o) => !o)}
+                                disabled={exporting}
+                            >
+                                {!exporting && (
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                )}
+                                {exporting ? "Exportando..." : "Exportar"}
+                                {!exporting && (
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: "2px" }}>
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                )}
+                            </button>
+                            {exportOpen && (
+                                <div style={styles.exportDropMenu}>
+                                    <button
+                                        className="export-drop-item"
+                                        style={styles.exportDropItem}
+                                        onClick={() => { setExportOpen(false); handleExport(); }}
+                                    >
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                        </svg>
+                                        JPG
+                                    </button>
+                                    <button
+                                        className="export-drop-item"
+                                        style={styles.exportDropItem}
+                                        onClick={() => { setExportOpen(false); handleExportExcel(); }}
+                                    >
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                                        </svg>
+                                        Excel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         <button
-                            style={{ ...styles.exportBtn, ...(exporting ? styles.exportBtnDisabled : {}) }}
-                            onClick={handleExport}
-                            disabled={exporting}
-                        >
-                            {exporting ? "Exportando..." : "⬇ Exportar JPG"}
-                        </button>
-                        <button
-                            style={{ ...styles.exportBtn, background: "#0f766e" }}
-                            onClick={handleExportExcel}
-                        >
-                            ⬇ Exportar Excel
-                        </button>
-                        <button
-                            style={{ ...styles.exportBtn, ...(sending ? styles.exportBtnDisabled : {}), background: "#16a34a" }}
+                            className="export-btn"
+                            style={{ ...styles.exportBtn, ...(sending ? styles.exportBtnDisabled : {}) }}
                             onClick={handleOpenSendForm}
                             disabled={sending}
                         >
+                            {!sending && (
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"/>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                            )}
                             {sending ? "Enviando..." : "Enviar a operadores"}
                         </button>
                         {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
@@ -632,18 +685,57 @@ const styles = {
         color: "#16a34a",
     },
     exportBtn: {
-        background: "#1e3a5f",
-        color: "#ffffff",
-        border: "none",
+        background: "#ffffff",
+        color: "#1e293b",
+        border: "1.5px solid #cbd5e1",
         padding: "8px 14px",
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: "700",
         fontSize: "0.82rem",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+    },
+    exportBtnJpg: {
+        background: "#2563eb",
+        color: "#ffffff",
+        border: "1.5px solid #2563eb",
     },
     exportBtnDisabled: {
-        background: "#94a3b8",
+        background: "#e2e8f0",
+        color: "#94a3b8",
+        border: "1.5px solid #e2e8f0",
         cursor: "not-allowed",
+    },
+    exportDropWrap: {
+        position: "relative",
+    },
+    exportDropMenu: {
+        position: "absolute",
+        top: "calc(100% + 6px)",
+        right: 0,
+        background: "#ffffff",
+        border: "1.5px solid #e2e8f0",
+        borderRadius: "10px",
+        boxShadow: "0 8px 24px rgba(15,23,42,0.12)",
+        overflow: "hidden",
+        zIndex: 50,
+        minWidth: "120px",
+    },
+    exportDropItem: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        width: "100%",
+        padding: "10px 14px",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        fontSize: "0.83rem",
+        fontWeight: "700",
+        color: "#1e293b",
+        textAlign: "left",
     },
     modalOverlay: {
         position: "fixed",

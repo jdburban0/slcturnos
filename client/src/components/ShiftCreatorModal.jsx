@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createShift } from "../api/index.js";
 
 const WEEK_DAYS = [
@@ -72,6 +72,11 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
     const [mode, setMode] = useState("week");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = ""; };
+    }, []);
 
     // Modo semana
     const [mondayIso, setMondayIso] = useState(todayMondayIso);
@@ -206,7 +211,7 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                 />
                             </div>
                             <div style={s.weekLabelBox}>
-                                <span style={s.weekLabelText}>📆 {getWeekLabel(mondayIso)}</span>
+                                <span style={s.weekLabelText}>{getWeekLabel(mondayIso)}</span>
                             </div>
                         </div>
 
@@ -246,7 +251,6 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                 {/* Turno diurno */}
                                 <div style={s.presetCard} className={dayPreset.enabled ? "preset-card-day" : ""}>
                                     <div style={s.presetHeader}>
-                                        <span style={s.presetIcon}>D</span>
                                         <span style={s.presetName}>Diurno</span>
                                         <ToggleSwitch
                                             checked={dayPreset.enabled}
@@ -288,7 +292,6 @@ function ShiftCreatorModal({ token, onClose, onCreated }) {
                                 {/* Turno nocturno */}
                                 <div style={s.presetCard} className={nightPreset.enabled ? "preset-card-night" : ""}>
                                     <div style={s.presetHeader}>
-                                        <span style={s.presetIcon}>N</span>
                                         <span style={s.presetName}>Nocturno</span>
                                         <ToggleSwitch
                                             checked={nightPreset.enabled}
@@ -463,7 +466,7 @@ const s = {
         padding: "16px",
     },
     modal: {
-        background: "var(--card-bg)",
+        background: "var(--bg-color)",
         borderRadius: "20px",
         width: "100%",
         maxWidth: "580px",
@@ -536,7 +539,7 @@ const s = {
     weekLabelBox: {
         flex: 1,
         minWidth: "160px",
-        paddingBottom: "2px",
+        paddingBottom: "9px",
     },
     weekLabelText: {
         color: "var(--text-muted)",
@@ -704,8 +707,8 @@ const s = {
     },
     // Vista previa
     preview: {
-        background: "var(--success-bg)",
-        border: "1.5px solid var(--success)",
+        background: "var(--hover-overlay)",
+        border: "1.5px solid var(--border-color)",
         borderRadius: "12px",
         padding: "12px 16px",
         display: "flex",
@@ -714,7 +717,7 @@ const s = {
         flexWrap: "wrap",
     },
     previewCount: {
-        background: "#16a34a",
+        background: "#2563eb",
         color: "#ffffff",
         fontWeight: "800",
         fontSize: "0.88rem",
@@ -723,7 +726,7 @@ const s = {
         whiteSpace: "nowrap",
     },
     previewDesc: {
-        color: "var(--success)",
+        color: "var(--text-muted)",
         fontSize: "0.85rem",
         fontWeight: "600",
     },

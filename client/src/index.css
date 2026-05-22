@@ -554,3 +554,29 @@ button:active:not(:disabled) {
   .week-strip { overflow: visible !important; }
   .week-strip-btn { flex: 1 !important; flex-shrink: 1 !important; }
 }
+
+/* ─── Export buttons (ScheduleTable) ─────────────────────── */
+.export-btn {
+  transition: background 0.15s ease, border-color 0.15s ease,
+              box-shadow 0.15s ease, transform 0.12s ease;
+}
+.export-btn:not(:disabled):hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.1);
+}
+.export-btn:not(:disabled):active {
+  transform: scale(0.97);
+}
+.export-btn-jpg:not(:disabled):hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
+}
+.export-btn:disabled {
+  cursor: not-allowed;
+}
+.export-drop-item:hover {
+  background: #f1f5f9 !important;
+}

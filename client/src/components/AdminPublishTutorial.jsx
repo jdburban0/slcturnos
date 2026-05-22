@@ -28,23 +28,21 @@ export default function AdminPublishTutorial({ onComplete }) {
     const [step, setStep] = useState(0);
     const [canAdvance, setCanAdvance] = useState(false);
 
-    // Habilitar botón avanzar después de 2.5s en cada paso
     useEffect(() => {
         setCanAdvance(false);
-        const t = setTimeout(() => setCanAdvance(true), 2500);
+        const t = setTimeout(() => setCanAdvance(true), 2000);
         return () => clearTimeout(t);
     }, [step]);
 
-    const STEPS = 2;
+    const STEPS = 1;
     const isLast = step === STEPS;
 
     return (
         <div style={styles.overlay}>
-            <div style={styles.modal}>
+            <div style={{ ...styles.modal, maxWidth: "500px" }}>
 
-                {/* Cabecera: badge tutorial + dots */}
                 <div style={styles.header}>
-                    <span style={styles.tutorialBadge}>Tutorial - Novedades</span>
+                    <span style={styles.tutorialBadge}>Novedades en el horario</span>
                     <div style={styles.stepIndicator}>
                         {Array.from({ length: STEPS + 1 }).map((_, i) => (
                             <div key={i} style={{ ...styles.dot, background: i <= step ? "#3b82f6" : "var(--card-border)" }} />
@@ -52,51 +50,33 @@ export default function AdminPublishTutorial({ onComplete }) {
                     </div>
                 </div>
 
-                {/* Paso 0 */}
                 {step === 0 && (
                     <>
-                        <h2 style={styles.title}>El horario empieza oculto</h2>
+                        <h2 style={styles.title}>Nuevo estilo en el horario</h2>
                         <p style={styles.desc}>
-                            Al crear una semana nueva, el horario queda en estado{" "}
-                            <strong style={{ color: "#c2410c" }}>Oculto</strong> por defecto.
-                            Los operadores <strong>no pueden verlo ni solicitar turnos</strong> hasta que tú lo publiques manualmente.
+                            Cada turno en la tabla ahora está encerrado en su propio recuadro,
+                            así es más fácil distinguir qué cupos pertenecen a cada turno cuando hay varios en el mismo día.
                         </p>
                         <div style={styles.visualBox}>
-                            <StepOneVisual />
+                            <ScheduleStyleVisual />
                         </div>
                     </>
                 )}
 
-                {/* Paso 1 */}
                 {step === 1 && (
                     <>
-                        <h2 style={styles.title}>Activa el toggle para publicarlo</h2>
+                        <h2 style={styles.title}>Botón Exportar mejorado</h2>
                         <p style={styles.desc}>
-                            Cambia el toggle a{" "}
-                            <strong style={{ color: "#16a34a" }}>Visible</strong> en la sección de horario.
-                            En ese momento los operadores podrán ver los turnos y enviar solicitudes.
+                            Los botones de exportar se unieron en uno solo. Haz clic en{" "}
+                            <strong>Exportar</strong> para elegir entre guardar el horario como imagen{" "}
+                            <strong>JPG</strong> o como archivo <strong>Excel</strong>.
                         </p>
                         <div style={styles.visualBox}>
-                            <StepTwoVisual />
+                            <ExportButtonVisual />
                         </div>
                     </>
                 )}
 
-                {/* Paso 2 */}
-                {step === 2 && (
-                    <>
-                        <h2 style={styles.title}>Nuevo menú de navegación</h2>
-                        <p style={styles.desc}>
-                            Las opciones de <strong>modo oscuro</strong>, <strong>cambiar contraseña</strong> y{" "}
-                            <strong>cerrar sesión</strong> ahora están en el menú de las tres rayas, en la esquina superior derecha.
-                        </p>
-                        <div style={styles.visualBox}>
-                            <StepMenuVisual />
-                        </div>
-                    </>
-                )}
-
-                {/* Navegación */}
                 <div style={styles.navRow}>
                     {step > 0 && (
                         <button className="tutorial-back-btn" style={styles.backBtn} onClick={() => setStep((s) => s - 1)}>
@@ -116,11 +96,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                         onClick={canAdvance ? (isLast ? onComplete : () => setStep((s) => s + 1)) : undefined}
                         disabled={!canAdvance}
                     >
-                        {!canAdvance
-                            ? "Un momento..."
-                            : isLast
-                                ? "Entendido"
-                                : "Siguiente"}
+                        {!canAdvance ? "Un momento..." : isLast ? "Entendido" : "Siguiente"}
                     </button>
                 </div>
 
@@ -130,104 +106,99 @@ export default function AdminPublishTutorial({ onComplete }) {
     );
 }
 
-/* ── Visuales ilustrativos ── */
+/* ── Visuales ── */
 
-function StepOneVisual() {
+function ScheduleStyleVisual() {
     return (
         <div style={viz.card}>
-            <div style={viz.warningBanner}>
-                <div style={viz.warningIcon}>!</div>
-                <span style={{ fontSize: "0.78rem", color: "#c2410c", fontWeight: 600, textAlign: "left" }}>
-                    El horario está sin publicar. Los operadores no podrán solicitar turnos hasta que lo hagas visible.
-                </span>
-            </div>
-            <div style={viz.scheduleRow}>
-                <div style={viz.scheduleLeft}>
-                    <span style={viz.scheduleTitle}>Schedule</span>
-                    <span style={viz.liveBadge}>● LIVE</span>
-                </div>
-                <div style={viz.toggleRow}>
-                    <div style={{ ...viz.toggleTrack, background: "#64748b" }}>
-                        <div style={{ ...viz.toggleThumb, left: "3px" }} />
+            <div style={{ display: "flex", gap: "10px" }}>
+                {/* Antes */}
+                <div style={{ flex: 1 }}>
+                    <div style={sv.colLabel}>Antes</div>
+                    <div style={sv.tableOld}>
+                        <div style={sv.headerOld}>Miércoles</div>
+                        <div style={sv.cellOld}>
+                            <div style={sv.timeOld}>7:30am - 4:30pm</div>
+                            <div style={sv.nameOld}>Prueba2</div>
+                            <div style={sv.nameOld}>Juan David</div>
+                        </div>
+                        <div style={sv.cellOld}>
+                            <div style={sv.timeOld}>11:00pm - 6:00am</div>
+                            <div style={sv.nameOld}>Operador</div>
+                        </div>
                     </div>
-                    <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>Oculto</span>
+                </div>
+                {/* Flecha */}
+                <div style={{ display: "flex", alignItems: "center", paddingTop: "18px" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+                {/* Ahora */}
+                <div style={{ flex: 1 }}>
+                    <div style={sv.colLabel}>Ahora</div>
+                    <div style={sv.tableNew}>
+                        <div style={sv.headerNew}>Miércoles</div>
+                        <div style={sv.cellNew}>
+                            <div style={sv.boxNew}>
+                                <div style={sv.timeNew}>7:30am - 4:30pm</div>
+                                <div style={sv.nameNew}>Prueba2</div>
+                                <div style={sv.nameNew}>Juan David</div>
+                            </div>
+                        </div>
+                        <div style={sv.cellNew}>
+                            <div style={sv.boxNew}>
+                                <div style={sv.timeNew}>11:00pm - 6:00am</div>
+                                <div style={sv.nameNew}>Operador</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
 
-function StepTwoVisual() {
+function ExportButtonVisual() {
     return (
         <div style={viz.card}>
-            <div style={viz.scheduleRow}>
-                <div style={viz.scheduleLeft}>
-                    <span style={viz.scheduleTitle}>Schedule</span>
-                    <span style={viz.liveBadge}>● LIVE</span>
-                </div>
-                <div style={viz.toggleRow}>
-                    <div style={{ ...viz.toggleTrack, background: "#16a34a" }}>
-                        <div style={{ ...viz.toggleThumb, left: "19px" }} />
-                    </div>
-                    <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: 600 }}>Visible</span>
-                </div>
-            </div>
-            <div style={viz.miniTable}>
-                {["Lun", "Mar", "Mié", "Jue", "Vie"].map((d) => (
-                    <div key={d} style={viz.miniCol}>
-                        <div style={viz.miniHeader}>{d}</div>
-                        <div style={viz.miniCell}>7:30am</div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-function StepMenuVisual() {
-    return (
-        <div style={viz.card}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                    <div style={{ fontWeight: "800", fontSize: "0.95rem", color: "#f1f5f9" }}>Panel Admin</div>
-                    <div style={{ fontSize: "0.65rem", color: "#94a3b8", marginTop: "2px" }}>Admin · SLC Turnos</div>
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                    <div style={viz.iconBtn}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ position: "relative" }}>
+                    <div style={ev.btn}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Exportar
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div style={{ ...viz.iconBtn, background: "#3b82f6", border: "1px solid #3b82f6" }}>
-                        <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-                            <rect y="2" width="18" height="2" rx="1" fill="#fff" />
-                            <rect y="8" width="18" height="2" rx="1" fill="#fff" />
-                            <rect y="14" width="18" height="2" rx="1" fill="#fff" />
-                        </svg>
+                    <div style={ev.menu}>
+                        <div style={ev.item}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            JPG
+                        </div>
+                        <div style={ev.item}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            Excel
+                        </div>
                     </div>
                 </div>
             </div>
-            <div style={viz.dropdown}>
-                <div style={viz.dropItem}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
-                    <span>Modo oscuro</span>
-                </div>
-                <div style={viz.dropItem}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                    <span>Cambiar contraseña</span>
-                </div>
-                <div style={{ height: "1px", background: "#334155", margin: "2px 0" }} />
-                <div style={{ ...viz.dropItem, color: "#f87171" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                    <span>Cerrar sesión</span>
-                </div>
-            </div>
+            <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b", textAlign: "right" }}>
+                Botón ubicado sobre la tabla del horario
+            </p>
         </div>
     );
 }
 
-/* ── Estilos ── */
-
+/* ── Estilos modal ── */
 const styles = {
     overlay: {
         position: "fixed",
@@ -291,7 +262,7 @@ const styles = {
         fontSize: "0.88rem",
         color: "var(--text-muted)",
         lineHeight: 1.6,
-        maxWidth: "380px",
+        maxWidth: "400px",
     },
     visualBox: {
         width: "100%",
@@ -339,6 +310,7 @@ const styles = {
     },
 };
 
+/* ── Estilos visuales — comparación celdas ── */
 const viz = {
     card: {
         background: "#0f172a",
@@ -349,109 +321,75 @@ const viz = {
         gap: "10px",
         border: "1px solid #1e293b",
     },
-    warningBanner: {
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "8px",
-        background: "#fff7ed",
-        border: "1px solid #fed7aa",
-        borderRadius: "6px",
-        padding: "8px 10px",
+};
+
+const sv = {
+    colLabel: {
+        fontSize: "0.68rem", fontWeight: "700", color: "#64748b",
+        textTransform: "uppercase", letterSpacing: "0.05em",
+        marginBottom: "4px", textAlign: "center",
     },
-    warningIcon: {
-        flexShrink: 0,
-        width: "18px",
-        height: "18px",
-        borderRadius: "50%",
-        background: "#f97316",
-        color: "#fff",
-        fontSize: "0.72rem",
-        fontWeight: "900",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: "1px",
+    tableOld: {
+        border: "1px solid #334155", borderRadius: "6px", overflow: "hidden",
     },
-    scheduleRow: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
+    headerOld: {
+        background: "#1e3a5f", color: "#e2e8f0",
+        fontSize: "0.65rem", fontWeight: "700",
+        textAlign: "center", padding: "5px 4px",
     },
-    scheduleLeft: {
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
+    cellOld: {
+        padding: "6px 6px",
+        borderTop: "1px solid #334155",
     },
-    scheduleTitle: {
-        fontWeight: "800",
-        fontSize: "0.95rem",
-        color: "#f1f5f9",
+    timeOld: {
+        fontSize: "0.6rem", fontWeight: "700", color: "#94a3b8",
+        textAlign: "center", marginBottom: "3px",
     },
-    liveBadge: {
-        fontSize: "0.68rem",
-        fontWeight: "700",
-        color: "#16a34a",
-        background: "#dcfce7",
-        padding: "2px 8px",
-        borderRadius: "999px",
+    nameOld: {
+        fontSize: "0.6rem", color: "#64748b", textAlign: "center",
     },
-    toggleRow: {
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
+    tableNew: {
+        border: "1px solid #334155", borderRadius: "6px", overflow: "hidden",
     },
-    toggleTrack: {
-        width: "36px",
-        height: "20px",
-        borderRadius: "999px",
-        position: "relative",
+    headerNew: {
+        background: "#1e3a5f", color: "#e2e8f0",
+        fontSize: "0.65rem", fontWeight: "700",
+        textAlign: "center", padding: "5px 4px",
     },
-    toggleThumb: {
-        position: "absolute",
-        top: "2px",
-        width: "16px",
-        height: "16px",
-        borderRadius: "50%",
-        background: "#fff",
+    cellNew: {
+        padding: "5px 5px",
+        borderTop: "1px solid #334155",
     },
-    miniTable: {
-        display: "flex",
-        gap: "4px",
+    boxNew: {
+        border: "1px solid #334155", borderRadius: "5px",
+        padding: "4px 5px", background: "#1e293b",
     },
-    miniCol: {
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        gap: "3px",
+    timeNew: {
+        fontSize: "0.6rem", fontWeight: "700", color: "#94a3b8",
+        textAlign: "center", marginBottom: "3px",
     },
-    miniHeader: {
-        background: "#1e3a5f",
-        color: "#e2e8f0",
-        fontSize: "0.68rem",
-        fontWeight: "700",
-        textAlign: "center",
-        padding: "4px 2px",
-        borderRadius: "4px",
+    nameNew: {
+        fontSize: "0.6rem", color: "#64748b", textAlign: "center",
     },
-    miniCell: {
-        background: "#1e293b",
-        color: "#94a3b8",
-        fontSize: "0.62rem",
-        textAlign: "center",
-        padding: "4px 2px",
-        borderRadius: "4px",
+};
+
+/* ── Estilos visuales — botón exportar ── */
+const ev = {
+    btn: {
+        display: "inline-flex", alignItems: "center", gap: "6px",
+        background: "#2563eb", color: "#fff",
+        border: "1.5px solid #2563eb", borderRadius: "8px",
+        padding: "7px 12px", fontSize: "0.8rem", fontWeight: "700",
     },
-    iconBtn: {
-        width: "30px", height: "30px", borderRadius: "8px",
-        background: "#1e293b", border: "1px solid #334155",
-        display: "flex", alignItems: "center", justifyContent: "center",
+    menu: {
+        position: "absolute", top: "calc(100% + 5px)", right: 0,
+        background: "#ffffff", border: "1.5px solid #e2e8f0",
+        borderRadius: "8px", boxShadow: "0 8px 20px rgba(15,23,42,0.15)",
+        overflow: "hidden", minWidth: "110px", zIndex: 10,
     },
-    dropdown: {
-        background: "#1e293b", borderRadius: "8px", padding: "4px",
-        border: "1px solid #334155", display: "flex", flexDirection: "column", gap: "2px",
-    },
-    dropItem: {
-        display: "flex", alignItems: "center", gap: "8px", padding: "7px 10px",
-        borderRadius: "6px", fontSize: "0.75rem", color: "#e2e8f0", fontWeight: "600",
+    item: {
+        display: "flex", alignItems: "center", gap: "8px",
+        padding: "9px 12px", fontSize: "0.78rem", fontWeight: "700",
+        color: "#1e293b",
     },
 };
