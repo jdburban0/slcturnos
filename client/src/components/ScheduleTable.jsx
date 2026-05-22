@@ -486,7 +486,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                         return (
                                             <td key={date} style={styles.tdCell}>
                                                 {cell ? (
-                                                    <>
+                                                    <div style={styles.cellBlock}>
                                                         <div style={styles.timeInCell}>
                                                             {cell.startTime} - {cell.endTime}
                                                         </div>
@@ -501,7 +501,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                                                 </div>
                                                             )
                                                         )}
-                                                    </>
+                                                    </div>
                                                 ) : null}
                                             </td>
                                         );
@@ -524,7 +524,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                         return (
                                             <td key={date} style={styles.tdCell}>
                                                 {cell ? (
-                                                    <>
+                                                    <div style={styles.cellBlock}>
                                                         <div style={styles.timeInCell}>
                                                             {cell.startTime} - {cell.endTime}
                                                         </div>
@@ -539,7 +539,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                                                                 </div>
                                                             )
                                                         )}
-                                                    </>
+                                                    </div>
                                                 ) : null}
                                             </td>
                                         );
@@ -822,13 +822,19 @@ const styles = {
         fontStyle: "italic",
     },
     tdCell: {
-        padding: "8px 10px",
-        borderBottom: "1px solid #e2e8f0",
-        borderRight: "1px solid #e2e8f0",
+        padding: "6px 8px",
         verticalAlign: "top",
         minHeight: "52px",
         minWidth: "120px",
         textAlign: "center",
+    },
+    cellBlock: {
+        display: "block",
+        border: "1px solid #cbd5e1",
+        borderRadius: "8px",
+        padding: "6px 10px",
+        background: "#f8fafc",
+        boxSizing: "border-box",
     },
     timeInCell: {
         fontWeight: "700",
