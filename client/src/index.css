@@ -580,3 +580,25 @@ button:active:not(:disabled) {
 .export-drop-item:hover {
   background: #f1f5f9 !important;
 }
+
+/* ─── User action buttons ─────────────────────────────────── */
+.user-ban-btn {
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.user-ban-btn:hover {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  transform: translateY(-1px);
+}
+.user-ban-btn:active { transform: scale(0.97); }
+
+.user-delete-btn {
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.user-delete-btn:hover {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
+  transform: translateY(-1px);
+}
+.user-delete-btn:active { transform: scale(0.97); }

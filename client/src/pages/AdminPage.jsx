@@ -1283,7 +1283,7 @@ function AdminPage() {
                                 <thead>
                                     <tr>
                                         {["Nombre", "Correo", "Grupo", "Estado", "Acciones"].map((h) => (
-                                            <th key={h} style={styles.th}>{h}</th>
+                                            <th key={h} style={{ ...styles.th, ...(h === "Acciones" ? styles.thCenter : {}) }}>{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
@@ -1295,10 +1295,8 @@ function AdminPage() {
                                             <td style={styles.td}>{u.group ?? <span style={{ color: "var(--text-muted)" }}>—</span>}</td>
                                             <td style={styles.td}>
                                                 <span style={{
-                                                    ...styles.badge,
-                                                    ...(u.active
-                                                        ? { background: "var(--success-bg)", color: "var(--success)" }
-                                                        : { background: "var(--danger-bg)", color: "var(--danger)" }),
+                                                    fontSize: "0.88rem", fontWeight: "700",
+                                                    color: u.active ? "#3b82f6" : "var(--text-muted)",
                                                 }}>
                                                     {u.active ? "Activo" : "Baneado"}
                                                 </span>
@@ -1306,6 +1304,7 @@ function AdminPage() {
                                             <td style={styles.td}>
                                                 <div style={styles.actionBtns}>
                                                     <button
+                                                        className="user-ban-btn"
                                                         style={u.active ? styles.warnBtn : styles.activateBtn}
                                                         onClick={() => handleToggleUser(u.id)}
                                                     >
@@ -1326,6 +1325,7 @@ function AdminPage() {
                                                         )}
                                                     </button>
                                                     <button
+                                                        className="user-delete-btn"
                                                         style={styles.deleteBtn}
                                                         onClick={() => handleDeleteUser(u.id, u.name)}
                                                     >
@@ -1359,7 +1359,7 @@ function AdminPage() {
                                 <thead>
                                     <tr>
                                         {["Nombre", "Correo", "Acciones"].map((h) => (
-                                            <th key={h} style={styles.th}>{h}</th>
+                                            <th key={h} style={{ ...styles.th, ...(h === "Acciones" ? styles.thCenter : {}) }}>{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
@@ -1370,6 +1370,7 @@ function AdminPage() {
                                             <td style={styles.td}>{u.email}</td>
                                             <td style={styles.td}>
                                                 <button
+                                                    className="user-delete-btn"
                                                     style={styles.deleteBtn}
                                                     onClick={() => handleDeleteUser(u.id, u.name, "lead")}
                                                 >
@@ -1751,15 +1752,13 @@ const styles = {
     },
     deleteBtn: {
         display: "inline-flex", alignItems: "center", gap: "5px",
-        background: "transparent", color: "var(--danger)", border: "1px solid var(--danger)",
-        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600", whiteSpace: "nowrap",
-        transition: "background 0.15s, color 0.15s",
+        background: "#ffffff", color: "#1e293b", border: "1.5px solid #cbd5e1",
+        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "700", whiteSpace: "nowrap",
     },
     warnBtn: {
         display: "inline-flex", alignItems: "center", gap: "5px",
-        background: "transparent", color: "var(--warning)", border: "1px solid var(--warning)",
-        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600", whiteSpace: "nowrap",
-        transition: "background 0.15s, color 0.15s",
+        background: "#3b82f6", color: "#ffffff", border: "1.5px solid #3b82f6",
+        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "700", whiteSpace: "nowrap",
     },
     slotsEditor: { display: "flex", alignItems: "center", gap: "4px", justifyContent: "center" },
     slotBtn: {
@@ -1775,9 +1774,8 @@ const styles = {
     },
     activateBtn: {
         display: "inline-flex", alignItems: "center", gap: "5px",
-        background: "transparent", color: "var(--success)", border: "1px solid var(--success)",
-        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600", whiteSpace: "nowrap",
-        transition: "background 0.15s, color 0.15s",
+        background: "#3b82f6", color: "#ffffff", border: "1.5px solid #3b82f6",
+        padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "700", whiteSpace: "nowrap",
     },
     settingsGrid: {
         display: "grid",
