@@ -1368,7 +1368,7 @@ function AdminPage() {
                                         <tr key={u.id} style={styles.tr}>
                                             <td style={styles.td}>{u.name}</td>
                                             <td style={styles.td}>{u.email}</td>
-                                            <td style={styles.td}>
+                                            <td style={{ ...styles.td, textAlign: "center" }}>
                                                 <button
                                                     className="user-delete-btn"
                                                     style={styles.deleteBtn}
