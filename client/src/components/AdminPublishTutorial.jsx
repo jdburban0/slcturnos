@@ -42,7 +42,7 @@ export default function AdminPublishTutorial({ onComplete }) {
             <div style={{ ...styles.modal, maxWidth: "500px" }}>
 
                 <div style={styles.header}>
-                    <span style={styles.tutorialBadge}>Novedades en el horario</span>
+                    <span style={styles.tutorialBadge}>Novedades</span>
                     <div style={styles.stepIndicator}>
                         {Array.from({ length: STEPS + 1 }).map((_, i) => (
                             <div key={i} style={{ ...styles.dot, background: i <= step ? "#3b82f6" : "var(--card-border)" }} />
@@ -54,8 +54,8 @@ export default function AdminPublishTutorial({ onComplete }) {
                     <>
                         <h2 style={styles.title}>Nuevo estilo en el horario</h2>
                         <p style={styles.desc}>
-                            Cada turno en la tabla ahora está encerrado en su propio recuadro,
-                            así es más fácil distinguir qué cupos pertenecen a cada turno cuando hay varios en el mismo día.
+                            Cada turno ahora tiene su propio recuadro, separando visualmente
+                            los turnos dentro de un mismo día.
                         </p>
                         <div style={styles.visualBox}>
                             <ScheduleStyleVisual />
@@ -113,43 +113,63 @@ function ScheduleStyleVisual() {
         <div style={viz.card}>
             <div style={{ display: "flex", gap: "10px" }}>
                 {/* Antes */}
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={sv.colLabel}>Antes</div>
-                    <div style={sv.tableOld}>
-                        <div style={sv.headerOld}>Miércoles</div>
-                        <div style={sv.cellOld}>
-                            <div style={sv.timeOld}>7:30am - 4:30pm</div>
-                            <div style={sv.nameOld}>Prueba2</div>
-                            <div style={sv.nameOld}>Juan David</div>
+                    <div style={sv.table}>
+                        <div style={{ display: "flex" }}>
+                            <div style={{ ...sv.headerCell, flex: 1 }}>Lunes</div>
+                            <div style={{ ...sv.headerCell, flex: 1, borderLeft: "1px solid #2d4a6b" }}>Martes</div>
                         </div>
-                        <div style={sv.cellOld}>
-                            <div style={sv.timeOld}>11:00pm - 6:00am</div>
-                            <div style={sv.nameOld}>Operador</div>
+                        <div style={{ display: "flex", borderTop: "1px solid #1e293b" }}>
+                            {/* Lunes - antes */}
+                            <div style={{ ...sv.tdOld, flex: 1 }}>
+                                <div style={sv.timeOld}>7:30am - 4:30pm</div>
+                                <div style={sv.nameOld}>Isabella G.</div>
+                                <div style={sv.nameOld}>David Reyes</div>
+                                <div style={sv.nameOld}>Esteban T.</div>
+                                <div style={sv.slotOld}>4</div>
+                                <div style={sv.slotOld}>5</div>
+                            </div>
+                            {/* Martes - antes */}
+                            <div style={{ ...sv.tdOld, flex: 1, borderLeft: "1px solid #1e293b" }}>
+                                <div style={sv.timeOld}>7:30am - 4:30pm</div>
+                                <div style={sv.nameOld}>Nicolás C.</div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 {/* Flecha */}
-                <div style={{ display: "flex", alignItems: "center", paddingTop: "18px" }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{ display: "flex", alignItems: "center", paddingTop: "18px", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                     </svg>
                 </div>
                 {/* Ahora */}
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={sv.colLabel}>Ahora</div>
-                    <div style={sv.tableNew}>
-                        <div style={sv.headerNew}>Miércoles</div>
-                        <div style={sv.cellNew}>
-                            <div style={sv.boxNew}>
-                                <div style={sv.timeNew}>7:30am - 4:30pm</div>
-                                <div style={sv.nameNew}>Prueba2</div>
-                                <div style={sv.nameNew}>Juan David</div>
-                            </div>
+                    <div style={sv.table}>
+                        <div style={{ display: "flex" }}>
+                            <div style={{ ...sv.headerCell, flex: 1 }}>Lunes</div>
+                            <div style={{ ...sv.headerCell, flex: 1, borderLeft: "1px solid #2d4a6b" }}>Martes</div>
                         </div>
-                        <div style={sv.cellNew}>
-                            <div style={sv.boxNew}>
-                                <div style={sv.timeNew}>11:00pm - 6:00am</div>
-                                <div style={sv.nameNew}>Operador</div>
+                        <div style={{ display: "flex", borderTop: "1px solid #1e293b" }}>
+                            {/* Lunes - ahora */}
+                            <div style={{ ...sv.tdNew, flex: 1 }}>
+                                <div style={sv.boxNew}>
+                                    <div style={sv.timeNew}>7:30am - 4:30pm</div>
+                                    <div style={sv.nameNew}>Isabella G.</div>
+                                    <div style={sv.nameNew}>David Reyes</div>
+                                    <div style={sv.nameNew}>Esteban T.</div>
+                                    <div style={sv.slotNew}>4</div>
+                                    <div style={sv.slotNew}>5</div>
+                                </div>
+                            </div>
+                            {/* Martes - ahora */}
+                            <div style={{ ...sv.tdNew, flex: 1, borderLeft: "1px solid #1e293b" }}>
+                                <div style={sv.boxNew}>
+                                    <div style={sv.timeNew}>7:30am - 4:30pm</div>
+                                    <div style={sv.nameNew}>Nicolás C.</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -162,8 +182,11 @@ function ScheduleStyleVisual() {
 function ExportButtonVisual() {
     return (
         <div style={viz.card}>
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <div style={{ position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-end", gap: "8px" }}>
+                <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b", textAlign: "right", paddingTop: "10px" }}>
+                    Ubicado sobre<br />la tabla del horario
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
                     <div style={ev.btn}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -191,9 +214,6 @@ function ExportButtonVisual() {
                     </div>
                 </div>
             </div>
-            <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b", textAlign: "right" }}>
-                Botón ubicado sobre la tabla del horario
-            </p>
         </div>
     );
 }
@@ -325,51 +345,47 @@ const viz = {
 
 const sv = {
     colLabel: {
-        fontSize: "0.68rem", fontWeight: "700", color: "#64748b",
+        fontSize: "0.65rem", fontWeight: "700", color: "#64748b",
         textTransform: "uppercase", letterSpacing: "0.05em",
         marginBottom: "4px", textAlign: "center",
     },
-    tableOld: {
+    table: {
         border: "1px solid #334155", borderRadius: "6px", overflow: "hidden",
     },
-    headerOld: {
+    headerCell: {
         background: "#1e3a5f", color: "#e2e8f0",
-        fontSize: "0.65rem", fontWeight: "700",
-        textAlign: "center", padding: "5px 4px",
+        fontSize: "0.62rem", fontWeight: "700",
+        textAlign: "center", padding: "4px 2px",
     },
-    cellOld: {
-        padding: "6px 6px",
-        borderTop: "1px solid #334155",
+    tdOld: {
+        padding: "5px 4px",
     },
     timeOld: {
-        fontSize: "0.6rem", fontWeight: "700", color: "#94a3b8",
+        fontSize: "0.58rem", fontWeight: "700", color: "#cbd5e1",
         textAlign: "center", marginBottom: "3px",
     },
     nameOld: {
-        fontSize: "0.6rem", color: "#64748b", textAlign: "center",
+        fontSize: "0.57rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.4,
     },
-    tableNew: {
-        border: "1px solid #334155", borderRadius: "6px", overflow: "hidden",
+    slotOld: {
+        fontSize: "0.57rem", color: "#475569", textAlign: "center", lineHeight: 1.4,
     },
-    headerNew: {
-        background: "#1e3a5f", color: "#e2e8f0",
-        fontSize: "0.65rem", fontWeight: "700",
-        textAlign: "center", padding: "5px 4px",
-    },
-    cellNew: {
-        padding: "5px 5px",
-        borderTop: "1px solid #334155",
+    tdNew: {
+        padding: "5px 3px",
     },
     boxNew: {
         border: "1px solid #334155", borderRadius: "5px",
-        padding: "4px 5px", background: "#1e293b",
+        padding: "4px 3px", background: "#1e293b",
     },
     timeNew: {
-        fontSize: "0.6rem", fontWeight: "700", color: "#94a3b8",
-        textAlign: "center", marginBottom: "3px",
+        fontSize: "0.58rem", fontWeight: "700", color: "#cbd5e1",
+        textAlign: "center", marginBottom: "3px", whiteSpace: "nowrap",
     },
     nameNew: {
-        fontSize: "0.6rem", color: "#64748b", textAlign: "center",
+        fontSize: "0.57rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.4,
+    },
+    slotNew: {
+        fontSize: "0.57rem", color: "#475569", textAlign: "center", lineHeight: 1.4,
     },
 };
 
@@ -382,10 +398,9 @@ const ev = {
         padding: "7px 12px", fontSize: "0.8rem", fontWeight: "700",
     },
     menu: {
-        position: "absolute", top: "calc(100% + 5px)", right: 0,
         background: "#ffffff", border: "1.5px solid #e2e8f0",
-        borderRadius: "8px", boxShadow: "0 8px 20px rgba(15,23,42,0.15)",
-        overflow: "hidden", minWidth: "110px", zIndex: 10,
+        borderRadius: "8px", boxShadow: "0 4px 12px rgba(15,23,42,0.12)",
+        overflow: "hidden", minWidth: "110px",
     },
     item: {
         display: "flex", alignItems: "center", gap: "8px",
