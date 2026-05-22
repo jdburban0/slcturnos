@@ -677,7 +677,6 @@ const styles = {
         alignItems: "center",
         gap: "8px",
         marginBottom: "10px",
-        flexWrap: "wrap",
     },
     sendMsg: {
         fontSize: "0.82rem",
