@@ -695,6 +695,7 @@ const styles = {
         display: "inline-flex",
         alignItems: "center",
         gap: "6px",
+        whiteSpace: "nowrap",
     },
     exportBtnJpg: {
         background: "#2563eb",
