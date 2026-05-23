@@ -228,9 +228,10 @@ function ShiftsTable({
                                                     {/* Spacer izquierdo — mismo ancho que Ver para mantener centrado */}
                                                     <div style={{ width: "66px", flexShrink: 0 }} />
                                                     <div style={styles.actionBtnsMain}>
-                                                        <button style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
+                                                        <button className="shift-edit-btn" style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
                                                         {canAssign && (
                                                             <button
+                                                                className="shift-assign-btn"
                                                                 style={{ ...styles.assignBtn, ...(approved >= shift.totalSlots ? styles.assignBtnDisabled : {}) }}
                                                                 onClick={() => onAssign(shift.id, shift.title)}
                                                                 disabled={approved >= shift.totalSlots}
@@ -239,7 +240,7 @@ function ShiftsTable({
                                                             </button>
                                                         )}
                                                         {["admin", "lead"].includes(userRole) && (
-                                                            <button style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
+                                                            <button className="user-delete-btn" style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
                                                         )}
                                                     </div>
                                                     <div style={{ width: "66px", flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
