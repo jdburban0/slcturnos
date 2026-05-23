@@ -36,11 +36,11 @@ function PendingRequestCard({ request, onApprove, onReject, index }) {
             <div style={s.actionsRow}>
                 {!showRejectForm ? (
                     <>
-                        <button style={s.approveBtn} onClick={() => onApprove(request.id)}>
-                            ✓ Aprobar
+                        <button className="transfer-approve-btn" style={s.approveBtn} onClick={() => onApprove(request.id)}>
+                            Aprobar
                         </button>
-                        <button style={s.rejectBtn} onClick={() => setShowRejectForm(true)}>
-                            ✕ Rechazar
+                        <button className="transfer-reject-btn" style={s.rejectBtn} onClick={() => setShowRejectForm(true)}>
+                            Rechazar
                         </button>
                     </>
                 ) : (
@@ -52,6 +52,7 @@ function PendingRequestCard({ request, onApprove, onReject, index }) {
                             onChange={(e) => setNotes(e.target.value)}
                         />
                         <button
+                            className="transfer-reject-btn"
                             style={s.rejectBtn}
                             onClick={() => { onReject(request.id, notes); setShowRejectForm(false); }}
                         >
@@ -154,28 +155,28 @@ const s = {
         alignItems: "center",
     },
     approveBtn: {
-        background: "#16a34a",
+        background: "#3b82f6",
         color: "#fff",
-        border: "none",
+        border: "1px solid #3b82f6",
         padding: "8px 16px",
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: "700",
         fontSize: "0.85rem",
         whiteSpace: "nowrap",
-        transition: "transform 0.15s ease, filter 0.15s ease",
+        transition: "background 0.15s ease, border-color 0.15s ease, transform 0.12s ease",
     },
     rejectBtn: {
-        background: "#dc2626",
+        background: "#ef4444",
         color: "#fff",
-        border: "none",
+        border: "1px solid #ef4444",
         padding: "8px 16px",
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: "700",
         fontSize: "0.85rem",
         whiteSpace: "nowrap",
-        transition: "transform 0.15s ease, filter 0.15s ease",
+        transition: "background 0.15s ease, border-color 0.15s ease, transform 0.12s ease",
     },
     cancelBtn: {
         background: "var(--border-color)",

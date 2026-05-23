@@ -45,9 +45,9 @@ import ChatPanel from "../components/ChatPanel.jsx";
 
 const STATUS_LABEL = { OPEN: "Abierto", FULL: "Lleno", CLOSED: "Cerrado" };
 const STATUS_STYLE = {
-    OPEN: { background: "var(--success-bg)", color: "var(--success)" },
-    FULL: { background: "var(--danger-bg)", color: "var(--danger)" },
-    CLOSED: { background: "var(--border-color)", color: "var(--text-muted)" },
+    OPEN: { background: "transparent", color: "var(--success)" },
+    FULL: { background: "transparent", color: "var(--danger)" },
+    CLOSED: { background: "transparent", color: "var(--text-muted)" },
 };
 
 function parseTimeToMinutes(t) {
@@ -283,6 +283,7 @@ function AdminPage() {
         const el = tabRefs.current[activeTab];
         if (el) setSliderStyle({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
     }, [activeTab]);
+
     const [registerCode, setRegisterCode] = useState("");
     const [newCode, setNewCode] = useState("");
     const [codeVisible, setCodeVisible] = useState(false);
@@ -626,10 +627,6 @@ function AdminPage() {
     const filteredTransfers = transfers.filter((t) => reqTab === "current" ? isCurrentWeekDate(t.shift?.date) : !isCurrentWeekDate(t.shift?.date));
     const hasCurrentWeekItems = requests.some((r) => isCurrentWeekDate(r.shift?.date)) || transfers.some((t) => isCurrentWeekDate(t.shift?.date));
 
-    // Si ya no quedan items de semana actual pero el tab sigue en "current", resetear a "next"
-    useEffect(() => {
-        if (!hasCurrentWeekItems && reqTab === "current") setReqTab("next");
-    }, [hasCurrentWeekItems, reqTab]);
 
     // Schedule/table view sync
     // "Semana actual" = cualquier turno cuya fecha cae en esta semana (OPEN o CLOSED)
@@ -959,17 +956,22 @@ function AdminPage() {
 
                 {activeTab === "requests" && (
                     <section style={styles.section}>
-                        {/* Tab toggle semana actual / próxima — solo si hay items de la semana actual */}
-                        {hasCurrentWeekItems && (
-                            <div style={{ display: "flex", gap: "8px", marginBottom: "20px", overflowX: "auto", scrollbarWidth: "none" }}>
-                                <button style={{ ...styles.tab, flexShrink: 0, ...(reqTab === "next" ? styles.tabActive : {}) }} onClick={() => setReqTab("next")}>
-                                    Próxima semana{requests.filter((r) => !isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => !isCurrentWeekDate(t.shift?.date)).length > 0 ? ` (${requests.filter((r) => !isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => !isCurrentWeekDate(t.shift?.date)).length})` : ""}
+                                        {/* Tab toggle semana actual / próxima — siempre visible */}
+                        <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+                            {[
+                                { id: "next", label: `Próxima semana${(() => { const c = requests.filter((r) => !isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => !isCurrentWeekDate(t.shift?.date)).length; return c > 0 ? ` (${c})` : ""; })()}` },
+                                { id: "current", label: `Semana actual${(() => { const c = requests.filter((r) => isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => isCurrentWeekDate(t.shift?.date)).length; return c > 0 ? ` (${c})` : ""; })()}` },
+                            ].map((t) => (
+                                <button
+                                    key={t.id}
+                                    className="req-tab-btn"
+                                    style={{ ...styles.reqTab, ...(reqTab === t.id ? styles.reqTabActive : {}) }}
+                                    onClick={() => setReqTab(t.id)}
+                                >
+                                    {t.label}
                                 </button>
-                                <button style={{ ...styles.tab, flexShrink: 0, ...(reqTab === "current" ? styles.tabActive : {}) }} onClick={() => setReqTab("current")}>
-                                    Semana actual{requests.filter((r) => isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => isCurrentWeekDate(t.shift?.date)).length > 0 ? ` (${requests.filter((r) => isCurrentWeekDate(r.shift?.date)).length + transfers.filter((t) => isCurrentWeekDate(t.shift?.date)).length})` : ""}
-                                </button>
-                            </div>
-                        )}
+                            ))}
+                        </div>
 
                         {/* Traspasos y desistimientos filtrados */}
                         {filteredTransfers.length > 0 && (() => {
@@ -995,8 +997,8 @@ function AdminPage() {
                                                     </p>
                                                 </div>
                                                 <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                                                    <button style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve", true)}>Aprobar</button>
-                                                    <button style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject", true)}>Rechazar</button>
+                                                    <button className="transfer-approve-btn" style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve", true)}>Aprobar</button>
+                                                    <button className="transfer-reject-btn" style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject", true)}>Rechazar</button>
                                                 </div>
                                             </div>
                                         ))}
@@ -1020,8 +1022,8 @@ function AdminPage() {
                                                     </p>
                                                 </div>
                                                 <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                                                    <button style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve")}>Aprobar</button>
-                                                    <button style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject")}>Rechazar</button>
+                                                    <button className="transfer-approve-btn" style={styles.approveBtn} onClick={() => handleReviewTransfer(t.id, "approve")}>Aprobar</button>
+                                                    <button className="transfer-reject-btn" style={styles.rejectTransferBtn} onClick={() => handleReviewTransfer(t.id, "reject")}>Rechazar</button>
                                                 </div>
                                             </div>
                                         ))}
@@ -1033,7 +1035,7 @@ function AdminPage() {
 
                         {/* Solicitudes filtradas */}
                         {filteredRequests.length === 0 && filteredTransfers.length === 0 ? (
-                            <p style={styles.empty}>No hay solicitudes pendientes{hasCurrentWeekItems ? ` para la ${reqTab === "current" ? "semana actual" : "próxima semana"}` : ""}.</p>
+                            <p style={styles.empty}>No hay solicitudes pendientes para la {reqTab === "current" ? "semana actual" : "próxima semana"}.</p>
                         ) : filteredRequests.length > 0 && (
                             <div style={styles.requestList}>
                                 <div style={styles.requestListHeader}>
@@ -1631,6 +1633,23 @@ const styles = {
         textAlign: "center",
     },
     tabActive: {
+        background: "#3b82f6",
+        color: "#ffffff",
+    },
+    reqTab: {
+        padding: "8px 16px",
+        borderRadius: "10px",
+        border: "none",
+        background: "transparent",
+        color: "var(--text-muted)",
+        cursor: "pointer",
+        fontWeight: "600",
+        fontSize: "0.88rem",
+        whiteSpace: "nowrap",
+        transition: "background 0.3s ease, color 0.3s ease",
+    },
+    reqTabActive: {
+        background: "#3b82f6",
         color: "#ffffff",
     },
     section: {
@@ -1684,7 +1703,7 @@ const styles = {
     td: { padding: "10px 12px", color: "var(--text-main)", fontSize: "0.88rem" },
     tdCenter: { textAlign: "center" },
     badge: {
-        padding: "4px 10px", borderRadius: "999px", fontSize: "0.8rem", fontWeight: "bold", whiteSpace: "nowrap",
+        fontSize: "0.82rem", fontWeight: "700", whiteSpace: "nowrap",
     },
     weekActions: {
         background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "12px",
@@ -1716,12 +1735,14 @@ const styles = {
     transferTitle: { margin: "0 0 2px", color: "var(--text-main)", fontWeight: "700", fontSize: "0.9rem" },
     transferMeta: { margin: "0 0 2px", color: "var(--text-muted)", fontSize: "0.82rem" },
     approveBtn: {
-        background: "var(--success)", color: "#fff", border: "none",
+        background: "#3b82f6", color: "#fff", border: "1px solid #3b82f6",
         padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem",
+        transition: "background 0.15s ease, border-color 0.15s ease, transform 0.12s ease",
     },
     rejectTransferBtn: {
-        background: "transparent", color: "var(--danger)", border: "1px solid var(--danger)",
+        background: "#ef4444", color: "#fff", border: "1px solid #ef4444",
         padding: "6px 12px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem",
+        transition: "background 0.15s ease, border-color 0.15s ease, transform 0.12s ease",
     },
     assignBtn: {
         background: "var(--primary)", color: "#fff", border: "none",

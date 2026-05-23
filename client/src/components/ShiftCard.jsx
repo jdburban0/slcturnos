@@ -32,25 +32,26 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
         return `${n}°`;
     }
 
-    let statusBg = "var(--border-color)";
+    let statusBg = "transparent";
     let statusColor = "var(--text-muted)";
     let statusText = `${availableSlots} cupo${availableSlots !== 1 ? "s" : ""} libre${availableSlots !== 1 ? "s" : ""}`;
 
-    if (isApproved || isManualAssigned) { statusBg = "#dcfce7"; statusColor = "#15803d"; statusText = "Aprobado ✓"; }
+    if (isApproved || isManualAssigned) { statusBg = "transparent"; statusColor = "#22c55e"; statusText = "Aprobado ✓"; }
     else if (isPending) {
-        statusBg = "#fef9c3"; statusColor = "#92400e";
+        statusBg = "transparent"; statusColor = "#f59e0b";
         statusText = queuePos > 0 ? `${ordinal(queuePos)} en la fila` : "En revisión…";
     }
-    else if (isFull) { statusBg = "#fee2e2"; statusColor = "#b91c1c"; statusText = "Sin cupos"; }
+    else if (isFull) { statusBg = "transparent"; statusColor = "#ef4444"; statusText = "Sin cupos"; }
 
     function getAction() {
         if (isManualAssigned) return (
-            <button style={styles.desistBtn} onClick={() => onDesistManual(myManualAssignment.id, shift.id)}>
+            <button className="shift-desist-btn" style={styles.desistBtn} onClick={() => onDesistManual(myManualAssignment.id, shift.id)}>
                 Desistir
             </button>
         );
         if (isApproved) return (
             <button
+                className="shift-desist-btn"
                 style={{ ...styles.desistBtn, ...(desistDisabled ? styles.desistBtnDisabled : {}) }}
                 onClick={() => !desistDisabled && onDesist(myRequest.id, shift.title)}
                 disabled={desistDisabled}
@@ -60,7 +61,7 @@ function ShiftCard({ shift, myRequest, userEmail, onRequest, onCancelRequest, on
             </button>
         );
         if (isPending) return (
-            <button style={styles.cancelBtn} onClick={() => onCancelRequest(myRequest.id)}>
+            <button className="shift-cancel-btn" style={styles.cancelBtn} onClick={() => onCancelRequest(myRequest.id)}>
                 Cancelar
             </button>
         );
@@ -175,7 +176,7 @@ const styles = {
     rightSide: {
         display: "flex",
         flexDirection: "column",
-        alignItems: "flex-end",
+        alignItems: "center",
         gap: "8px",
         flexShrink: 0,
     },
@@ -189,6 +190,7 @@ const styles = {
         cursor: "pointer",
         fontWeight: "700",
         fontSize: "0.82rem",
+        minWidth: "90px",
         transition: "transform 0.15s ease, filter 0.15s ease",
     },
     requestBtnDisabled: {
@@ -197,30 +199,33 @@ const styles = {
         opacity: 0.75,
     },
     cancelBtn: {
-        background: "transparent",
-        border: "1px solid #d97706",
-        color: "#b45309",
+        background: "#ef4444",
+        border: "1px solid #ef4444",
+        color: "#ffffff",
         padding: "6px 12px",
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "0.82rem",
-        transition: "transform 0.15s ease, filter 0.15s ease",
+        minWidth: "90px",
+        transition: "background 0.15s ease, border-color 0.15s ease, transform 0.12s ease",
     },
     desistBtn: {
-        background: "transparent",
+        background: "#ef4444",
         border: "1px solid #ef4444",
-        color: "#ef4444",
+        color: "#ffffff",
         padding: "6px 12px",
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "0.82rem",
-        transition: "transform 0.15s ease, filter 0.15s ease",
+        minWidth: "90px",
+        transition: "background 0.15s ease, border-color 0.15s ease, transform 0.12s ease",
     },
     desistBtnDisabled: {
-        border: "1px solid #475569",
-        color: "#475569",
+        background: "#94a3b8",
+        border: "1px solid #94a3b8",
+        color: "#ffffff",
         cursor: "not-allowed",
         opacity: 0.6,
     },

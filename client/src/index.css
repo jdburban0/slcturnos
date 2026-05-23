@@ -603,6 +603,47 @@ button:active:not(:disabled) {
 }
 .user-delete-btn:active { transform: scale(0.97); }
 
+/* ─── Transfer approve / reject buttons ──────────────────── */
+.transfer-approve-btn {
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease !important;
+}
+.transfer-approve-btn:hover {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  transform: translateY(-1px);
+  opacity: 1 !important; filter: none !important;
+}
+.transfer-approve-btn:active { transform: scale(0.97); }
+
+.transfer-reject-btn {
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease !important;
+}
+.transfer-reject-btn:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  transform: translateY(-1px);
+  opacity: 1 !important; filter: none !important;
+}
+.transfer-reject-btn:active { transform: scale(0.97); }
+
+/* ─── ShiftCard destructive buttons ──────────────────────── */
+.shift-cancel-btn,
+.shift-desist-btn {
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease !important;
+}
+.shift-cancel-btn:not(:disabled):hover,
+.shift-desist-btn:not(:disabled):hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  transform: translateY(-1px);
+  opacity: 1 !important;
+  filter: none !important;
+}
+.shift-cancel-btn:not(:disabled):active,
+.shift-desist-btn:not(:disabled):active {
+  transform: scale(0.97);
+}
+
 /* ─── Shift action buttons ────────────────────────────────── */
 .shift-edit-btn {
   transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;

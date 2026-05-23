@@ -635,9 +635,6 @@ const styles = {
         fontSize: "0.75rem",
         fontWeight: "700",
         color: "#16a34a",
-        background: "#dcfce7",
-        padding: "3px 10px",
-        borderRadius: "999px",
     },
     weekNav: {
         display: "flex",
