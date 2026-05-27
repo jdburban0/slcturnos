@@ -349,3 +349,39 @@ export async function sendAdminTransferAlertEmail({ admins, operatorName, shiftT
         }
     }
 }
+
+/**
+ * Notifica al operador que su desistimiento o traspaso fue aprobado.
+ */
+export async function sendTransferOutcomeEmail({ name, email, shiftTitle, shiftDate, startTime, endTime, type, toName }) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    const isTransfer = type === "transfer";
+    const subject = isTransfer
+        ? `Traspaso aprobado — ${shiftTitle}`
+        : `Desistimiento aprobado — ${shiftTitle}`;
+
+    const bodyMsg = isTransfer
+        ? `Tu traspaso del turno <strong>${shiftTitle}</strong> a <strong>${toName}</strong> fue aprobado. Ya no tienes este turno asignado.`
+        : `Tu solicitud de desistimiento del turno <strong>${shiftTitle}</strong> fue aprobada. Ya no tienes este turno asignado.`;
+
+    const html = `
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#fef2f2;border-radius:12px;">
+            <h2 style="color:#0f172a;margin:0 0 8px;">${isTransfer ? "Traspaso aprobado" : "Desistimiento aprobado"}</h2>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, ${bodyMsg}</p>
+            <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #fecaca;margin-bottom:20px;">
+                <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
+                <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
+                <p style="margin:0;color:#475569;font-size:0.9rem;">${startTime} – ${endTime}</p>
+            </div>
+            <p style="color:#94a3b8;font-size:0.78rem;margin:0;">— SLC Turnos</p>
+        </div>
+    `;
+
+    try {
+        await getResend().emails.send({ from: FROM, to: email, subject, html });
+        console.log(`[Mailer] Resultado de ${type} enviado a ${email}`);
+    } catch (err) {
+        console.error(`[Mailer] Error enviando resultado de ${type}:`, err.message);
+    }
+}

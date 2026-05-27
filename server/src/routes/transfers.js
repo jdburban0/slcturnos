@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { sendAssignmentEmail } from "../lib/mailer.js";
+import { sendAssignmentEmail, sendTransferOutcomeEmail } from "../lib/mailer.js";
 import { notifyUser } from "../lib/notify.js";
 
 const router = Router();
@@ -98,18 +98,32 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
                 }
             });
 
+            const shiftDateFormatted = new Date(transfer.shift.date).toLocaleDateString("es-CO", {
+                weekday: "long", year: "numeric", month: "long", day: "numeric",
+            });
+
             if (isTransfer) {
                 sendAssignmentEmail({
                     name: transfer.toName,
                     email: transfer.toEmail,
                     shiftTitle: transfer.shift.title,
-                    shiftDate: new Date(transfer.shift.date).toLocaleDateString("es-CO", {
-                        weekday: "long", year: "numeric", month: "long", day: "numeric",
-                    }),
+                    shiftDate: shiftDateFormatted,
                     startTime: transfer.shift.startTime,
                     endTime: transfer.shift.endTime,
                 });
             }
+
+            // Notificar por email al operador que solicitó el desistimiento o traspaso
+            sendTransferOutcomeEmail({
+                name: transfer.fromUser.name,
+                email: transfer.fromUser.email,
+                shiftTitle: transfer.shift.title,
+                shiftDate: shiftDateFormatted,
+                startTime: transfer.shift.startTime,
+                endTime: transfer.shift.endTime,
+                type: isTransfer ? "transfer" : "withdraw",
+                toName: transfer.toName,
+            }).catch(() => {});
         } else {
             const io2 = req.app.get("io");
             await notifyUser(io2, transfer.fromUserId,

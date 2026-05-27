@@ -187,39 +187,23 @@ router.patch("/:id", requireAuth, requireRole("admin", "lead"), async (req, res)
         const io = req.app.get("io");
         io.emit("shifts:refresh");
 
-        // Si aumentaron los cupos, reabrir turno si estaba FULL y ahora hay espacio
+        // Recalcular estado OPEN/FULL siempre que cambien los cupos
         const newSlots = parseInt(totalSlots);
-        if (before && newSlots > before.totalSlots && shift.status === "FULL") {
+        if (before && shift.status !== "CLOSED") {
             const [approvedCount, manualCount] = await Promise.all([
                 prisma.shiftRequest.count({ where: { shiftId: shift.id, status: "APPROVED" } }),
                 prisma.manualAssignment.count({ where: { shiftId: shift.id } }),
             ]);
-            if (approvedCount + manualCount < newSlots) {
-                await prisma.shift.update({
-                    where: { id: shift.id },
-                    data: { status: "OPEN" },
-                });
+            const occupied = approvedCount + manualCount;
+            const shouldBeFull = occupied >= newSlots;
+            if (shouldBeFull && shift.status === "OPEN") {
+                await prisma.shift.update({ where: { id: shift.id }, data: { status: "FULL" } });
+            } else if (!shouldBeFull && shift.status === "FULL") {
+                await prisma.shift.update({ where: { id: shift.id }, data: { status: "OPEN" } });
             }
         }
 
-        if (before && newSlots > before.totalSlots) {
-            const added = newSlots - before.totalSlots;
-            prisma.user.findMany({
-                where: { role: "operator", active: true },
-                select: { id: true, name: true, email: true },
-            }).then((operators) => {
-                console.log(`[Mailer] Notificando nuevo cupo a ${operators.length} operadores: ${operators.map((o) => o.email).join(", ")}`);
-                sendNewShiftEmail({
-                    operators,
-                    shiftTitle: shift.title,
-                    shiftDate: new Date(shift.date).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
-                    startTime: shift.startTime,
-                    endTime: shift.endTime,
-                    totalSlots: added,
-                    extraMsg: `Se ${added === 1 ? "abrió 1 cupo nuevo" : `abrieron ${added} cupos nuevos`} en este turno.`,
-                });
-            }).catch((err) => console.error("[Mailer] Error buscando operadores:", err.message));
-        }
+
 
         res.json(shift);
     } catch (err) {
