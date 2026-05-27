@@ -1774,7 +1774,7 @@ const styles = {
     },
     deleteBtn: {
         display: "inline-flex", alignItems: "center", gap: "5px",
-        background: "#ffffff", color: "#1e293b", border: "1.5px solid #cbd5e1",
+        background: "#ef4444", color: "#ffffff", border: "1.5px solid #ef4444",
         padding: "5px 10px", borderRadius: "7px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "700", whiteSpace: "nowrap",
     },
     warnBtn: {
