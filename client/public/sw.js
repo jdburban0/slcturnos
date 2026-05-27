@@ -20,12 +20,15 @@ self.addEventListener("push", (event) => {
     try { data = event.data.json(); } catch { data = { title: "SLC Turnos", body: event.data.text() }; }
 
     const title = data.title || "SLC Turnos";
+    const tag = data.tag || title.toLowerCase().replace(/\s+/g, "-").slice(0, 32);
     const options = {
         body: data.body || "",
         icon: "/slcicon.png",
         badge: "/slcicon.png",
         vibrate: [200, 100, 200],
         data: { url: "/" },
+        tag,
+        renotify: true,  // vibrar/sonar aunque reemplace una notif anterior del mismo tag
     };
 
     event.waitUntil(

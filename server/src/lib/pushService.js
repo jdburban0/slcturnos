@@ -35,7 +35,8 @@ export async function sendPushToUser(userId, title, body) {
             try {
                 await webpush.sendNotification(
                     { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                    payload
+                    payload,
+                    { TTL: 600 } // expira en 10 minutos si no se entrega
                 );
                 console.log(`[Push] ✓ Enviado a ${sub.endpoint.slice(0, 60)}...`);
             } catch (err) {

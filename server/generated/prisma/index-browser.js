@@ -133,6 +133,18 @@ exports.Prisma.UserScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PasskeyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  credentialId: 'credentialId',
+  publicKey: 'publicKey',
+  counter: 'counter',
+  deviceType: 'deviceType',
+  backedUp: 'backedUp',
+  transports: 'transports',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.MessageScalarFieldEnum = {
   id: 'id',
   senderId: 'senderId',
@@ -268,6 +280,7 @@ exports.RequestStatus = exports.$Enums.RequestStatus = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Passkey: 'Passkey',
   Message: 'Message',
   PushSubscription: 'PushSubscription',
   Shift: 'Shift',
