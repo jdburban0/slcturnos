@@ -313,7 +313,10 @@ function AdminPage() {
     const [pwdSuccess, setPwdSuccess] = useState("");
     const [assignModal, setAssignModal] = useState(null); // { shiftId, shiftTitle }
     const [assignForm, setAssignForm] = useState({ name: "", email: "" });
+    const [assignDropOpen, setAssignDropOpen] = useState(false);
+    const [assignSearch, setAssignSearch] = useState("");
     const [assignLoading, setAssignLoading] = useState(false);
+    const assignDropRef = useRef(null);
     const [assignedModal, setAssignedModal] = useState(null); // { shift }
     const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
 
@@ -339,6 +342,17 @@ function AdminPage() {
         loadUsers();
         loadTransfers();
     }, [loadShifts, loadRequests, loadUsers, loadTransfers]);
+
+    useEffect(() => {
+        if (!assignDropOpen) return;
+        function handleClick(e) {
+            if (assignDropRef.current && !assignDropRef.current.contains(e.target)) {
+                setAssignDropOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, [assignDropOpen]);
 
     useEffect(() => {
         if (activeTab === "settings" && user?.role === "admin") {
@@ -672,25 +686,70 @@ function AdminPage() {
                         </div>
                         <p style={{ margin: "0 0 16px", color: "var(--text-muted)", fontSize: "0.85rem" }}>{assignModal.shiftTitle}</p>
                         <form onSubmit={handleAssign} style={styles.modalForm}>
-                            <input
-                                style={styles.modalInput}
-                                type="text"
-                                placeholder="Nombre completo"
-                                value={assignForm.name}
-                                onChange={(e) => setAssignForm((f) => ({ ...f, name: e.target.value }))}
-                                required
-                            />
-                            <input
-                                style={styles.modalInput}
-                                type="email"
-                                placeholder="Correo electrónico"
-                                value={assignForm.email}
-                                onChange={(e) => setAssignForm((f) => ({ ...f, email: e.target.value }))}
-                                required
-                            />
+                            <div style={{ position: "relative" }} ref={assignDropRef}>
+                                <button
+                                    type="button"
+                                    style={styles.assignDropBtn}
+                                    onClick={() => { setAssignDropOpen((o) => !o); setAssignSearch(""); }}
+                                >
+                                    <span style={{ flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: assignForm.name ? "var(--text-main)" : "var(--text-muted)" }}>
+                                        {assignForm.name || "Seleccionar operador"}
+                                    </span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transform: assignDropOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </button>
+                                {assignDropOpen && (
+                                    <div className="dropdown-anim" style={styles.assignDropMenu}>
+                                        <div style={{ padding: "6px 6px 4px" }}>
+                                            <input
+                                                style={{ ...styles.modalInput, fontSize: "0.85rem", padding: "7px 10px" }}
+                                                type="text"
+                                                placeholder="Buscar..."
+                                                value={assignSearch}
+                                                onChange={(e) => setAssignSearch(e.target.value)}
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                                            {users
+                                                .filter((u) => u.role === "operator" && u.active)
+                                                .filter((u) => {
+                                                    const q = assignSearch.toLowerCase();
+                                                    return !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+                                                })
+                                                .map((u) => {
+                                                    const selected = assignForm.email === u.email;
+                                                    return (
+                                                        <div
+                                                            key={u.id}
+                                                            className={`assign-item${selected ? " selected" : ""}`}
+                                                            style={{ ...styles.assignDropItem, ...(selected ? styles.assignDropItemSelected : {}) }}
+                                                            onClick={() => { setAssignForm({ name: u.name, email: u.email }); setAssignDropOpen(false); }}
+                                                        >
+                                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                                <div style={{ fontWeight: "600", fontSize: "0.88rem", color: selected ? "#fff" : "var(--text-main)" }}>{u.name}</div>
+                                                                <div style={{ fontSize: "0.75rem", color: selected ? "rgba(255,255,255,0.75)" : "var(--text-muted)" }}>{u.email}</div>
+                                                            </div>
+                                                            {selected && (
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                                    <polyline points="20 6 9 17 4 12"/>
+                                                                </svg>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
+                                            }
+                                            {users.filter((u) => u.role === "operator" && u.active && (!assignSearch || u.name.toLowerCase().includes(assignSearch.toLowerCase()) || u.email.toLowerCase().includes(assignSearch.toLowerCase()))).length === 0 && (
+                                                <p style={{ margin: 0, padding: "12px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>Sin resultados</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                             <div style={styles.modalActions}>
                                 <button type="button" style={styles.modalCancel} onClick={() => setAssignModal(null)}>Cancelar</button>
-                                <button type="submit" style={styles.modalSave} disabled={assignLoading}>
+                                <button type="submit" style={{ ...styles.modalSave, ...(!assignForm.email ? { opacity: 0.5, cursor: "not-allowed" } : {}) }} disabled={assignLoading || !assignForm.email}>
                                     {assignLoading ? "Asignando..." : "Asignar y notificar"}
                                 </button>
                             </div>
@@ -1069,7 +1128,6 @@ function AdminPage() {
                         {/* Aviso: semana actual archivada, sin próxima semana creada */}
                         {isCwTrulyArchived && !hasActiveShifts && (
                             <div style={styles.nextWeekNotice}>
-                                <span style={{ fontSize: "1.1rem" }}>—</span>
                                 <div>
                                     <strong>La semana actual ya está archivada.</strong>
                                     <p style={{ margin: "2px 0 0", fontSize: "0.85rem", color: "var(--text-muted)" }}>
@@ -1169,7 +1227,7 @@ function AdminPage() {
                             startEditSlots={startEditSlots}
                             handleSaveSlots={handleSaveSlots}
                             handleDeleteShift={handleDeleteShift}
-                            onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); }}
+                            onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); setAssignSearch(""); }}
                             onViewAssigned={(shift) => setAssignedModal({ shift })}
                             userRole={user?.role}
                             emptyText="No hay turnos"
@@ -1197,7 +1255,7 @@ function AdminPage() {
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                                         <div>
                                             <h3 style={styles.settingsLabel}>Historial de turnos</h3>
-                                            <p style={styles.settingsHint}>Semanas cerradas — solo lectura.</p>
+                                            <p style={styles.settingsHint}>Semanas cerradas - solo lectura.</p>
                                         </div>
                                         <button
                                             style={{ ...styles.historyToggle, ...(showHistory ? styles.historyToggleActive : {}) }}
@@ -1910,6 +1968,27 @@ const styles = {
     },
     modalTitle: { margin: "0 0 20px", color: "var(--text-main)", fontSize: "1.1rem", fontWeight: "800" },
     modalForm: { display: "flex", flexDirection: "column", gap: "12px" },
+    assignDropBtn: {
+        width: "100%", display: "flex", alignItems: "center", gap: "8px",
+        background: "var(--bg-color)", border: "1.5px solid var(--card-border)",
+        borderRadius: "8px", padding: "10px 14px", cursor: "pointer",
+        fontSize: "0.95rem", color: "var(--text-muted)",
+        transition: "border-color 0.15s ease",
+    },
+    assignDropMenu: {
+        position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+        background: "var(--input-bg)", border: "1px solid var(--border-color)",
+        borderRadius: "10px", boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+        zIndex: 10, overflow: "hidden",
+    },
+    assignDropItem: {
+        display: "flex", alignItems: "center", gap: "10px",
+        padding: "9px 12px", cursor: "pointer",
+        transition: "background 0.12s ease",
+    },
+    assignDropItemSelected: {
+        background: "#3b82f6",
+    },
     modalInput: {
         background: "var(--input-bg)", border: "1px solid var(--border-color)", borderRadius: "8px",
         padding: "10px 14px", color: "var(--text-main)", fontSize: "1rem", width: "100%", boxSizing: "border-box", outline: "none",

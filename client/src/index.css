@@ -626,6 +626,14 @@ button:active:not(:disabled) {
 }
 .transfer-reject-btn:active { transform: scale(0.97); }
 
+/* ─── Assign operator dropdown ────────────────────────────── */
+.assign-item:not(.selected):hover {
+  background: var(--hover-overlay) !important;
+}
+.assign-item.selected:hover {
+  background: #2563eb !important;
+}
+
 /* ─── ShiftCard destructive buttons ──────────────────────── */
 .shift-cancel-btn,
 .shift-desist-btn {
