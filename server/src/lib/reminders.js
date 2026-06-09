@@ -6,21 +6,25 @@ import { sendShiftReminderEmail } from "./mailer.js";
 async function sendTomorrowReminders() {
     console.log("[Reminder] Ejecutando recordatorios de turno para mañana...");
 
-    // "Mañana" en Colombia = día calendario actual en UTC + 1
-    // El cron dispara a las 8pm COT; usando timezone: "America/Bogota" en node-cron,
-    // el proceso corre en la hora local del servidor pero con el schedule en COT.
-    // Para calcular "mañana en Colombia" sumamos 1 día a la fecha actual en COT.
-    const nowCOT = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
-    const tomorrowCOT = new Date(nowCOT);
-    tomorrowCOT.setDate(nowCOT.getDate() + 1);
+    // Obtener la fecha actual en Colombia con Intl.DateTimeFormat (confiable, formato ISO)
+    const cotDateStr = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Bogota",
+        year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date()); // ej: "2025-06-09"
 
-    // Los turnos se guardan con date = YYYY-MM-DDT12:00:00 UTC
-    // Buscamos cualquier turno cuyo date caiga en el día de mañana COT (que coincide con el día UTC)
-    const y = tomorrowCOT.getFullYear();
-    const m = tomorrowCOT.getMonth();
-    const d = tomorrowCOT.getDate();
-    const dayStart = new Date(y, m, d, 0, 0, 0, 0);         // 00:00 local (UTC en Render)
-    const dayEnd   = new Date(y, m, d, 23, 59, 59, 999);     // 23:59 local
+    const [cotY, cotM, cotD] = cotDateStr.split("-").map(Number);
+
+    // "Mañana" en Colombia: sumamos 1 día (JS maneja desbordamiento de mes/año)
+    const tomorrowCOT = new Date(cotY, cotM - 1, cotD + 1);
+    const ty = tomorrowCOT.getFullYear();
+    const tm = tomorrowCOT.getMonth();  // 0-indexed
+    const td = tomorrowCOT.getDate();
+
+    // Los turnos se guardan con date = YYYY-MM-DDT12:00:00 UTC (noon).
+    // Buscamos cualquier turno cuyo date caiga en el día de mañana COT.
+    // new Date(y, m, d, ...) usa hora local del servidor (UTC en Render).
+    const dayStart = new Date(ty, tm, td, 0, 0, 0, 0);
+    const dayEnd   = new Date(ty, tm, td, 23, 59, 59, 999);
 
     try {
         const shifts = await prisma.shift.findMany({
