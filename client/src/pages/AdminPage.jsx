@@ -1014,7 +1014,7 @@ function AdminPage() {
                 `}</style>
 
                 {activeTab === "requests" && (
-                    <section style={styles.section}>
+                    <section className="admin-section" style={styles.section}>
                                         {/* Tab toggle semana actual / próxima — siempre visible */}
                         <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
                             {[
@@ -1117,7 +1117,7 @@ function AdminPage() {
                 )}
 
                 {activeTab === "shifts" && (
-                    <section style={styles.section}>
+                    <section className="admin-section" style={styles.section}>
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Turnos creados</h2>
                             <button style={styles.createButton} onClick={() => setShowCreatorModal(true)}>
@@ -1336,7 +1336,7 @@ function AdminPage() {
                 )}
 
                 {activeTab === "users" && (
-                    <section style={styles.section}>
+                    <section className="admin-section" style={styles.section}>
                         <h2 style={styles.sectionTitle}>Operadores del equipo</h2>
 
                         <div style={styles.tableWrapper}>
@@ -1413,7 +1413,7 @@ function AdminPage() {
                 )}
 
                 {activeTab === "leads" && user?.role === "admin" && (
-                    <section style={styles.section}>
+                    <section className="admin-section" style={styles.section}>
                         <h2 style={styles.sectionTitle}>Leads del equipo</h2>
                         <div style={styles.tableWrapper}>
                             <table style={styles.table}>
@@ -1454,7 +1454,7 @@ function AdminPage() {
                 )}
 
                 {activeTab === "settings" && user?.role === "admin" && (
-                    <section style={styles.section}>
+                    <section className="admin-section" style={styles.section}>
                         <h2 style={styles.sectionTitle}>Ajustes del sistema</h2>
 
                         <div style={styles.settingsGrid}>

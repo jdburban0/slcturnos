@@ -379,7 +379,7 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
         <div style={styles.tableBlock}>
             {canExport && (
                 <div>
-                    <div style={styles.exportRow}>
+                    <div style={styles.exportRow} className="export-row">
                         <div ref={exportDropRef} style={styles.exportDropWrap}>
                             <button
                                 className="export-btn export-btn-jpg"

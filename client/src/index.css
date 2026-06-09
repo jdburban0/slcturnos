@@ -671,3 +671,29 @@ button:active:not(:disabled) {
   transform: translateY(-1px);
 }
 .shift-assign-btn:not(:disabled):active { transform: scale(0.97); }
+
+/* ─── Admin mobile responsivo ─────────────────────────────── */
+@media (max-width: 600px) {
+  /* Reducir padding de las secciones del admin en móvil */
+  .admin-section {
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Botones de exportar apilados en columna */
+  .export-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+  /* El wrapper del dropdown también se estira */
+  .export-row > div {
+    width: 100%;
+  }
+  /* Ambos botones ocupan todo el ancho */
+  .export-row .export-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    box-sizing: border-box;
+  }
+}
