@@ -3,6 +3,7 @@ import { Server as SocketServer } from "socket.io";
 import { prisma } from "./lib/prisma.js";
 import app from "./app.js";
 import { verifySocketToken } from "./middleware/auth.js";
+import { startReminders } from "./lib/reminders.js";
 
 const PORT = process.env.PORT || 4000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
@@ -57,4 +58,5 @@ prisma.$queryRaw`SELECT 1`
 
 httpServer.listen(PORT, () => {
     console.log(`Servidor SLC Turnos corriendo en http://localhost:${PORT}`);
+    startReminders();
 });

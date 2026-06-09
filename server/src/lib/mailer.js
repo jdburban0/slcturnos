@@ -353,6 +353,44 @@ export async function sendAdminTransferAlertEmail({ admins, operatorName, shiftT
 /**
  * Notifica al operador que su desistimiento o traspaso fue aprobado.
  */
+/**
+ * Recordatorio de turno al día siguiente (cron 8pm COT).
+ */
+export async function sendShiftReminderEmail({ name, email, shiftTitle, shiftDate, startTime, endTime }) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    const html = `
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f0f9ff;border-radius:12px;">
+            <h2 style="color:#0f172a;margin:0 0 8px;">Recordatorio de turno</h2>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, tienes un turno programado para mañana:</p>
+            <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #bae6fd;margin-bottom:20px;">
+                <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
+                <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
+                <p style="margin:0;color:#475569;font-size:0.9rem;">${startTime} – ${endTime}</p>
+            </div>
+            <p style="margin:0 0 16px;">
+                <a href="https://slcturnos.online"
+                   style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:0.9rem;">
+                    Ver en SLC Turnos →
+                </a>
+            </p>
+            <p style="color:#94a3b8;font-size:0.78rem;margin:0;">— SLC Turnos</p>
+        </div>
+    `;
+
+    try {
+        await getResend().emails.send({
+            from: FROM,
+            to: email,
+            subject: `Recordatorio: turno mañana — ${shiftTitle}`,
+            html,
+        });
+        console.log(`[Mailer] Recordatorio enviado a ${email}`);
+    } catch (err) {
+        console.error("[Mailer] Error enviando recordatorio:", err.message);
+    }
+}
+
 export async function sendTransferOutcomeEmail({ name, email, shiftTitle, shiftDate, startTime, endTime, type, toName }) {
     if (!process.env.RESEND_API_KEY) return;
 
