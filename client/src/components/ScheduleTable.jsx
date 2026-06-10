@@ -77,38 +77,66 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
 
     return (
         <div style={{ ...styles.wrapper, ...(flash ? styles.wrapperFlash : {}) }} className="schedule-wrapper">
-            {scheduleNav?.bothExist && (
-                <div style={styles.scheduleNavRow}>
-                    <button
-                        style={{ ...styles.scheduleNavBtn, ...(scheduleNav.view === "next" ? styles.scheduleNavBtnDisabled : {}) }}
-                        onClick={() => scheduleNav.onSetView("next")}
-                        disabled={scheduleNav.view === "next"}
-                        title="Próxima semana"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                    </button>
-                    <span style={styles.scheduleNavLabel}>
-                        {scheduleNav.view === "current" ? "Semana actual - en curso" : "Próxima semana - turnos abiertos"}
-                    </span>
-                    <button
-                        style={{ ...styles.scheduleNavBtn, ...(scheduleNav.view === "current" ? styles.scheduleNavBtnDisabled : {}) }}
-                        onClick={() => scheduleNav.onSetView("current")}
-                        disabled={scheduleNav.view === "current"}
-                        title="Semana actual"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                    </button>
+            {/* Fila 1: Nav (izq) + Toggle visible (der) */}
+            {(scheduleNav?.bothExist || publishToggle) && (
+                <div style={styles.topRow}>
+                    {scheduleNav?.bothExist ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <button
+                                style={{ ...styles.scheduleNavBtn, ...(scheduleNav.view === "next" ? styles.scheduleNavBtnDisabled : {}) }}
+                                onClick={() => scheduleNav.onSetView("next")}
+                                disabled={scheduleNav.view === "next"}
+                                title="Próxima semana"
+                            >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                            </button>
+                            <span style={styles.scheduleNavLabel}>
+                                {scheduleNav.view === "current" ? "Semana actual - en curso" : "Próxima semana - turnos abiertos"}
+                            </span>
+                            <button
+                                style={{ ...styles.scheduleNavBtn, ...(scheduleNav.view === "current" ? styles.scheduleNavBtnDisabled : {}) }}
+                                onClick={() => scheduleNav.onSetView("current")}
+                                disabled={scheduleNav.view === "current"}
+                                title="Semana actual"
+                            >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                    ) : <div />}
+                    {publishToggle && (
+                        <div
+                            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+                            onClick={publishToggle.onToggle}
+                        >
+                            <div style={{
+                                width: "38px", height: "22px", borderRadius: "999px",
+                                background: publishToggle.isPublished ? "#16a34a" : "#94a3b8",
+                                position: "relative", transition: "background 0.2s", flexShrink: 0,
+                            }}>
+                                <div style={{
+                                    position: "absolute", top: "3px",
+                                    left: publishToggle.isPublished ? "19px" : "3px",
+                                    width: "16px", height: "16px", borderRadius: "50%",
+                                    background: "#fff", transition: "left 0.2s",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+                                }} />
+                            </div>
+                            <span style={{ fontSize: "0.8rem", fontWeight: "600", color: publishToggle.isPublished ? "#16a34a" : "#64748b", whiteSpace: "nowrap" }}>
+                                {publishToggle.isPublished ? "Visible" : "Oculto"}
+                            </span>
+                        </div>
+                    )}
                 </div>
             )}
             {publishToggle && !publishToggle.isPublished && (
                 <div style={{
                     display: "flex", alignItems: "center", gap: "10px",
                     background: "#fff7ed", border: "1px solid #fed7aa",
-                    borderRadius: "8px", padding: "9px 14px", marginBottom: "12px",
+                    borderRadius: "8px", padding: "9px 14px",
                     maxWidth: "960px", margin: "0 auto 12px",
                 }}>
                     <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#c2410c" }}>!</span>
@@ -117,35 +145,6 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
                     </span>
                 </div>
             )}
-            <div style={styles.liveRow}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={styles.liveTitle}>Schedule</span>
-                    <span style={styles.liveBadge}>● LIVE</span>
-                </div>
-                {publishToggle && (
-                    <div
-                        style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
-                        onClick={publishToggle.onToggle}
-                    >
-                        <div style={{
-                            width: "38px", height: "22px", borderRadius: "999px",
-                            background: publishToggle.isPublished ? "#16a34a" : "#94a3b8",
-                            position: "relative", transition: "background 0.2s", flexShrink: 0,
-                        }}>
-                            <div style={{
-                                position: "absolute", top: "3px",
-                                left: publishToggle.isPublished ? "19px" : "3px",
-                                width: "16px", height: "16px", borderRadius: "50%",
-                                background: "#fff", transition: "left 0.2s",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
-                            }} />
-                        </div>
-                        <span style={{ fontSize: "0.8rem", fontWeight: "600", color: publishToggle.isPublished ? "#16a34a" : "#64748b", whiteSpace: "nowrap" }}>
-                            {publishToggle.isPublished ? "Visible" : "Oculto"}
-                        </span>
-                    </div>
-                )}
-            </div>
 
             {/* Navegación entre semanas */}
             {total > 1 && (
@@ -405,10 +404,15 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
 
     return (
         <div style={styles.tableBlock}>
-            {canExport && (
-                <div>
-                    <div style={styles.exportRow} className="export-row">
-                        <div ref={exportDropRef} style={styles.exportDropWrap}>
+            {/* Fila 2: Schedule • LIVE (izq) + botones exportar (der) */}
+            <div style={styles.headerRow} className="export-row">
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={styles.liveTitle}>Schedule</span>
+                    <span style={styles.liveBadge}>● LIVE</span>
+                </div>
+                {canExport && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div ref={exportDropRef} style={styles.exportDropWrap}>
                             <button
                                 className="export-btn export-btn-jpg"
                                 style={{ ...styles.exportBtn, ...styles.exportBtnJpg, ...(exporting ? styles.exportBtnDisabled : {}) }}
@@ -468,10 +472,12 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                             )}
                             {sending ? "Enviando..." : "Enviar a operadores"}
                         </button>
-                        {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
-                    </div>
+                    {sendMsg && <span style={styles.sendMsg}>{sendMsg}</span>}
+                </div>
+                )}
+            </div>
 
-                    {showMsgForm && createPortal(
+            {canExport && showMsgForm && createPortal(
                         <div data-theme={document.documentElement.getAttribute("data-theme")} style={styles.modalOverlay} onClick={() => { setShowMsgForm(false); setCustomMessage(""); setSelectedIds(null); }}>
                             <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
                                 <h3 style={styles.modalTitle}>Enviar horario</h3>
@@ -536,8 +542,6 @@ function WeekTable({ shifts, canExport, exporting, setExporting, token }) {
                         </div>,
                         document.body
                     )}
-                </div>
-            )}
 
             <div
                 ref={tableRef}
@@ -651,11 +655,10 @@ const styles = {
     wrapperFlash: {
         boxShadow: "0 0 0 2px #3b82f6",
     },
-    scheduleNavRow: {
+    topRow: {
         display: "flex",
+        justifyContent: "space-between",
         alignItems: "center",
-        gap: "10px",
-        marginBottom: "14px",
         maxWidth: "960px",
         margin: "0 auto 14px",
     },
@@ -672,13 +675,12 @@ const styles = {
         color: "var(--text-muted)", fontSize: "0.82rem", fontWeight: "700",
         textTransform: "uppercase", letterSpacing: "0.05em",
     },
-    liveRow: {
+    headerRow: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: "16px",
         maxWidth: "960px",
-        margin: "0 auto 16px",
+        margin: "0 auto 10px",
     },
     liveTitle: {
         fontWeight: "800",
@@ -723,15 +725,6 @@ const styles = {
     },
     tableBlock: {
         marginBottom: "16px",
-        maxWidth: "960px",
-        margin: "0 auto 16px",
-    },
-    exportRow: {
-        display: "flex",
-        justifyContent: "flex-end",
-        alignItems: "center",
-        gap: "8px",
-        marginBottom: "10px",
     },
     sendMsg: {
         fontSize: "0.82rem",
