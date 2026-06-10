@@ -42,7 +42,7 @@ function getWeekKey(isoString) {
     return monday.toISOString().slice(0, 10);
 }
 
-export default function ScheduleTable({ shifts, updatedAt, canExport, token, showAll, publishToggle }) {
+export default function ScheduleTable({ shifts, updatedAt, canExport, token, showAll, publishToggle, scheduleNav }) {
     const [flash, setFlash] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [weekIndex, setWeekIndex] = useState(0);
@@ -77,6 +77,33 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
 
     return (
         <div style={{ ...styles.wrapper, ...(flash ? styles.wrapperFlash : {}) }} className="schedule-wrapper">
+            {scheduleNav?.bothExist && (
+                <div style={styles.scheduleNavRow}>
+                    <button
+                        style={{ ...styles.scheduleNavBtn, ...(scheduleNav.view === "next" ? styles.scheduleNavBtnDisabled : {}) }}
+                        onClick={() => scheduleNav.onSetView("next")}
+                        disabled={scheduleNav.view === "next"}
+                        title="Próxima semana"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </button>
+                    <span style={styles.scheduleNavLabel}>
+                        {scheduleNav.view === "current" ? "Semana actual - en curso" : "Próxima semana - turnos abiertos"}
+                    </span>
+                    <button
+                        style={{ ...styles.scheduleNavBtn, ...(scheduleNav.view === "current" ? styles.scheduleNavBtnDisabled : {}) }}
+                        onClick={() => scheduleNav.onSetView("current")}
+                        disabled={scheduleNav.view === "current"}
+                        title="Semana actual"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            )}
             {publishToggle && !publishToggle.isPublished && (
                 <div style={{
                     display: "flex", alignItems: "center", gap: "10px",
@@ -623,6 +650,27 @@ const styles = {
     },
     wrapperFlash: {
         boxShadow: "0 0 0 2px #3b82f6",
+    },
+    scheduleNavRow: {
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        marginBottom: "14px",
+        maxWidth: "960px",
+        margin: "0 auto 14px",
+    },
+    scheduleNavBtn: {
+        background: "var(--card-bg)", border: "1.5px solid var(--border-color)", color: "var(--text-muted)",
+        width: "32px", height: "32px", borderRadius: "8px", cursor: "pointer",
+        flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "background 0.15s, color 0.15s, border-color 0.15s",
+    },
+    scheduleNavBtnDisabled: {
+        opacity: 0.3, cursor: "not-allowed",
+    },
+    scheduleNavLabel: {
+        color: "var(--text-muted)", fontSize: "0.82rem", fontWeight: "700",
+        textTransform: "uppercase", letterSpacing: "0.05em",
     },
     liveRow: {
         display: "flex",

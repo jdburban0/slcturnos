@@ -1137,51 +1137,23 @@ function AdminPage() {
                             </div>
                         )}
 
-                        {/* Navegación entre semanas + horario visual */}
+                        {/* Horario visual */}
                         {(hasCwShifts || hasActiveShifts) && (
-                            <div style={{ marginBottom: "8px" }}>
-                                {bothSchedulesExist && (
-                                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                                        <button
-                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "next" ? { opacity: 0.3, cursor: "not-allowed" } : {}) }}
-                                            onClick={() => setScheduleView("next")}
-                                            disabled={effectiveView === "next"}
-                                            title="Próxima semana"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                        </button>
-                                        <span style={styles.historySectionLabel}>
-                                            {effectiveView === "current" ? "Semana actual — en curso" : "Próxima semana — turnos abiertos"}
-                                        </span>
-                                        <button
-                                            style={{ ...styles.scheduleNavBtn, ...(effectiveView === "current" ? { opacity: 0.3, cursor: "not-allowed" } : {}) }}
-                                            onClick={() => setScheduleView("current")}
-                                            disabled={effectiveView === "current"}
-                                            title="Semana actual"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                )}
-                                <ScheduleTable
-                                    shifts={visibleScheduleShifts}
-                                    updatedAt={shiftsUpdatedAt}
-                                    canExport
-                                    token={token}
-                                    showAll={effectiveView === "current"}
-                                    publishToggle={effectiveView !== "current" ? (() => {
-                                        const weeks = getWeeksFromShifts(visibleScheduleShifts);
-                                        if (!weeks.length) return null;
-                                        const [monday] = weeks[0];
-                                        const isPublished = visibleScheduleShifts.some((s) => s.status !== "CLOSED" && s.published);
-                                        return { monday, isPublished, onToggle: () => handlePublishWeek(monday, !isPublished) };
-                                    })() : null}
-                                />
-                            </div>
+                            <ScheduleTable
+                                shifts={visibleScheduleShifts}
+                                updatedAt={shiftsUpdatedAt}
+                                canExport
+                                token={token}
+                                showAll={effectiveView === "current"}
+                                publishToggle={effectiveView !== "current" ? (() => {
+                                    const weeks = getWeeksFromShifts(visibleScheduleShifts);
+                                    if (!weeks.length) return null;
+                                    const [monday] = weeks[0];
+                                    const isPublished = visibleScheduleShifts.some((s) => s.status !== "CLOSED" && s.published);
+                                    return { monday, isPublished, onToggle: () => handlePublishWeek(monday, !isPublished) };
+                                })() : null}
+                                scheduleNav={bothSchedulesExist ? { view: effectiveView, onSetView: setScheduleView, bothExist: true } : null}
+                            />
                         )}
 
                         {/* Archivar semana — solo muestra la semana visible en el schedule */}
