@@ -617,6 +617,9 @@ const styles = {
         boxShadow: "var(--card-shadow)",
         marginBottom: "20px",
         transition: "box-shadow 0.4s",
+        maxWidth: "1000px",
+        marginLeft: "auto",
+        marginRight: "auto",
     },
     wrapperFlash: {
         boxShadow: "0 0 0 2px #3b82f6",
