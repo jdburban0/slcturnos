@@ -82,6 +82,7 @@ export default function ScheduleTable({ shifts, updatedAt, canExport, token, sho
                     display: "flex", alignItems: "center", gap: "10px",
                     background: "#fff7ed", border: "1px solid #fed7aa",
                     borderRadius: "8px", padding: "9px 14px", marginBottom: "12px",
+                    maxWidth: "960px", margin: "0 auto 12px",
                 }}>
                     <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#c2410c" }}>!</span>
                     <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "#c2410c" }}>
@@ -625,6 +626,8 @@ const styles = {
         justifyContent: "space-between",
         alignItems: "center",
         marginBottom: "16px",
+        maxWidth: "960px",
+        margin: "0 auto 16px",
     },
     liveTitle: {
         fontWeight: "800",
@@ -642,6 +645,8 @@ const styles = {
         justifyContent: "center",
         gap: "16px",
         marginBottom: "16px",
+        maxWidth: "960px",
+        margin: "0 auto 16px",
     },
     navBtn: {
         background: "#1e3a5f",
@@ -667,6 +672,8 @@ const styles = {
     },
     tableBlock: {
         marginBottom: "16px",
+        maxWidth: "960px",
+        margin: "0 auto 16px",
     },
     exportRow: {
         display: "flex",
