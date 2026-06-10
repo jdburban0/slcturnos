@@ -872,6 +872,8 @@ const styles = {
         borderRadius: "10px",
         overflow: "hidden",
         border: "1px solid #e2e8f0",
+        maxWidth: "960px",
+        margin: "0 auto",
     },
     tableTitle: {
         fontWeight: "800",
