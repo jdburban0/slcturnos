@@ -1118,7 +1118,7 @@ function AdminPage() {
 
                 {activeTab === "shifts" && (
                     <section className="admin-section" style={styles.section}>
-                        <div style={styles.sectionHeader}>
+                        <div style={{ ...styles.sectionHeader, maxWidth: "1000px", marginLeft: "auto", marginRight: "auto" }}>
                             <h2 style={styles.sectionTitle}>Turnos creados</h2>
                             <button style={styles.createButton} onClick={() => setShowCreatorModal(true)}>
                                 + Nuevo turno
