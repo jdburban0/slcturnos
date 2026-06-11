@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { requireAuth, requireRole } from "./middleware/auth.js";
+import { sendTomorrowReminders } from "./lib/reminders.js";
 import authRouter from "./routes/auth.js";
 import shiftsRouter from "./routes/shifts.js";
 import requestsRouter from "./routes/requests.js";
@@ -37,6 +39,14 @@ app.use(express.json({ limit: "5mb" }));
 
 app.get("/", (req, res) => res.json({ ok: true }));
 app.get("/api/ping", (req, res) => res.json({ ok: true }));
+app.post("/api/trigger-reminders", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    try {
+        await sendTomorrowReminders();
+        res.json({ ok: true, message: "Recordatorios enviados" });
+    } catch (err) {
+        res.status(500).json({ message: "Error al enviar recordatorios", error: err.message });
+    }
+});
 
 app.use("/api/auth", authRouter);
 app.use("/api/shifts", shiftsRouter);
