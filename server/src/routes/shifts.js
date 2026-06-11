@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { sendTomorrowReminders } from "../lib/reminders.js";
 import { sendNewShiftEmail, sendWeeklyScheduleEmail, sendAssignmentEmail, sendAdminTransferAlertEmail, queueAdminPendingNotification } from "../lib/mailer.js";
 import { notifyMany } from "../lib/notify.js";
 import { queueAdminRequestPush, sendPushToAdmins, sendPushToUser } from "../lib/pushService.js";
@@ -904,6 +905,15 @@ router.patch("/week/:monday/publish", requireAuth, requireRole("admin", "lead"),
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al actualizar visibilidad" });
+    }
+});
+
+router.post("/reminders/trigger", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    try {
+        await sendTomorrowReminders();
+        res.json({ ok: true, message: "Recordatorios enviados" });
+    } catch (err) {
+        res.status(500).json({ message: "Error al enviar recordatorios", error: err.message });
     }
 });
 

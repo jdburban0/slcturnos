@@ -29,8 +29,7 @@ async function sendTomorrowReminders() {
     try {
         const shifts = await prisma.shift.findMany({
             where: {
-                date:   { gte: dayStart, lte: dayEnd },
-                status: { not: "CLOSED" },
+                date: { gte: dayStart, lte: dayEnd },
             },
             include: {
                 requests: {
@@ -98,6 +97,8 @@ async function sendTomorrowReminders() {
         console.error("[Reminder] Error ejecutando recordatorios:", err.message);
     }
 }
+
+export { sendTomorrowReminders };
 
 export function startReminders() {
     // Todos los días a las 8:00pm hora Colombia
