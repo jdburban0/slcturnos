@@ -8,6 +8,15 @@ import { queueAdminRequestPush, sendPushToAdmins, sendPushToUser } from "../lib/
 
 const router = Router();
 
+router.post("/reminders/trigger", requireAuth, requireRole("admin", "lead"), async (req, res) => {
+    try {
+        await sendTomorrowReminders();
+        res.json({ ok: true, message: "Recordatorios enviados" });
+    } catch (err) {
+        res.status(500).json({ message: "Error al enviar recordatorios", error: err.message });
+    }
+});
+
 // GET all shifts with their requests
 router.get("/", requireAuth, async (req, res) => {
     try {
@@ -905,15 +914,6 @@ router.patch("/week/:monday/publish", requireAuth, requireRole("admin", "lead"),
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error al actualizar visibilidad" });
-    }
-});
-
-router.post("/reminders/trigger", requireAuth, requireRole("admin", "lead"), async (req, res) => {
-    try {
-        await sendTomorrowReminders();
-        res.json({ ok: true, message: "Recordatorios enviados" });
-    } catch (err) {
-        res.status(500).json({ message: "Error al enviar recordatorios", error: err.message });
     }
 });
 
