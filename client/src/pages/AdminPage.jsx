@@ -60,6 +60,27 @@ function parseTimeToMinutes(t) {
     return h * 60 + m;
 }
 
+// Convierte formato 12h "7:30am" → "07:30" (24h para input[type=time])
+function to24h(t) {
+    if (!t) return "";
+    const match = t.match(/(\d+):(\d+)(am|pm)/i);
+    if (!match) return t;
+    let [, h, m, period] = match;
+    h = parseInt(h); m = parseInt(m);
+    if (period.toLowerCase() === "pm" && h !== 12) h += 12;
+    if (period.toLowerCase() === "am" && h === 12) h = 0;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+// Convierte formato 24h "07:30" → "7:30am" (formato del sistema)
+function to12h(t) {
+    if (!t) return t;
+    const [h, mi] = t.split(":").map(Number);
+    const ampm = h >= 12 ? "pm" : "am";
+    const hour = h % 12 || 12;
+    return `${hour}:${String(mi).padStart(2, "0")}${ampm}`;
+}
+
 function getWeekMonday(dateStr) {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date(y, m - 1, d);
@@ -76,8 +97,8 @@ function weekRangeLabel(mondayStr) {
 }
 
 function ShiftsTable({
-    shifts, editingShiftId, editSlots, setEditSlots, setEditingShiftId,
-    startEditSlots, handleSaveSlots, handleDeleteShift, onAssign, onViewAssigned,
+    shifts, handleDeleteShift, onAssign, onViewAssigned,
+    onEdit,
     userRole, emptyText, styles, muted,
     hideStatus, hidePending, allowAssignClosed, weekSeparators, readOnly, onDeleteWeek, onUnarchiveWeek,
 }) {
@@ -215,43 +236,34 @@ function ShiftsTable({
                                     )}
                                     {!readOnly && (
                                         <td style={{ ...styles.td, ...styles.tdCenter }}>
-                                            {editingShiftId === shift.id ? (
-                                                <div style={styles.slotsEditor}>
-                                                    <button style={styles.slotBtn} onClick={() => setEditSlots((v) => Math.max(1, v - 1))}>−</button>
-                                                    <span style={styles.slotsNum}>{editSlots}</span>
-                                                    <button style={styles.slotBtn} onClick={() => setEditSlots((v) => v + 1)}>+</button>
-                                                    <button style={styles.saveBtn} onClick={() => handleSaveSlots(shift)}>✓</button>
-                                                    <button style={styles.cancelBtn} onClick={() => setEditingShiftId(null)}>✕</button>
+                                            <div style={styles.actionBtns}>
+                                                <div style={{ width: "66px", flexShrink: 0 }} />
+                                                <div style={styles.actionBtnsMain}>
+                                                    {onEdit && (
+                                                        <button className="shift-edit-btn" style={styles.editBtn} onClick={() => onEdit(shift)}>Editar</button>
+                                                    )}
+                                                    {canAssign && (
+                                                        <button
+                                                            className="shift-assign-btn"
+                                                            style={{ ...styles.assignBtn, ...(approved >= shift.totalSlots ? styles.assignBtnDisabled : {}) }}
+                                                            onClick={() => onAssign(shift.id, shift.title)}
+                                                            disabled={approved >= shift.totalSlots}
+                                                        >
+                                                            Asignar
+                                                        </button>
+                                                    )}
+                                                    {["admin", "lead"].includes(userRole) && (
+                                                        <button className="user-delete-btn" style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <div style={styles.actionBtns}>
-                                                    {/* Spacer izquierdo — mismo ancho que Ver para mantener centrado */}
-                                                    <div style={{ width: "66px", flexShrink: 0 }} />
-                                                    <div style={styles.actionBtnsMain}>
-                                                        <button className="shift-edit-btn" style={styles.editBtn} onClick={() => startEditSlots(shift)}>Cupos</button>
-                                                        {canAssign && (
-                                                            <button
-                                                                className="shift-assign-btn"
-                                                                style={{ ...styles.assignBtn, ...(approved >= shift.totalSlots ? styles.assignBtnDisabled : {}) }}
-                                                                onClick={() => onAssign(shift.id, shift.title)}
-                                                                disabled={approved >= shift.totalSlots}
-                                                            >
-                                                                Asignar
-                                                            </button>
-                                                        )}
-                                                        {["admin", "lead"].includes(userRole) && (
-                                                            <button className="user-delete-btn" style={styles.deleteBtn} onClick={() => handleDeleteShift(shift.id)}>Eliminar</button>
-                                                        )}
-                                                    </div>
-                                                    <div style={{ width: "66px", flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
-                                                        {onViewAssigned && approved > 0 && (
-                                                            <button style={styles.viewAssignedBtn} onClick={() => onViewAssigned(shift)}>
-                                                                Ver ({approved})
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                <div style={{ width: "66px", flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
+                                                    {onViewAssigned && approved > 0 && (
+                                                        <button style={styles.viewAssignedBtn} onClick={() => onViewAssigned(shift)}>
+                                                            Ver ({approved})
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            )}
+                                            </div>
                                         </td>
                                     )}
                                 </tr>
@@ -300,8 +312,7 @@ function AdminPage() {
     const [deletedMessageEvent, setDeletedMessageEvent] = useState(null);
     const [showCreatorModal, setShowCreatorModal] = useState(false);
     const [leaving, setLeaving] = useState(false);
-    const [editingShiftId, setEditingShiftId] = useState(null);
-    const [editSlots, setEditSlots] = useState(1);
+    const [editModal, setEditModal] = useState(null); // { shift, slots, startTime: "HH:MM", endTime: "HH:MM" }
     const [showHistory, setShowHistory] = useState(false);
     const [historyWeekIndex, setHistoryWeekIndex] = useState(0);
     const [scheduleView, setScheduleView] = useState("next"); // "next" | "current"
@@ -430,21 +441,24 @@ function AdminPage() {
         });
     }
 
-    function startEditSlots(shift) {
-        setEditingShiftId(shift.id);
-        setEditSlots(shift.totalSlots);
-    }
-
-    async function handleSaveSlots(shift) {
-        const approved = shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0;
-        if (editSlots < approved) {
-            showToast("Error", `No puedes bajar los cupos por debajo de los ${approved} ya aprobados.`);
+    async function handleSaveEdit(e) {
+        e.preventDefault();
+        if (!editModal) return;
+        const { shift, slots, startTime, endTime } = editModal;
+        const approved = (shift.requests?.filter((r) => r.status === "APPROVED").length ?? 0) + (shift.manualAssignments?.length ?? 0);
+        if (slots < approved) {
+            showToast("Error", `No puedes bajar los cupos por debajo de los ${approved} ya ocupados.`);
             return;
         }
+        if (!startTime || !endTime) { showToast("Error", "Ingresa ambas horas."); return; }
         try {
-            await updateShift(token, shift.id, { totalSlots: editSlots });
-            setEditingShiftId(null);
-            showToast("Cupos actualizados");
+            await updateShift(token, shift.id, {
+                totalSlots: slots,
+                startTime: to12h(startTime),
+                endTime: to12h(endTime),
+            });
+            setEditModal(null);
+            showToast("Turno actualizado");
             loadShifts();
         } catch (err) { showToast("Error", err.message); }
     }
@@ -674,6 +688,70 @@ function AdminPage() {
                 <div className="anim-slide-right" style={styles.toast}>
                     <strong>{toast.title}</strong>
                     {toast.message && <p style={styles.toastMsg}>{toast.message}</p>}
+                </div>
+            )}
+
+            {editModal && (
+                <div className="modal-overlay-anim" style={styles.modalOverlay}>
+                    <div className="modal-box-anim" style={{ ...styles.modalBox, maxWidth: "400px" }}>
+                        <div style={styles.modalHeader}>
+                            <h3 style={{ ...styles.modalTitle, margin: 0 }}>Editar turno</h3>
+                            <button style={styles.modalCloseBtn} onClick={() => setEditModal(null)}>✕</button>
+                        </div>
+                        <p style={{ margin: "0 0 20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                            {editModal.shift.title} · {new Date(editModal.shift.date.slice(0, 10) + "T00:00:00").toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short" })}
+                        </p>
+                        <form onSubmit={handleSaveEdit} style={styles.modalForm}>
+                            {/* Horario */}
+                            <p style={{ margin: "0 0 6px", fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Horario</p>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "4px" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>Inicio</label>
+                                    <input
+                                        id="edit-shift-start"
+                                        type="time"
+                                        style={styles.modalInput}
+                                        value={editModal.startTime}
+                                        onChange={(e) => setEditModal((m) => ({ ...m, startTime: e.target.value }))}
+                                        required
+                                    />
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>Fin</label>
+                                    <input
+                                        id="edit-shift-end"
+                                        type="time"
+                                        style={styles.modalInput}
+                                        value={editModal.endTime}
+                                        onChange={(e) => setEditModal((m) => ({ ...m, endTime: e.target.value }))}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            {/* Cupos */}
+                            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "8px" }}>
+                                <p style={{ margin: "0 0 10px", fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Cupos</p>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <button
+                                        type="button"
+                                        style={styles.slotBtn}
+                                        onClick={() => setEditModal((m) => ({ ...m, slots: Math.max(1, m.slots - 1) }))}
+                                    >−</button>
+                                    <span style={{ ...styles.slotsNum, fontSize: "1.1rem", minWidth: "36px" }}>{editModal.slots}</span>
+                                    <button
+                                        type="button"
+                                        style={styles.slotBtn}
+                                        onClick={() => setEditModal((m) => ({ ...m, slots: m.slots + 1 }))}
+                                    >+</button>
+                                    <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginLeft: "4px" }}>cupo{editModal.slots !== 1 ? "s" : ""}</span>
+                                </div>
+                            </div>
+                            <div style={styles.modalActions}>
+                                <button type="button" style={styles.modalCancel} onClick={() => setEditModal(null)}>Cancelar</button>
+                                <button type="submit" style={styles.modalSave}>Guardar cambios</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
 
@@ -1192,15 +1270,10 @@ function AdminPage() {
                         {/* Tabla sincronizada con el horario visible */}
                         <ShiftsTable
                             shifts={visibleScheduleShifts}
-                            editingShiftId={editingShiftId}
-                            editSlots={editSlots}
-                            setEditSlots={setEditSlots}
-                            setEditingShiftId={setEditingShiftId}
-                            startEditSlots={startEditSlots}
-                            handleSaveSlots={handleSaveSlots}
                             handleDeleteShift={handleDeleteShift}
                             onAssign={(shiftId, shiftTitle) => { setAssignModal({ shiftId, shiftTitle }); setAssignForm({ name: "", email: "" }); setAssignSearch(""); }}
                             onViewAssigned={(shift) => setAssignedModal({ shift })}
+                            onEdit={(shift) => setEditModal({ shift, slots: shift.totalSlots, startTime: to24h(shift.startTime), endTime: to24h(shift.endTime) })}
                             userRole={user?.role}
                             emptyText="No hay turnos"
                             styles={styles}
@@ -1800,6 +1873,10 @@ const styles = {
     },
     editBtn: {
         background: "var(--primary-light)", color: "var(--primary)", border: "none",
+        padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
+    },
+    editTimeBtn: {
+        background: "var(--hover-overlay)", color: "var(--text-main)", border: "1px solid var(--border-color)",
         padding: "5px 9px", borderRadius: "6px", cursor: "pointer", fontSize: "0.76rem", fontWeight: "600", whiteSpace: "nowrap",
     },
     deleteBtn: {

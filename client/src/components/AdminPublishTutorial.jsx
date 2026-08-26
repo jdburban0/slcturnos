@@ -34,7 +34,7 @@ export default function AdminPublishTutorial({ onComplete }) {
         return () => clearTimeout(t);
     }, [step]);
 
-    const STEPS = 1;
+    const STEPS = 0;
     const isLast = step === STEPS;
 
     return (
@@ -52,27 +52,14 @@ export default function AdminPublishTutorial({ onComplete }) {
 
                 {step === 0 && (
                     <>
-                        <h2 style={styles.title}>Nuevo estilo en el horario</h2>
+                        <h2 style={styles.title}>Nuevo botón "Editar" en turnos</h2>
                         <p style={styles.desc}>
-                            Cada turno ahora tiene su propio recuadro, separando visualmente
-                            los turnos dentro de un mismo día.
+                            Los botones <strong>Cupos</strong> y <strong>Horario</strong> se unieron en uno solo.
+                            Haz clic en <strong>Editar</strong> para modificar el rango de horas y los cupos
+                            de cualquier turno desde un mismo lugar.
                         </p>
                         <div style={styles.visualBox}>
-                            <ScheduleStyleVisual />
-                        </div>
-                    </>
-                )}
-
-                {step === 1 && (
-                    <>
-                        <h2 style={styles.title}>Botón Exportar mejorado</h2>
-                        <p style={styles.desc}>
-                            Los botones de exportar se unieron en uno solo. Haz clic en{" "}
-                            <strong>Exportar</strong> para elegir entre guardar el horario como imagen{" "}
-                            <strong>JPG</strong> o como archivo <strong>Excel</strong>.
-                        </p>
-                        <div style={styles.visualBox}>
-                            <ExportButtonVisual />
+                            <EditModalVisual />
                         </div>
                     </>
                 )}
@@ -91,7 +78,7 @@ export default function AdminPublishTutorial({ onComplete }) {
                         style={{
                             ...styles.btn,
                             ...(canAdvance ? {} : styles.btnDisabled),
-                            ...(step === 0 ? { marginLeft: "auto" } : {}),
+                            marginLeft: "auto",
                         }}
                         onClick={canAdvance ? (isLast ? onComplete : () => setStep((s) => s + 1)) : undefined}
                         disabled={!canAdvance}
@@ -106,114 +93,62 @@ export default function AdminPublishTutorial({ onComplete }) {
     );
 }
 
-/* ── Visuales ── */
+/* ── Visual: simulación del botón Editar y el modal ── */
 
-function ScheduleStyleVisual() {
-    const tableContent = (isNew) => (
-        <div style={sv.table}>
-            <div style={{ display: "flex" }}>
-                <div style={{ ...sv.headerCell, flex: 1 }}>Lunes</div>
-                <div style={{ ...sv.headerCell, flex: 1, borderLeft: "1px solid #2d4a6b" }}>Martes</div>
-            </div>
-            <div style={{ display: "flex", borderTop: "1px solid #1e293b" }}>
-                {/* Lunes */}
-                <div style={{ ...(isNew ? sv.tdNew : sv.tdOld), flex: 1 }}>
-                    {isNew ? (
-                        <div style={sv.boxNew}>
-                            <div style={sv.timeNew}>7:30am - 4:30pm</div>
-                            <div style={sv.nameNew}>Isabella G.</div>
-                            <div style={sv.nameNew}>David Reyes</div>
-                            <div style={sv.nameNew}>Esteban T.</div>
-                            <div style={sv.slotNew}>4</div>
-                            <div style={sv.slotNew}>5</div>
-                        </div>
-                    ) : (
-                        <>
-                            <div style={sv.timeOld}>7:30am - 4:30pm</div>
-                            <div style={sv.nameOld}>Isabella G.</div>
-                            <div style={sv.nameOld}>David Reyes</div>
-                            <div style={sv.nameOld}>Esteban T.</div>
-                            <div style={sv.slotOld}>4</div>
-                            <div style={sv.slotOld}>5</div>
-                        </>
-                    )}
-                </div>
-                {/* Martes */}
-                <div style={{ ...(isNew ? sv.tdNew : sv.tdOld), flex: 1, borderLeft: "1px solid #1e293b" }}>
-                    {isNew ? (
-                        <div style={sv.boxNew}>
-                            <div style={sv.timeNew}>7:30am - 4:30pm</div>
-                            <div style={sv.nameNew}>Nicolás C.</div>
-                        </div>
-                    ) : (
-                        <>
-                            <div style={sv.timeOld}>7:30am - 4:30pm</div>
-                            <div style={sv.nameOld}>Nicolás C.</div>
-                        </>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-
+function EditModalVisual() {
     return (
         <div style={viz.card}>
-            {/* Antes */}
-            <div style={sv.colLabel}>Antes</div>
-            {tableContent(false)}
-            {/* Flecha */}
+            {/* Fila de tabla simulada */}
+            <div style={em.tableRow}>
+                <span style={em.timeText}>7:30am – 4:30pm</span>
+                <span style={em.slotsText}>3 cupos</span>
+                <div style={em.editBtn}>Editar</div>
+            </div>
+            {/* Flecha hacia abajo */}
             <div style={{ display: "flex", justifyContent: "center" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/>
                 </svg>
             </div>
-            {/* Ahora */}
-            <div style={sv.colLabel}>Ahora</div>
-            {tableContent(true)}
-        </div>
-    );
-}
-
-function ExportButtonVisual() {
-    return (
-        <div style={viz.card}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-end", gap: "8px" }}>
-                <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b", textAlign: "right", paddingTop: "10px" }}>
-                    Ubicado sobre<br />la tabla del horario
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                    <div style={ev.btn}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        Exportar
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
-                    <div style={ev.menu}>
-                        <div style={ev.item}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                            </svg>
-                            JPG
+            {/* Modal simulado */}
+            <div style={em.modalSim}>
+                <div style={em.modalTitle}>Editar turno</div>
+                <div style={em.modalSub}>Diurno - Lunes · lun., 1 sep.</div>
+                {/* Sección horario */}
+                <div style={em.section}>
+                    <div style={em.sectionLabel}>Horario</div>
+                    <div style={em.timeRow}>
+                        <div style={em.timeField}>
+                            <span style={em.fieldLabel}>Inicio</span>
+                            <div style={em.timeInput}>07:30</div>
                         </div>
-                        <div style={ev.item}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                            </svg>
-                            Excel
+                        <div style={em.timeField}>
+                            <span style={em.fieldLabel}>Fin</span>
+                            <div style={em.timeInput}>16:30</div>
                         </div>
                     </div>
+                </div>
+                {/* Sección cupos */}
+                <div style={{ ...em.section, borderTop: "1px solid #1e293b", paddingTop: "10px" }}>
+                    <div style={em.sectionLabel}>Cupos</div>
+                    <div style={em.slotsRow}>
+                        <div style={em.slotBtn}>−</div>
+                        <span style={em.slotNum}>3</span>
+                        <div style={em.slotBtn}>+</div>
+                        <span style={em.slotLabel}>cupos</span>
+                    </div>
+                </div>
+                {/* Footer */}
+                <div style={em.modalFooter}>
+                    <div style={em.cancelBtn}>Cancelar</div>
+                    <div style={em.saveBtn}>Guardar cambios</div>
                 </div>
             </div>
         </div>
     );
 }
 
-/* ── Estilos modal ── */
+/* ── Estilos del modal del tutorial ── */
 const styles = {
     overlay: {
         position: "fixed",
@@ -325,7 +260,7 @@ const styles = {
     },
 };
 
-/* ── Estilos visuales — comparación celdas ── */
+/* ── Estilos del contenedor oscuro ── */
 const viz = {
     card: {
         background: "#0f172a",
@@ -338,68 +273,54 @@ const viz = {
     },
 };
 
-const sv = {
-    colLabel: {
-        fontSize: "0.65rem", fontWeight: "700", color: "#64748b",
+/* ── Estilos de la visual del modal "Editar" ── */
+const em = {
+    /* Fila de tabla simulada */
+    tableRow: {
+        display: "flex", alignItems: "center", gap: "10px",
+        background: "#1e293b", borderRadius: "7px", padding: "8px 12px",
+    },
+    timeText: { flex: 1, fontSize: "0.72rem", color: "#cbd5e1", fontWeight: "600" },
+    slotsText: { fontSize: "0.68rem", color: "#64748b" },
+    editBtn: {
+        background: "#2563eb", color: "#fff", borderRadius: "5px",
+        padding: "4px 10px", fontSize: "0.68rem", fontWeight: "700",
+    },
+    /* Modal simulado */
+    modalSim: {
+        background: "#1e293b", borderRadius: "10px", padding: "14px",
+        display: "flex", flexDirection: "column", gap: "10px",
+        border: "1px solid #334155", textAlign: "left",
+    },
+    modalTitle: { fontSize: "0.82rem", fontWeight: "800", color: "#e2e8f0" },
+    modalSub: { fontSize: "0.65rem", color: "#64748b", marginTop: "-6px" },
+    section: { display: "flex", flexDirection: "column", gap: "8px" },
+    sectionLabel: {
+        fontSize: "0.6rem", fontWeight: "700", color: "#475569",
         textTransform: "uppercase", letterSpacing: "0.05em",
-        marginBottom: "4px", textAlign: "center",
     },
-    table: {
-        border: "1px solid #334155", borderRadius: "6px", overflow: "hidden",
+    timeRow: { display: "flex", gap: "8px" },
+    timeField: { flex: 1, display: "flex", flexDirection: "column", gap: "4px" },
+    fieldLabel: { fontSize: "0.6rem", color: "#475569" },
+    timeInput: {
+        background: "#0f172a", border: "1px solid #334155", borderRadius: "5px",
+        padding: "5px 8px", fontSize: "0.72rem", color: "#cbd5e1", fontWeight: "600",
     },
-    headerCell: {
-        background: "#1e3a5f", color: "#e2e8f0",
-        fontSize: "0.62rem", fontWeight: "700",
-        textAlign: "center", padding: "4px 2px",
+    slotsRow: { display: "flex", alignItems: "center", gap: "8px" },
+    slotBtn: {
+        background: "#0f172a", border: "1px solid #334155", borderRadius: "5px",
+        width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: "0.8rem", color: "#cbd5e1", fontWeight: "700",
     },
-    tdOld: {
-        padding: "5px 4px",
+    slotNum: { fontSize: "0.9rem", fontWeight: "800", color: "#e2e8f0", minWidth: "20px", textAlign: "center" },
+    slotLabel: { fontSize: "0.65rem", color: "#475569" },
+    modalFooter: { display: "flex", gap: "8px", justifyContent: "flex-end", paddingTop: "2px" },
+    cancelBtn: {
+        background: "transparent", border: "1px solid #334155", borderRadius: "6px",
+        padding: "5px 10px", fontSize: "0.68rem", color: "#64748b", fontWeight: "700",
     },
-    timeOld: {
-        fontSize: "0.58rem", fontWeight: "700", color: "#cbd5e1",
-        textAlign: "center", marginBottom: "3px",
-    },
-    nameOld: {
-        fontSize: "0.57rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.4,
-    },
-    slotOld: {
-        fontSize: "0.57rem", color: "#475569", textAlign: "center", lineHeight: 1.4,
-    },
-    tdNew: {
-        padding: "5px 3px",
-    },
-    boxNew: {
-        border: "1px solid #334155", borderRadius: "5px",
-        padding: "4px 3px", background: "#1e293b",
-    },
-    timeNew: {
-        fontSize: "0.58rem", fontWeight: "700", color: "#cbd5e1",
-        textAlign: "center", marginBottom: "3px",
-    },
-    nameNew: {
-        fontSize: "0.57rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.4,
-    },
-    slotNew: {
-        fontSize: "0.57rem", color: "#475569", textAlign: "center", lineHeight: 1.4,
-    },
-};
-
-/* ── Estilos visuales — botón exportar ── */
-const ev = {
-    btn: {
-        display: "inline-flex", alignItems: "center", gap: "6px",
-        background: "#2563eb", color: "#fff",
-        border: "1.5px solid #2563eb", borderRadius: "8px",
-        padding: "7px 12px", fontSize: "0.8rem", fontWeight: "700",
-    },
-    menu: {
-        background: "#ffffff", border: "1.5px solid #e2e8f0",
-        borderRadius: "8px", boxShadow: "0 4px 12px rgba(15,23,42,0.12)",
-        overflow: "hidden", minWidth: "110px",
-    },
-    item: {
-        display: "flex", alignItems: "center", gap: "8px",
-        padding: "9px 12px", fontSize: "0.78rem", fontWeight: "700",
-        color: "#1e293b",
+    saveBtn: {
+        background: "#2563eb", borderRadius: "6px",
+        padding: "5px 10px", fontSize: "0.68rem", color: "#fff", fontWeight: "700",
     },
 };
