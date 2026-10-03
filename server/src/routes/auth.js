@@ -62,7 +62,7 @@ router.post("/register", async (req, res) => {
         return res.status(400).json({ message: "El correo es requerido" });
     }
     if (!email.toLowerCase().trim().endsWith("@sig.systems")) {
-        return res.status(400).json({ message: "Solo se permiten correos @sig.systems" });
+        return res.status(400).json({ message: "Solo puedes usar el correo corporativo" });
     }
     if (!password || password.length < 6) {
         return res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
@@ -166,7 +166,7 @@ router.post("/forgot-password", async (req, res) => {
         const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
 
         if (!user) {
-            return res.status(404).json({ message: "No existe ninguna cuenta con ese correo" });
+            return res.json({ message: "Si el correo existe, recibirás un código" });
         }
 
         const code = String(Math.floor(100000 + Math.random() * 900000));
