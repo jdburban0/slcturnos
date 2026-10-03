@@ -2,9 +2,14 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { prisma } from "./lib/prisma.js";
 
-const ADMIN_PASSWORD   = process.env.SEED_ADMIN_PASSWORD   ?? "slc2025";
-const OPERATOR_CODE    = process.env.SEED_OPERATOR_CODE    ?? "SLC2025";
-const ADMIN_CODE       = process.env.SEED_ADMIN_CODE       ?? "SLCADMIN2025";
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+const OPERATOR_CODE  = process.env.SEED_OPERATOR_CODE;
+const ADMIN_CODE     = process.env.SEED_ADMIN_CODE;
+
+if (!ADMIN_PASSWORD || !OPERATOR_CODE || !ADMIN_CODE) {
+    console.error("❌ Faltan variables de entorno del seed. Define en .env:\n   SEED_ADMIN_PASSWORD\n   SEED_OPERATOR_CODE\n   SEED_ADMIN_CODE");
+    process.exit(1);
+}
 
 async function main() {
     const hash = await bcrypt.hash(ADMIN_PASSWORD, 10);
