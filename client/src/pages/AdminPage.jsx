@@ -5,8 +5,7 @@ import { useTheme } from "../context/ThemeContext.jsx";
 import { useSocket } from "../hooks/useSocket.js";
 import {
     getShifts, getRequests, deleteShift, deleteWeek, updateShift, closeWeek, reviewRequest,
-    getUsers, toggleUser, deleteUser, getRegisterCode, updateRegisterCode,
-    getAdminRegisterCode, updateAdminRegisterCode, changePassword, assignShift,
+    getUsers, toggleUser, deleteUser, changePassword, assignShift,
     getTransfers, reviewTransfer, removeAssignedOperator, removeManualAssignment, publishWeek, unarchiveWeek,
 } from "../api/index.js";
 
@@ -42,6 +41,7 @@ import AdminPublishTutorial, { useAdminTutorial } from "../components/AdminPubli
 import { usePushSubscription } from "../hooks/usePushSubscription.js";
 import PushPrompt from "../components/PushPrompt.jsx";
 import ChatPanel from "../components/ChatPanel.jsx";
+import InviteSection from "../components/InviteSection.jsx";
 
 const STATUS_LABEL = { OPEN: "Abierto", FULL: "Lleno", CLOSED: "Cerrado" };
 const STATUS_STYLE = {
@@ -296,14 +296,6 @@ function AdminPage() {
         if (el) setSliderStyle({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
     }, [activeTab]);
 
-    const [registerCode, setRegisterCode] = useState("");
-    const [newCode, setNewCode] = useState("");
-    const [codeVisible, setCodeVisible] = useState(false);
-    const [codeLoading, setCodeLoading] = useState(false);
-    const [adminRegisterCode, setAdminRegisterCode] = useState("");
-    const [newAdminCode, setNewAdminCode] = useState("");
-    const [adminCodeVisible, setAdminCodeVisible] = useState(false);
-    const [adminCodeLoading, setAdminCodeLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const [notifSignal, setNotifSignal] = useState(0);
     const [showChat, setShowChat] = useState(false);
@@ -364,17 +356,6 @@ function AdminPage() {
         document.addEventListener("mousedown", handleClick);
         return () => document.removeEventListener("mousedown", handleClick);
     }, [assignDropOpen]);
-
-    useEffect(() => {
-        if (activeTab === "settings" && user?.role === "admin") {
-            getRegisterCode(token)
-                .then(({ code }) => { setRegisterCode(code ?? ""); setNewCode(code ?? ""); })
-                .catch(() => {});
-            getAdminRegisterCode(token)
-                .then(({ code }) => { setAdminRegisterCode(code ?? ""); setNewAdminCode(code ?? ""); })
-                .catch(() => {});
-        }
-    }, [activeTab, token, user?.role]);
 
     useSocket(token, {
         "shifts:refresh": () => { loadShifts(); loadRequests(); },
@@ -519,28 +500,6 @@ function AdminPage() {
     }
 
 
-
-    async function handleSaveCode(e) {
-        e.preventDefault();
-        setCodeLoading(true);
-        try {
-            await updateRegisterCode(token, newCode);
-            setRegisterCode(newCode);
-            showToast("Código actualizado");
-        } catch (err) { showToast("Error", err.message); }
-        finally { setCodeLoading(false); }
-    }
-
-    async function handleSaveAdminCode(e) {
-        e.preventDefault();
-        setAdminCodeLoading(true);
-        try {
-            await updateAdminRegisterCode(token, newAdminCode);
-            setAdminRegisterCode(newAdminCode);
-            showToast("Código de admins actualizado");
-        } catch (err) { showToast("Error", err.message); }
-        finally { setAdminCodeLoading(false); }
-    }
 
     async function handleReviewTransfer(transferId, action, isDesistimiento = false) {
         try {
@@ -860,7 +819,7 @@ function AdminPage() {
                         <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
                             <button style={styles.modalCancel} onClick={() => setConfirmModal(null)}>Cancelar</button>
                             <button
-                                style={{ ...styles.modalSave, background: "var(--danger)" }}
+                                style={{ ...styles.modalSave, ...(confirmModal.tone !== "primary" && { background: "var(--danger)" }) }}
                                 onClick={() => { setConfirmModal(null); confirmModal.onConfirm(); }}
                             >
                                 {confirmModal.confirmLabel ?? "Eliminar"}
@@ -1074,7 +1033,7 @@ function AdminPage() {
                         { id: "shifts", label: "Turnos" },
                         { id: "users", label: "Operadores" },
                         ...(user?.role === "admin" ? [{ id: "leads", label: "Leads" }] : []),
-                        ...(user?.role === "admin" ? [{ id: "settings", label: "Ajustes" }] : []),
+                        ...((user?.role === "admin" || user?.role === "lead") ? [{ id: "invite", label: "Invitar" }] : []),
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -1498,132 +1457,15 @@ function AdminPage() {
                     </section>
                 )}
 
-                {activeTab === "settings" && user?.role === "admin" && (
-                    <section className="admin-section" style={styles.section}>
-                        <h2 style={styles.sectionTitle}>Ajustes del sistema</h2>
-
-                        <div style={styles.settingsGrid}>
-
-                            {/* Código operadores */}
-                            <div style={styles.settingsCard}>
-                                <div style={styles.settingsCardHeader}>
-                                    <div style={styles.settingsIconWrap}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p style={styles.settingsCardTitle}>Operadores</p>
-                                        <p style={styles.settingsCardSub}>Código de registro</p>
-                                    </div>
-                                </div>
-
-                                <p style={styles.settingsHint}>
-                                    Los operadores usan este código al registrarse. Cámbialo para revocar el acceso a nuevos registros.
-                                </p>
-
-                                <div style={styles.settingsCurrentRow}>
-                                    <span style={styles.settingsCurrentLabel}>Código activo</span>
-                                    <span style={styles.settingsCurrentCode}>
-                                        {codeVisible ? registerCode : "••••••••"}
-                                    </span>
-                                </div>
-
-                                <form style={styles.settingsForm} onSubmit={handleSaveCode}>
-                                    <div style={styles.codeRow}>
-                                        <input
-                                            type={codeVisible ? "text" : "password"}
-                                            style={styles.codeInput}
-                                            value={newCode}
-                                            onChange={(e) => setNewCode(e.target.value)}
-                                            required
-                                            minLength={4}
-                                            placeholder="Nuevo código"
-                                        />
-                                        <button type="button" style={styles.codeToggleBtn} onClick={() => setCodeVisible((v) => !v)}>
-                                            {codeVisible ? (
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
-                                                </svg>
-                                            ) : (
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                                </svg>
-                                            )}
-                                        </button>
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        style={{ ...styles.settingsSaveBtn, ...(codeLoading || newCode === registerCode || newCode.length < 4 ? styles.settingsSaveBtnDisabled : {}) }}
-                                        disabled={codeLoading || newCode === registerCode || newCode.length < 4}
-                                    >
-                                        {codeLoading ? "Guardando…" : "Guardar cambios"}
-                                    </button>
-                                </form>
-                            </div>
-
-                            {/* Código leads */}
-                            <div style={styles.settingsCard}>
-                                <div style={styles.settingsCardHeader}>
-                                    <div style={{ ...styles.settingsIconWrap, background: "rgba(139,92,246,0.12)", color: "#7c3aed" }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>
-                                            <path d="M16 11l2 2 4-4"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p style={styles.settingsCardTitle}>Leads</p>
-                                        <p style={styles.settingsCardSub}>Código de registro</p>
-                                    </div>
-                                </div>
-
-                                <p style={styles.settingsHint}>
-                                    Los leads usan este código al registrarse. No es necesario seleccionar grupo con este código.
-                                </p>
-
-                                <div style={styles.settingsCurrentRow}>
-                                    <span style={styles.settingsCurrentLabel}>Código activo</span>
-                                    <span style={styles.settingsCurrentCode}>
-                                        {adminCodeVisible ? adminRegisterCode : "••••••••"}
-                                    </span>
-                                </div>
-
-                                <form style={styles.settingsForm} onSubmit={handleSaveAdminCode}>
-                                    <div style={styles.codeRow}>
-                                        <input
-                                            type={adminCodeVisible ? "text" : "password"}
-                                            style={styles.codeInput}
-                                            value={newAdminCode}
-                                            onChange={(e) => setNewAdminCode(e.target.value)}
-                                            required
-                                            minLength={4}
-                                            placeholder="Nuevo código"
-                                        />
-                                        <button type="button" style={styles.codeToggleBtn} onClick={() => setAdminCodeVisible((v) => !v)}>
-                                            {adminCodeVisible ? (
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
-                                                </svg>
-                                            ) : (
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                                </svg>
-                                            )}
-                                        </button>
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        style={{ ...styles.settingsSaveBtn, ...(adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4 ? styles.settingsSaveBtnDisabled : {}) }}
-                                        disabled={adminCodeLoading || newAdminCode === adminRegisterCode || newAdminCode.length < 4}
-                                    >
-                                        {adminCodeLoading ? "Guardando…" : "Guardar cambios"}
-                                    </button>
-                                </form>
-                            </div>
-
-                        </div>
-                    </section>
+                {activeTab === "invite" && (user?.role === "admin" || user?.role === "lead") && (
+                    <InviteSection
+                        token={token}
+                        role={user?.role}
+                        showToast={showToast}
+                        sectionStyle={styles.section}
+                        titleStyle={styles.sectionTitle}
+                        confirm={(message, onConfirm, confirmLabel) => setConfirmModal({ message, onConfirm, confirmLabel, tone: "primary" })}
+                    />
                 )}
             </div>
 

@@ -239,6 +239,17 @@ exports.Prisma.PasswordResetTokenScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.InvitationScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  role: 'role',
+  tokenHash: 'tokenHash',
+  invitedById: 'invitedById',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -289,7 +300,8 @@ exports.Prisma.ModelName = {
   ShiftTransfer: 'ShiftTransfer',
   Notification: 'Notification',
   Setting: 'Setting',
-  PasswordResetToken: 'PasswordResetToken'
+  PasswordResetToken: 'PasswordResetToken',
+  Invitation: 'Invitation'
 };
 
 /**

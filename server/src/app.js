@@ -8,11 +8,11 @@ import shiftsRouter from "./routes/shifts.js";
 import requestsRouter from "./routes/requests.js";
 import notificationsRouter from "./routes/notifications.js";
 import usersRouter from "./routes/users.js";
-import settingsRouter from "./routes/settings.js";
 import transfersRouter from "./routes/transfers.js";
 import pushRouter from "./routes/push.js";
 import chatRouter from "./routes/chat.js";
 import passkeysRouter from "./routes/passkeys.js";
+import invitationsRouter from "./routes/invitations.js";
 
 dotenv.config();
 
@@ -53,10 +53,10 @@ app.use("/api/shifts", shiftsRouter);
 app.use("/api/requests", requestsRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/users", usersRouter);
-app.use("/api/settings", settingsRouter);
 app.use("/api/transfers", transfersRouter);
 app.use("/api/push", pushRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/passkeys", passkeysRouter);
+app.use("/api/invitations", invitationsRouter);
 
 export default app;

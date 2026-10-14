@@ -191,3 +191,16 @@ model PasswordResetToken {
 
   @@index([email])
 }
+
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  role        Role      @default(operator)
+  tokenHash   String    @unique
+  invitedById String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+}

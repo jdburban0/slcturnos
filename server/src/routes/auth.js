@@ -1,9 +1,11 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../lib/prisma.js";
 import { sendPasswordResetEmail } from "../lib/mailer.js";
+import { findValidInvitation } from "./invitations.js";
 
 const router = Router();
 
@@ -14,6 +16,38 @@ const loginLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
+
+// Solicitar código de restablecimiento: pocas veces por IP para evitar spam de correos
+const forgotLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { message: "Demasiadas solicitudes, espera 15 minutos" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Ingresar el código: limita la fuerza bruta del código de 6 dígitos
+const resetLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { message: "Demasiados intentos, espera 15 minutos" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { message: "Demasiados intentos, espera 15 minutos" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Mínimo 8 caracteres, al menos una mayúscula y un número
+function isStrongPassword(pwd) {
+    return typeof pwd === "string" && pwd.length >= 8 && /[A-Z]/.test(pwd) && /\d/.test(pwd);
+}
+
 const SECRET = process.env.JWT_SECRET;
 if (!SECRET) throw new Error("JWT_SECRET no está definido en las variables de entorno");
 
@@ -52,61 +86,63 @@ router.post("/login", loginLimiter, async (req, res) => {
     }
 });
 
-router.post("/register", async (req, res) => {
-    const { name, email, password, code, group } = req.body;
+router.post("/register", registerLimiter, async (req, res) => {
+    const { token, name, email, password, group } = req.body ?? {};
 
-    if (!name || !name.trim()) {
+    if (!token) {
+        return res.status(400).json({ message: "Necesitas una invitación para registrarte" });
+    }
+    if (!name || !String(name).trim()) {
         return res.status(400).json({ message: "El nombre es requerido" });
     }
-    if (!email || !email.trim()) {
-        return res.status(400).json({ message: "El correo es requerido" });
-    }
-    if (!email.toLowerCase().trim().endsWith("@sig.systems")) {
-        return res.status(400).json({ message: "Solo puedes usar el correo corporativo" });
-    }
-    if (!password || password.length < 6) {
-        return res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
-    }
-    if (!code || !code.trim()) {
-        return res.status(400).json({ message: "El código de acceso es requerido" });
+    if (!isStrongPassword(password)) {
+        return res.status(400).json({ message: "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número" });
     }
 
     try {
-        const [operatorSetting, adminSetting] = await Promise.all([
-            prisma.setting.findUnique({ where: { key: "register_code" } }),
-            prisma.setting.findUnique({ where: { key: "admin_register_code" } }),
-        ]);
-
-        const isLeadCode = adminSetting && code.trim() === adminSetting.value;
-        const isOperatorCode = operatorSetting && code.trim() === operatorSetting.value;
-
-        if (!isLeadCode && !isOperatorCode) {
-            return res.status(403).json({ message: "Código de acceso incorrecto" });
+        const invitation = await findValidInvitation(token);
+        if (!invitation) {
+            return res.status(400).json({ message: "Esta invitación no es válida o ya expiró. Pide una nueva a tu supervisor." });
         }
 
-        const role = isLeadCode ? "lead" : "operator";
+        const inviteEmail = invitation.email.toLowerCase();
+        if (email && String(email).toLowerCase().trim() !== inviteEmail) {
+            return res.status(400).json({ message: "El correo no coincide con el de la invitación" });
+        }
+        if (!inviteEmail.endsWith("@sig.systems")) {
+            return res.status(400).json({ message: "Solo puedes usar el correo corporativo" });
+        }
 
-        if (role === "operator" && !group) {
+        const role = invitation.role === "lead" ? "lead" : "operator";
+        if (role === "operator" && group !== "E1" && group !== "E2") {
             return res.status(400).json({ message: "Debes seleccionar tu grupo (E1 o E2)" });
         }
-        if (group && group !== "E1" && group !== "E2") {
-            return res.status(400).json({ message: "Grupo inválido" });
-        }
 
-        const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+        const existing = await prisma.user.findUnique({ where: { email: inviteEmail } });
         if (existing) {
             return res.status(409).json({ message: "Ya existe una cuenta con ese correo" });
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
-        const user = await prisma.user.create({
-            data: {
-                name: name.trim(),
-                email: email.toLowerCase().trim(),
-                passwordHash,
-                role,
-                ...(role === "operator" && group && { group }),
-            },
+
+        const user = await prisma.$transaction(async (tx) => {
+            // Marcar la invitación como usada solo si sigue libre (evita doble uso simultáneo)
+            const { count } = await tx.invitation.updateMany({
+                where: { id: invitation.id, usedAt: null, expiresAt: { gt: new Date() } },
+                data: { usedAt: new Date() },
+            });
+            if (count !== 1) {
+                throw Object.assign(new Error("Esta invitación ya fue usada"), { status: 400 });
+            }
+            return tx.user.create({
+                data: {
+                    name: String(name).trim(),
+                    email: inviteEmail,
+                    passwordHash,
+                    role,
+                    ...(role === "operator" && { group }),
+                },
+            });
         });
 
         res.status(201).json({
@@ -114,6 +150,7 @@ router.post("/register", async (req, res) => {
             user: { id: user.id, name: user.name, email: user.email, role: user.role, tutorialDone: user.tutorialDone },
         });
     } catch (err) {
+        if (err.status === 400) return res.status(400).json({ message: err.message });
         console.error(err);
         res.status(500).json({ message: "Error del servidor" });
     }
@@ -156,7 +193,7 @@ router.patch("/change-password", async (req, res) => {
     }
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", forgotLimiter, async (req, res) => {
     const { email } = req.body;
     if (!email) {
         return res.status(400).json({ message: "El correo es requerido" });
@@ -169,7 +206,7 @@ router.post("/forgot-password", async (req, res) => {
             return res.json({ message: "Si el correo existe, recibirás un código" });
         }
 
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = String(crypto.randomInt(100000, 1000000));
 
         await prisma.passwordResetToken.deleteMany({ where: { email: email.toLowerCase() } });
         await prisma.passwordResetToken.create({
@@ -189,7 +226,7 @@ router.post("/forgot-password", async (req, res) => {
     }
 });
 
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", resetLimiter, async (req, res) => {
     const { email, code, newPassword } = req.body;
 
     if (!email || !code || !newPassword) {

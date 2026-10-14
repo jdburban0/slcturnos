@@ -43,16 +43,9 @@ io.on("connection", (socket) => {
 });
 
 
-// Warm up DB connection and ensure default settings exist
+// Warm up DB connection
 prisma.$queryRaw`SELECT 1`
-    .then(async () => {
-        console.log("[DB] Conexión lista");
-        await prisma.setting.upsert({
-            where: { key: "admin_register_code" },
-            update: {},
-            create: { key: "admin_register_code", value: "SLCADMIN2025" },
-        });
-    })
+    .then(() => console.log("[DB] Conexión lista"))
     .catch((err) => console.error("[DB] Error warmup:", err.message));
 
 

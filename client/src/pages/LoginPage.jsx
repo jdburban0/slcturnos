@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { login, register, forgotPassword, resetPassword, getPasskeyLoginOptions, verifyPasskeyLogin } from "../api/index.js";
+import { login, forgotPassword, resetPassword, getPasskeyLoginOptions, verifyPasskeyLogin } from "../api/index.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { startAuthentication, WebAuthnAbortService } from "@simplewebauthn/browser";
@@ -10,13 +10,9 @@ function LoginPage() {
     const navigate = useNavigate();
     const { login: saveAuth } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const [mode, setMode] = useState("login"); // "login" | "register" | "forgot" | "reset"
-    const [name, setName] = useState("");
+    const [mode, setMode] = useState("login"); // "login" | "forgot" | "reset"
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [accessCode, setAccessCode] = useState("");
-    const [group, setGroup] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [leaving, setLeaving] = useState(false);
@@ -74,12 +70,8 @@ function LoginPage() {
         setTimeout(() => {
             setMode(newMode);
             setError("");
-            setName("");
             setEmail("");
             setPassword("");
-            setConfirmPassword("");
-            setAccessCode("");
-            setGroup("");
             setResetCode("");
             setResetPwd("");
             setResetConfirm("");
@@ -116,18 +108,6 @@ function LoginPage() {
         e.preventDefault();
         setError("");
 
-        if (mode === "register") {
-            if (!email.toLowerCase().endsWith("@sig.systems")) {
-                return setError("Solo puedes usar el correo corporativo");
-            }
-            if (password !== confirmPassword) {
-                return setError("Las contraseñas no coinciden");
-            }
-            if (password.length < 6) {
-                return setError("La contraseña debe tener al menos 6 caracteres");
-            }
-        }
-
         if (mode === "reset") {
             if (!resetCode.trim()) {
                 return setError("Ingresa el código recibido por correo");
@@ -145,9 +125,6 @@ function LoginPage() {
             if (mode === "login") {
                 WebAuthnAbortService.cancelCeremony();
                 const { token, user } = await login(email, password);
-                afterAuth(token, user);
-            } else if (mode === "register") {
-                const { token, user } = await register(name, email, password, accessCode, group);
                 afterAuth(token, user);
             } else if (mode === "forgot") {
                 await forgotPassword(email);
@@ -219,28 +196,10 @@ function LoginPage() {
                     <span style={styles.logoSub}>Turnos</span>
                 </div>
 
-                {/* Tabs / Title */}
-                {(isForgot || isReset) ? (
-                    <div style={styles.resetTitle}>Restablecer contraseña</div>
-                ) : (
-                    <div style={styles.tabs}>
-                        <div style={{ ...styles.tabPill, transform: `translateX(${isLogin ? "0%" : "100%"})` }} />
-                        <button
-                            style={{ ...styles.tab, ...(isLogin ? styles.tabActive : {}) }}
-                            onClick={() => switchMode("login")}
-                            type="button"
-                        >
-                            Iniciar sesión
-                        </button>
-                        <button
-                            style={{ ...styles.tab, ...(!isLogin ? styles.tabActive : {}) }}
-                            onClick={() => switchMode("register")}
-                            type="button"
-                        >
-                            Registrarse
-                        </button>
-                    </div>
-                )}
+                {/* Title */}
+                <div style={styles.resetTitle}>
+                    {(isForgot || isReset) ? "Restablecer contraseña" : "Iniciar sesión"}
+                </div>
 
                 <div key={fieldKey} className={formAnim}>
                     <form style={styles.form} onSubmit={handleSubmit}>
@@ -321,23 +280,9 @@ function LoginPage() {
                             </>
                         )}
 
-                        {/* ── login / register modes ── */}
+                        {/* ── login mode ── */}
                         {!isForgot && !isReset && (
                             <>
-                                {!isLogin && (
-                                    <div key={`name-${fieldKey}`} className="anim-field" style={styles.field}>
-                                        <label style={styles.label}>Nombre completo</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Tu nombre"
-                                            className="input-field"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                )}
-
                                 <div key={`email-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: isLogin ? "0ms" : "40ms" }}>
                                     <label style={styles.label}>Correo</label>
                                     <input
@@ -380,59 +325,6 @@ function LoginPage() {
                                         </span>
                                     )}
                                 </div>
-
-                                {!isLogin && (
-                                    <div key={`confirm-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "80ms" }}>
-                                        <label style={styles.label}>Confirmar contraseña</label>
-                                        <div style={styles.pwdWrapper}>
-                                            <input
-                                                type={showPassword ? "text" : "password"}
-                                                placeholder="••••••••"
-                                                className="input-field"
-                                                style={{ paddingRight: "42px" }}
-                                                value={confirmPassword}
-                                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                                required
-                                            />
-                                            <button type="button" style={styles.eyeBtn} onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
-                                                {showPassword
-                                                    ? <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-                                                    : <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                                                }
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {!isLogin && (
-                                    <div key={`group-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "120ms" }}>
-                                        <label style={styles.label}>Grupo <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>(solo operadores)</span></label>
-                                        <select
-                                            className="input-field"
-                                            style={{ color: group ? "var(--text-main)" : "var(--text-muted)" }}
-                                            value={group}
-                                            onChange={(e) => setGroup(e.target.value)}
-                                        >
-                                            <option value="">Sin grupo</option>
-                                            <option value="E1">E1</option>
-                                            <option value="E2">E2</option>
-                                        </select>
-                                    </div>
-                                )}
-
-                                {!isLogin && (
-                                    <div key={`code-${fieldKey}`} className="anim-field" style={{ ...styles.field, animationDelay: "200ms" }}>
-                                        <label style={styles.label}>Código de acceso</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Código proporcionado por el administrador"
-                                            className="input-field"
-                                            value={accessCode}
-                                            onChange={(e) => setAccessCode(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                )}
                             </>
                         )}
 

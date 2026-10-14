@@ -4,6 +4,7 @@ import { ThemeProvider } from "./context/ThemeContext.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
 
 function ProtectedRoute({ children, allowedRoles }) {
     const { user, token, loading } = useAuth();
@@ -47,6 +48,7 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+            <Route path="/registro" element={<RegisterPage />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

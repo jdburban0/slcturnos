@@ -3,11 +3,9 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./lib/prisma.js";
 
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
-const OPERATOR_CODE  = process.env.SEED_OPERATOR_CODE;
-const ADMIN_CODE     = process.env.SEED_ADMIN_CODE;
 
-if (!ADMIN_PASSWORD || !OPERATOR_CODE || !ADMIN_CODE) {
-    console.error("❌ Faltan variables de entorno del seed. Define en .env:\n   SEED_ADMIN_PASSWORD\n   SEED_OPERATOR_CODE\n   SEED_ADMIN_CODE");
+if (!ADMIN_PASSWORD) {
+    console.error("❌ Falta la variable de entorno del seed. Define en .env:\n   SEED_ADMIN_PASSWORD");
     process.exit(1);
 }
 
@@ -28,23 +26,10 @@ async function main() {
         console.log(`✓ ${u.name} (${u.role})`);
     }
 
-    await prisma.setting.upsert({
-        where: { key: "register_code" },
-        update: {},
-        create: { key: "register_code", value: OPERATOR_CODE },
-    });
-    await prisma.setting.upsert({
-        where: { key: "admin_register_code" },
-        update: {},
-        create: { key: "admin_register_code", value: ADMIN_CODE },
-    });
-    console.log(`✓ Código operadores: ${OPERATOR_CODE}`);
-    console.log(`✓ Código admins:     ${ADMIN_CODE}`);
-
     console.log("\n✅ Seed completado.");
     console.log("   Admin: admin@slc.com");
     console.log("   Lead:  lead@slc.com");
-    console.log("   (Contraseña y códigos definidos en .env)");
+    console.log("   (Contraseña definida en .env; nuevos usuarios se invitan desde el panel)");
 }
 
 main()

@@ -24,40 +24,40 @@ export async function login(email, password) {
     );
 }
 
-export async function register(name, email, password, code, group) {
+export async function register({ token, name, email, password, group }) {
     return handle(
         await fetch(`${BASE}/api/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password, code, group }),
+            body: JSON.stringify({ token, name, email, password, group }),
         })
     );
 }
 
-export async function getRegisterCode(token) {
-    return handle(await fetch(`${BASE}/api/settings/register-code`, { headers: headers(token) }));
+// Invitaciones
+export async function verifyInvitation(inviteToken) {
+    return handle(await fetch(`${BASE}/api/invitations/verify?token=${encodeURIComponent(inviteToken)}`));
 }
 
-export async function updateRegisterCode(token, code) {
+export async function getInvitations(token) {
+    return handle(await fetch(`${BASE}/api/invitations`, { headers: headers(token) }));
+}
+
+export async function createInvitation(token, email, role) {
     return handle(
-        await fetch(`${BASE}/api/settings/register-code`, {
-            method: "PATCH",
+        await fetch(`${BASE}/api/invitations`, {
+            method: "POST",
             headers: headers(token),
-            body: JSON.stringify({ code }),
+            body: JSON.stringify({ email, role }),
         })
     );
 }
 
-export async function getAdminRegisterCode(token) {
-    return handle(await fetch(`${BASE}/api/settings/admin-register-code`, { headers: headers(token) }));
-}
-
-export async function updateAdminRegisterCode(token, code) {
+export async function revokeInvitation(token, id) {
     return handle(
-        await fetch(`${BASE}/api/settings/admin-register-code`, {
-            method: "PATCH",
+        await fetch(`${BASE}/api/invitations/${id}`, {
+            method: "DELETE",
             headers: headers(token),
-            body: JSON.stringify({ code }),
         })
     );
 }

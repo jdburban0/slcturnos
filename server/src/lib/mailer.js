@@ -423,3 +423,61 @@ export async function sendTransferOutcomeEmail({ name, email, shiftTitle, shiftD
         console.error(`[Mailer] Error enviando resultado de ${type}:`, err.message);
     }
 }
+
+// ─── Invitaciones ─────────────────────────────────────────────────────────────
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+/**
+ * Envía la invitación de registro. Devuelve true si el correo se envió.
+ * Si no hay RESEND_API_KEY (entorno local sin correo), imprime el enlace en consola.
+ */
+export async function sendInvitationEmail({ email, role, inviterName, link }) {
+    if (!process.env.RESEND_API_KEY) {
+        console.log(`[Mailer] (sin RESEND_API_KEY) Enlace de invitación para ${email}: ${link}`);
+        return true;
+    }
+
+    const isLead = role === "lead";
+    const roleLabel = isLead ? "Lead Supervisor" : "Operador";
+
+    const html = `
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#eef4ff;border-radius:12px;">
+            <h2 style="color:#0f172a;margin:0 0 8px;">Te invitaron a SLC Turnos</h2>
+            <p style="color:#475569;margin:0 0 20px;">
+                <strong>${escapeHtml(inviterName)}</strong> te invitó a unirte a SLC Turnos como
+                <strong>${roleLabel}</strong>.
+            </p>
+            <p style="margin:0 0 20px;">
+                <a href="${escapeHtml(link)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:0.95rem;">Crear mi cuenta</a>
+            </p>
+            <p style="color:#475569;font-size:0.85rem;margin:0 0 8px;">Este enlace es personal y expira en <strong>24 horas</strong>.</p>
+            <p style="color:#94a3b8;font-size:0.78rem;margin:16px 0 0;">Si no esperabas esta invitación, ignora este mensaje. — SLC Turnos</p>
+        </div>
+    `;
+
+    try {
+        const { error } = await getResend().emails.send({
+            from: FROM,
+            to: email,
+            subject: `Invitación a SLC Turnos (${roleLabel})`,
+            html,
+        });
+        if (error) {
+            console.error("[Mailer] Error enviando invitación:", JSON.stringify(error));
+            return false;
+        }
+        console.log(`[Mailer] Invitación (${role}) enviada a ${email}`);
+        return true;
+    } catch (err) {
+        console.error("[Mailer] Error enviando invitación:", err.message);
+        return false;
+    }
+}
