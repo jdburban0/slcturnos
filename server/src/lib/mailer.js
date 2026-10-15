@@ -3,6 +3,15 @@ import { prisma } from "./prisma.js";
 
 const FROM = "SLC Turnos <noreply@slcturnos.online>";
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 let _resend = null;
 function getResend() {
     if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
@@ -62,7 +71,7 @@ async function flushShiftResultEmail({ to, name, shifts }) {
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#eef4ff;border-radius:12px;">
             <h2 style="color:#0f172a;margin:0 0 8px;">Resultado de tus solicitudes</h2>
-            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, aquí está el resultado de tus solicitudes de turno.</p>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${escapeHtml(name)}</strong>, aquí está el resultado de tus solicitudes de turno.</p>
             ${rows}
             <p style="color:#94a3b8;font-size:0.78rem;margin:16px 0 0;">— SLC Turnos</p>
         </div>
@@ -85,7 +94,7 @@ export async function sendAssignmentEmail({ name, email, shiftTitle, shiftDate, 
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#eef4ff;border-radius:12px;">
             <h2 style="color:#0f172a;margin:0 0 8px;">Asignación de turno</h2>
-            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, has sido asignado al siguiente turno:</p>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${escapeHtml(name)}</strong>, has sido asignado al siguiente turno:</p>
             <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #bfdbfe;margin-bottom:20px;">
                 <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
                 <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
@@ -117,7 +126,7 @@ export async function sendWeeklyScheduleEmail({ operators, imageBase64, weekLabe
     // Construir todos los emails primero
     const emails = operators.map((op) => {
         const paragraphs = bodyMsg
-            .replace(/\[nombre\]/gi, op.name)
+            .replace(/\[nombre\]/gi, escapeHtml(op.name))
             .split(/\n+/)
             .filter(Boolean)
             .map((p) => `<p style="margin:0 0 16px;font-size:1rem;color:#0f172a;line-height:1.6;">${p}</p>`)
@@ -173,7 +182,7 @@ export async function sendNewShiftEmail({ operators, shiftTitle, shiftDate, star
         html: `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
                 <h2 style="color:#0f172a;margin:0 0 8px;">Nuevo cupo disponible</h2>
-                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${op.name}</strong>, hay un cupo disponible para solicitar.</p>
+                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${escapeHtml(op.name)}</strong>, hay un cupo disponible para solicitar.</p>
                 <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
                     <p style="margin:0 0 4px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
                     <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
@@ -208,7 +217,7 @@ export async function sendPasswordResetEmail({ email, name, code }) {
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
             <h2 style="color:#0f172a;margin:0 0 8px;">Restablecer contraseña</h2>
-            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, recibimos una solicitud para restablecer tu contraseña.</p>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${escapeHtml(name)}</strong>, recibimos una solicitud para restablecer tu contraseña.</p>
             <div style="background:#ffffff;border-radius:8px;padding:24px;border:1px solid #e2e8f0;margin-bottom:20px;text-align:center;">
                 <p style="margin:0 0 8px;color:#475569;font-size:0.9rem;">Tu código de verificación es:</p>
                 <p style="margin:0;font-size:2.5rem;font-weight:700;letter-spacing:0.25em;color:#0f172a;">${code}</p>
@@ -285,7 +294,7 @@ async function _flushAdminPendingDigest(admins) {
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
                 <h2 style="color:#0f172a;margin:0 0 8px;">Solicitudes pendientes</h2>
                 <p style="color:#475569;margin:0 0 20px;">
-                    Hola <strong>${admin.name}</strong>, hay
+                    Hola <strong>${escapeHtml(admin.name)}</strong>, hay
                     <strong style="color:#2563eb;">${count} solicitud${count !== 1 ? "es" : ""} de turno</strong>
                     pendiente${count !== 1 ? "s" : ""} de revisión en SLC Turnos.
                 </p>
@@ -328,13 +337,13 @@ export async function sendAdminTransferAlertEmail({ admins, operatorName, shiftT
         const html = `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f8fafc;border-radius:12px;">
                 <h2 style="color:#0f172a;margin:0 0 8px;">${isTransfer ? "Solicitud de traspaso" : "Solicitud de desistimiento"}</h2>
-                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${admin.name}</strong>, hay una solicitud pendiente que requiere tu revisión.</p>
+                <p style="color:#475569;margin:0 0 20px;">Hola <strong>${escapeHtml(admin.name)}</strong>, hay una solicitud pendiente que requiere tu revisión.</p>
 
                 <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
-                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Operador:</strong> ${operatorName}</p>
-                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Turno:</strong> ${shiftTitle}</p>
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Operador:</strong> ${escapeHtml(operatorName)}</p>
+                    <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Turno:</strong> ${escapeHtml(shiftTitle)}</p>
                     <p style="margin:0 0 6px;color:#0f172a;font-size:0.95rem;"><strong>Fecha:</strong> ${shiftDate}</p>
-                    ${isTransfer ? `<p style="margin:0;color:#0f172a;font-size:0.95rem;"><strong>Ceder a:</strong> ${toName}</p>` : ""}
+                    ${isTransfer ? `<p style="margin:0;color:#0f172a;font-size:0.95rem;"><strong>Ceder a:</strong> ${escapeHtml(toName)}</p>` : ""}
                 </div>
 
                 <p style="color:#475569;font-size:0.9rem;">Ingresa a SLC Turnos para aprobar o rechazar la solicitud.</p>
@@ -362,7 +371,7 @@ export async function sendShiftReminderEmail({ name, email, shiftTitle, shiftDat
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f0f9ff;border-radius:12px;">
             <h2 style="color:#0f172a;margin:0 0 8px;">Recordatorio de turno</h2>
-            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, tienes un turno programado para mañana:</p>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${escapeHtml(name)}</strong>, tienes un turno programado para mañana:</p>
             <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #bae6fd;margin-bottom:20px;">
                 <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
                 <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
@@ -400,15 +409,15 @@ export async function sendTransferOutcomeEmail({ name, email, shiftTitle, shiftD
         : `Desistimiento aprobado — ${shiftTitle}`;
 
     const bodyMsg = isTransfer
-        ? `Tu traspaso del turno <strong>${shiftTitle}</strong> a <strong>${toName}</strong> fue aprobado. Ya no tienes este turno asignado.`
-        : `Tu solicitud de desistimiento del turno <strong>${shiftTitle}</strong> fue aprobada. Ya no tienes este turno asignado.`;
+        ? `Tu traspaso del turno <strong>${escapeHtml(shiftTitle)}</strong> a <strong>${escapeHtml(toName)}</strong> fue aprobado. Ya no tienes este turno asignado.`
+        : `Tu solicitud de desistimiento del turno <strong>${escapeHtml(shiftTitle)}</strong> fue aprobada. Ya no tienes este turno asignado.`;
 
     const html = `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#fef2f2;border-radius:12px;">
             <h2 style="color:#0f172a;margin:0 0 8px;">${isTransfer ? "Traspaso aprobado" : "Desistimiento aprobado"}</h2>
-            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${name}</strong>, ${bodyMsg}</p>
+            <p style="color:#475569;margin:0 0 20px;">Hola <strong>${escapeHtml(name)}</strong>, ${bodyMsg}</p>
             <div style="background:#ffffff;border-radius:8px;padding:16px;border:1px solid #fecaca;margin-bottom:20px;">
-                <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${shiftTitle}</p>
+                <p style="margin:0 0 6px;font-weight:700;color:#0f172a;font-size:1rem;">${escapeHtml(shiftTitle)}</p>
                 <p style="margin:0 0 4px;color:#475569;font-size:0.9rem;">${shiftDate}</p>
                 <p style="margin:0;color:#475569;font-size:0.9rem;">${startTime} – ${endTime}</p>
             </div>
@@ -425,15 +434,6 @@ export async function sendTransferOutcomeEmail({ name, email, shiftTitle, shiftD
 }
 
 // ─── Invitaciones ─────────────────────────────────────────────────────────────
-
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
 
 /**
  * Envía la invitación de registro. Devuelve true si el correo se envió.

@@ -89,6 +89,9 @@ router.patch("/:id/toggle", requireAuth, requireRole("admin", "lead"), async (re
     try {
         const current = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!current) return res.status(404).json({ message: "Usuario no encontrado" });
+        if (req.user.role === "lead" && current.role !== "operator") {
+            return res.status(403).json({ message: "Sin permisos suficientes" });
+        }
 
         const user = await prisma.user.update({
             where: { id: req.params.id },
