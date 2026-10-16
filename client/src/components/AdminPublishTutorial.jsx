@@ -8,7 +8,8 @@ export function useAdminTutorial() {
 
     useEffect(() => {
         if (!user) return;
-        if ((user.role === "admin" || user.role === "lead") && !user.tutorialDone) setShow(true);
+        // Por ahora solo admin, el tutorial de lead se agregará después
+        if (user.role === "admin" && !user.tutorialDone) setShow(true);
     }, [user?.id]);
 
     async function complete() {
@@ -34,7 +35,7 @@ export default function AdminPublishTutorial({ onComplete }) {
         return () => clearTimeout(t);
     }, [step]);
 
-    const STEPS = 0;
+    const STEPS = 2;
     const isLast = step === STEPS;
 
     return (
@@ -52,14 +53,42 @@ export default function AdminPublishTutorial({ onComplete }) {
 
                 {step === 0 && (
                     <>
-                        <h2 style={styles.title}>Nuevo botón "Editar" en turnos</h2>
+                        <h2 style={styles.title}>Ya no hay registro libre</h2>
                         <p style={styles.desc}>
-                            Los botones <strong>Cupos</strong> y <strong>Horario</strong> se unieron en uno solo.
-                            Haz clic en <strong>Editar</strong> para modificar el rango de horas y los cupos
-                            de cualquier turno desde un mismo lugar.
+                            Los operadores <strong>ya no pueden registrarse</strong> entrando al enlace de la
+                            plataforma con un código de acceso. Ese código compartido desapareció.
+                            Ahora cada persona necesita una <strong>invitación personal</strong> que tú envías.
                         </p>
                         <div style={styles.visualBox}>
-                            <EditModalVisual />
+                            <BeforeAfterVisual />
+                        </div>
+                    </>
+                )}
+
+                {step === 1 && (
+                    <>
+                        <h2 style={styles.title}>Invita desde la pestaña "Invitar"</h2>
+                        <p style={styles.desc}>
+                            Escribe el correo corporativo de la persona, elige si es
+                            <strong> operador</strong> o <strong>lead</strong>, y listo: el sistema le envía
+                            el enlace de registro por correo automáticamente.
+                        </p>
+                        <div style={styles.visualBox}>
+                            <InviteFormVisual />
+                        </div>
+                    </>
+                )}
+
+                {step === 2 && (
+                    <>
+                        <h2 style={styles.title}>Así le llega al operador</h2>
+                        <p style={styles.desc}>
+                            Recibe un correo con un botón para crear su cuenta. El enlace es
+                            <strong> personal</strong> y <strong>expira en 24 horas</strong>. Si no lo usa a
+                            tiempo, puedes revocarlo y enviarle uno nuevo.
+                        </p>
+                        <div style={styles.visualBox}>
+                            <InviteEmailVisual />
                         </div>
                     </>
                 )}
@@ -93,56 +122,74 @@ export default function AdminPublishTutorial({ onComplete }) {
     );
 }
 
-/* ── Visual: simulación del botón Editar y el modal ── */
+/* ── Visual: antes (código de acceso) vs ahora (invitación) ── */
 
-function EditModalVisual() {
+function BeforeAfterVisual() {
     return (
         <div style={viz.card}>
-            {/* Fila de tabla simulada */}
-            <div style={em.tableRow}>
-                <span style={em.timeText}>7:30am – 4:30pm</span>
-                <span style={em.slotsText}>3 cupos</span>
-                <div style={em.editBtn}>Editar</div>
+            <div style={ba.row}>
+                <span style={ba.oldLabel}>Antes</span>
+                <div style={ba.oldBox}>
+                    <div style={em.fieldLabel}>Código de acceso</div>
+                    <div style={{ ...em.timeInput, color: "#64748b" }}>SLCADMIN2025</div>
+                </div>
+                <span style={ba.strike}>✕</span>
             </div>
-            {/* Flecha hacia abajo */}
             <div style={{ display: "flex", justifyContent: "center" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/>
                 </svg>
             </div>
-            {/* Modal simulado */}
+            <div style={ba.row}>
+                <span style={ba.newLabel}>Ahora</span>
+                <div style={ba.newBox}>
+                    <div style={em.fieldLabel}>Correo invitado</div>
+                    <div style={{ ...em.timeInput, color: "#93c5fd" }}>juan.burbano@sig.systems</div>
+                </div>
+                <span style={ba.check}>✓</span>
+            </div>
+        </div>
+    );
+}
+
+/* ── Visual: mini formulario de invitación ── */
+
+function InviteFormVisual() {
+    return (
+        <div style={viz.card}>
             <div style={em.modalSim}>
-                <div style={em.modalTitle}>Editar turno</div>
-                <div style={em.modalSub}>Diurno - Lunes · lun., 1 sep.</div>
-                {/* Sección horario */}
-                <div style={em.section}>
-                    <div style={em.sectionLabel}>Horario</div>
-                    <div style={em.timeRow}>
-                        <div style={em.timeField}>
-                            <span style={em.fieldLabel}>Inicio</span>
-                            <div style={em.timeInput}>07:30</div>
-                        </div>
-                        <div style={em.timeField}>
-                            <span style={em.fieldLabel}>Fin</span>
-                            <div style={em.timeInput}>16:30</div>
-                        </div>
-                    </div>
+                <div style={em.modalTitle}>Nueva invitación</div>
+                <div style={em.sectionLabel}>Rol</div>
+                <div style={inv.segment}>
+                    <div style={inv.segmentActive}>Operador</div>
+                    <div style={inv.segmentInactive}>Lead</div>
                 </div>
-                {/* Sección cupos */}
-                <div style={{ ...em.section, borderTop: "1px solid #1e293b", paddingTop: "10px" }}>
-                    <div style={em.sectionLabel}>Cupos</div>
-                    <div style={em.slotsRow}>
-                        <div style={em.slotBtn}>−</div>
-                        <span style={em.slotNum}>3</span>
-                        <div style={em.slotBtn}>+</div>
-                        <span style={em.slotLabel}>cupos</span>
-                    </div>
-                </div>
-                {/* Footer */}
+                <div style={em.sectionLabel}>Correo del operador</div>
+                <div style={em.timeInput}>juan.burbano@sig.systems</div>
                 <div style={em.modalFooter}>
-                    <div style={em.cancelBtn}>Cancelar</div>
-                    <div style={em.saveBtn}>Guardar cambios</div>
+                    <div style={em.saveBtn}>Invitar operador</div>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Visual: correo de invitación tal como lo recibe el operador ── */
+
+function InviteEmailVisual() {
+    return (
+        <div style={viz.card}>
+            <div style={mail.chrome}>
+                <span style={mail.chromeDot} />
+                <span style={{ ...mail.chromeDot, background: "#475569" }} />
+                <span style={{ ...mail.chromeDot, background: "#475569" }} />
+                <span style={mail.subject}>Invitación a SLC Turnos (Operador)</span>
+            </div>
+            <div style={mail.body}>
+                <p style={mail.heading}>Te invitaron a SLC Turnos</p>
+                <p style={mail.text}><strong>Christian Perlaza</strong> te invitó a unirte a SLC Turnos como <strong>Operador</strong>.</p>
+                <div style={mail.btn}>Crear mi cuenta</div>
+                <p style={mail.hint}>Este enlace es personal y expira en <strong>24 horas</strong>.</p>
             </div>
         </div>
     );
@@ -273,54 +320,84 @@ const viz = {
     },
 };
 
-/* ── Estilos de la visual del modal "Editar" ── */
+/* ── Estilos compartidos de modal simulado ── */
 const em = {
-    /* Fila de tabla simulada */
-    tableRow: {
-        display: "flex", alignItems: "center", gap: "10px",
-        background: "#1e293b", borderRadius: "7px", padding: "8px 12px",
-    },
-    timeText: { flex: 1, fontSize: "0.72rem", color: "#cbd5e1", fontWeight: "600" },
-    slotsText: { fontSize: "0.68rem", color: "#64748b" },
-    editBtn: {
-        background: "#2563eb", color: "#fff", borderRadius: "5px",
-        padding: "4px 10px", fontSize: "0.68rem", fontWeight: "700",
-    },
-    /* Modal simulado */
     modalSim: {
         background: "#1e293b", borderRadius: "10px", padding: "14px",
         display: "flex", flexDirection: "column", gap: "10px",
         border: "1px solid #334155", textAlign: "left",
     },
     modalTitle: { fontSize: "0.82rem", fontWeight: "800", color: "#e2e8f0" },
-    modalSub: { fontSize: "0.65rem", color: "#64748b", marginTop: "-6px" },
-    section: { display: "flex", flexDirection: "column", gap: "8px" },
     sectionLabel: {
         fontSize: "0.6rem", fontWeight: "700", color: "#475569",
         textTransform: "uppercase", letterSpacing: "0.05em",
     },
-    timeRow: { display: "flex", gap: "8px" },
-    timeField: { flex: 1, display: "flex", flexDirection: "column", gap: "4px" },
     fieldLabel: { fontSize: "0.6rem", color: "#475569" },
     timeInput: {
         background: "#0f172a", border: "1px solid #334155", borderRadius: "5px",
         padding: "5px 8px", fontSize: "0.72rem", color: "#cbd5e1", fontWeight: "600",
     },
-    slotsRow: { display: "flex", alignItems: "center", gap: "8px" },
-    slotBtn: {
-        background: "#0f172a", border: "1px solid #334155", borderRadius: "5px",
-        width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "0.8rem", color: "#cbd5e1", fontWeight: "700",
-    },
-    slotNum: { fontSize: "0.9rem", fontWeight: "800", color: "#e2e8f0", minWidth: "20px", textAlign: "center" },
-    slotLabel: { fontSize: "0.65rem", color: "#475569" },
     modalFooter: { display: "flex", gap: "8px", justifyContent: "flex-end", paddingTop: "2px" },
-    cancelBtn: {
-        background: "transparent", border: "1px solid #334155", borderRadius: "6px",
-        padding: "5px 10px", fontSize: "0.68rem", color: "#64748b", fontWeight: "700",
-    },
     saveBtn: {
         background: "#2563eb", borderRadius: "6px",
         padding: "5px 10px", fontSize: "0.68rem", color: "#fff", fontWeight: "700",
     },
+};
+
+/* ── Estilos de la visual "antes / ahora" ── */
+const ba = {
+    row: { display: "flex", alignItems: "center", gap: "10px" },
+    oldLabel: {
+        fontSize: "0.62rem", fontWeight: "700", color: "#f87171", textTransform: "uppercase",
+        letterSpacing: "0.05em", width: "44px", flexShrink: 0,
+    },
+    newLabel: {
+        fontSize: "0.62rem", fontWeight: "700", color: "#4ade80", textTransform: "uppercase",
+        letterSpacing: "0.05em", width: "44px", flexShrink: 0,
+    },
+    oldBox: {
+        flex: 1, background: "#1e293b", borderRadius: "8px", padding: "8px 10px",
+        display: "flex", flexDirection: "column", gap: "4px", opacity: 0.6,
+    },
+    newBox: {
+        flex: 1, background: "#1e293b", borderRadius: "8px", padding: "8px 10px",
+        display: "flex", flexDirection: "column", gap: "4px", border: "1px solid #2563eb",
+    },
+    strike: { color: "#f87171", fontWeight: "800", fontSize: "0.9rem", flexShrink: 0 },
+    check: { color: "#4ade80", fontWeight: "800", fontSize: "0.9rem", flexShrink: 0 },
+};
+
+/* ── Estilos de la visual del formulario de invitación ── */
+const inv = {
+    segment: { display: "flex", gap: "4px", background: "#0f172a", borderRadius: "6px", padding: "3px" },
+    segmentActive: {
+        flex: 1, textAlign: "center", background: "#2563eb", color: "#fff",
+        borderRadius: "4px", padding: "4px 0", fontSize: "0.68rem", fontWeight: "700",
+    },
+    segmentInactive: {
+        flex: 1, textAlign: "center", color: "#64748b",
+        borderRadius: "4px", padding: "4px 0", fontSize: "0.68rem", fontWeight: "700",
+    },
+};
+
+/* ── Estilos de la visual del correo de invitación ── */
+const mail = {
+    chrome: {
+        display: "flex", alignItems: "center", gap: "6px",
+        background: "#1e293b", borderRadius: "8px 8px 0 0", padding: "8px 10px",
+        border: "1px solid #334155", borderBottom: "none",
+    },
+    chromeDot: { width: "7px", height: "7px", borderRadius: "50%", background: "#334155" },
+    subject: { marginLeft: "6px", fontSize: "0.66rem", color: "#94a3b8", fontWeight: "600" },
+    body: {
+        background: "#eef4ff", borderRadius: "0 0 8px 8px", padding: "16px 14px",
+        border: "1px solid #334155", borderTop: "none", textAlign: "left",
+    },
+    heading: { margin: "0 0 6px", fontSize: "0.86rem", fontWeight: "800", color: "#0f172a" },
+    text: { margin: "0 0 12px", fontSize: "0.72rem", color: "#475569", lineHeight: 1.5 },
+    btn: {
+        display: "inline-block", background: "#2563eb", color: "#fff", fontWeight: "700",
+        fontSize: "0.72rem", padding: "8px 16px", borderRadius: "6px", marginBottom: "12px",
+    },
+    hint: { margin: 0, fontSize: "0.66rem", color: "#64748b" },
 };
