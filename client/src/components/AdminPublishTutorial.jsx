@@ -131,12 +131,12 @@ function BeforeAfterVisual() {
                 <span style={ba.oldLabel}>Antes</span>
                 <div style={ba.oldBox}>
                     <div style={em.fieldLabel}>Código de acceso</div>
-                    <div style={{ ...em.timeInput, color: "#64748b" }}>SLCADMIN2025</div>
+                    <div style={em.timeInput}>SLCADMIN2025</div>
                 </div>
                 <span style={ba.strike}>✕</span>
             </div>
             <div style={{ display: "flex", justifyContent: "center" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ color: "var(--primary)" }} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/>
                 </svg>
             </div>
@@ -144,7 +144,7 @@ function BeforeAfterVisual() {
                 <span style={ba.newLabel}>Ahora</span>
                 <div style={ba.newBox}>
                     <div style={em.fieldLabel}>Correo invitado</div>
-                    <div style={{ ...em.timeInput, color: "#93c5fd" }}>juan.burbano@sig.systems</div>
+                    <div style={{ ...em.timeInput, color: "var(--primary)" }}>juan.burbano@sig.systems</div>
                 </div>
                 <span style={ba.check}>✓</span>
             </div>
@@ -181,8 +181,8 @@ function InviteEmailVisual() {
         <div style={viz.card}>
             <div style={mail.chrome}>
                 <span style={mail.chromeDot} />
-                <span style={{ ...mail.chromeDot, background: "#475569" }} />
-                <span style={{ ...mail.chromeDot, background: "#475569" }} />
+                <span style={mail.chromeDot} />
+                <span style={mail.chromeDot} />
                 <span style={mail.subject}>Invitación a SLC Turnos (Operador)</span>
             </div>
             <div style={mail.body}>
@@ -307,39 +307,39 @@ const styles = {
     },
 };
 
-/* ── Estilos del contenedor oscuro ── */
+/* ── Estilos del contenedor de la visual (sigue el tema claro/oscuro) ── */
 const viz = {
     card: {
-        background: "#0f172a",
+        background: "var(--bg-color)",
         borderRadius: "10px",
         padding: "14px 16px",
         display: "flex",
         flexDirection: "column",
         gap: "10px",
-        border: "1px solid #1e293b",
+        border: "1px solid var(--border-color)",
     },
 };
 
 /* ── Estilos compartidos de modal simulado ── */
 const em = {
     modalSim: {
-        background: "#1e293b", borderRadius: "10px", padding: "14px",
+        background: "var(--card-bg)", borderRadius: "10px", padding: "14px",
         display: "flex", flexDirection: "column", gap: "10px",
-        border: "1px solid #334155", textAlign: "left",
+        border: "1px solid var(--border-color)", textAlign: "left",
     },
-    modalTitle: { fontSize: "0.82rem", fontWeight: "800", color: "#e2e8f0" },
+    modalTitle: { fontSize: "0.82rem", fontWeight: "800", color: "var(--text-main)" },
     sectionLabel: {
-        fontSize: "0.6rem", fontWeight: "700", color: "#475569",
+        fontSize: "0.6rem", fontWeight: "700", color: "var(--text-muted)",
         textTransform: "uppercase", letterSpacing: "0.05em",
     },
-    fieldLabel: { fontSize: "0.6rem", color: "#475569" },
+    fieldLabel: { fontSize: "0.66rem", fontWeight: "700", color: "var(--text-muted)" },
     timeInput: {
-        background: "#0f172a", border: "1px solid #334155", borderRadius: "5px",
-        padding: "5px 8px", fontSize: "0.72rem", color: "#cbd5e1", fontWeight: "600",
+        background: "var(--input-bg)", border: "1px solid var(--border-color)", borderRadius: "5px",
+        padding: "5px 8px", fontSize: "0.72rem", color: "var(--text-main)", fontWeight: "600",
     },
     modalFooter: { display: "flex", gap: "8px", justifyContent: "flex-end", paddingTop: "2px" },
     saveBtn: {
-        background: "#2563eb", borderRadius: "6px",
+        background: "var(--primary)", borderRadius: "6px",
         padding: "5px 10px", fontSize: "0.68rem", color: "#fff", fontWeight: "700",
     },
 };
@@ -348,34 +348,35 @@ const em = {
 const ba = {
     row: { display: "flex", alignItems: "center", gap: "10px" },
     oldLabel: {
-        fontSize: "0.62rem", fontWeight: "700", color: "#f87171", textTransform: "uppercase",
+        fontSize: "0.62rem", fontWeight: "700", color: "var(--danger)", textTransform: "uppercase",
         letterSpacing: "0.05em", width: "44px", flexShrink: 0,
     },
     newLabel: {
-        fontSize: "0.62rem", fontWeight: "700", color: "#4ade80", textTransform: "uppercase",
+        fontSize: "0.62rem", fontWeight: "700", color: "var(--success)", textTransform: "uppercase",
         letterSpacing: "0.05em", width: "44px", flexShrink: 0,
     },
     oldBox: {
-        flex: 1, background: "#1e293b", borderRadius: "8px", padding: "8px 10px",
-        display: "flex", flexDirection: "column", gap: "4px", opacity: 0.6,
+        flex: 1, background: "var(--card-bg)", borderRadius: "8px", padding: "8px 10px",
+        display: "flex", flexDirection: "column", gap: "4px", opacity: 0.8,
+        border: "1px solid var(--border-color)",
     },
     newBox: {
-        flex: 1, background: "#1e293b", borderRadius: "8px", padding: "8px 10px",
-        display: "flex", flexDirection: "column", gap: "4px", border: "1px solid #2563eb",
+        flex: 1, background: "var(--card-bg)", borderRadius: "8px", padding: "8px 10px",
+        display: "flex", flexDirection: "column", gap: "4px", border: "1px solid var(--primary)",
     },
-    strike: { color: "#f87171", fontWeight: "800", fontSize: "0.9rem", flexShrink: 0 },
-    check: { color: "#4ade80", fontWeight: "800", fontSize: "0.9rem", flexShrink: 0 },
+    strike: { color: "var(--danger)", fontWeight: "800", fontSize: "0.9rem", flexShrink: 0 },
+    check: { color: "var(--success)", fontWeight: "800", fontSize: "0.9rem", flexShrink: 0 },
 };
 
 /* ── Estilos de la visual del formulario de invitación ── */
 const inv = {
-    segment: { display: "flex", gap: "4px", background: "#0f172a", borderRadius: "6px", padding: "3px" },
+    segment: { display: "flex", gap: "4px", background: "var(--hover-overlay)", borderRadius: "6px", padding: "3px" },
     segmentActive: {
-        flex: 1, textAlign: "center", background: "#2563eb", color: "#fff",
+        flex: 1, textAlign: "center", background: "var(--primary)", color: "#fff",
         borderRadius: "4px", padding: "4px 0", fontSize: "0.68rem", fontWeight: "700",
     },
     segmentInactive: {
-        flex: 1, textAlign: "center", color: "#64748b",
+        flex: 1, textAlign: "center", color: "var(--text-muted)",
         borderRadius: "4px", padding: "4px 0", fontSize: "0.68rem", fontWeight: "700",
     },
 };
@@ -384,14 +385,14 @@ const inv = {
 const mail = {
     chrome: {
         display: "flex", alignItems: "center", gap: "6px",
-        background: "#1e293b", borderRadius: "8px 8px 0 0", padding: "8px 10px",
-        border: "1px solid #334155", borderBottom: "none",
+        background: "var(--bg-color)", borderRadius: "8px 8px 0 0", padding: "8px 10px",
+        border: "1px solid var(--border-color)", borderBottom: "none",
     },
-    chromeDot: { width: "7px", height: "7px", borderRadius: "50%", background: "#334155" },
-    subject: { marginLeft: "6px", fontSize: "0.66rem", color: "#94a3b8", fontWeight: "600" },
+    chromeDot: { width: "7px", height: "7px", borderRadius: "50%", background: "var(--border-color)" },
+    subject: { marginLeft: "6px", fontSize: "0.66rem", color: "var(--text-muted)", fontWeight: "600" },
     body: {
         background: "#eef4ff", borderRadius: "0 0 8px 8px", padding: "16px 14px",
-        border: "1px solid #334155", borderTop: "none", textAlign: "left",
+        border: "1px solid var(--border-color)", borderTop: "none", textAlign: "left",
     },
     heading: { margin: "0 0 6px", fontSize: "0.86rem", fontWeight: "800", color: "#0f172a" },
     text: { margin: "0 0 12px", fontSize: "0.72rem", color: "#475569", lineHeight: 1.5 },
